@@ -1,2 +1,2 @@
-# zgEXCELL-2.0-Free
-My free version of our zgEXCELL 2.0 CMS/CRM.
+# zgEXCELL-3.0-Free
+My free version of the zgEXCELL 3.0 Engine.
