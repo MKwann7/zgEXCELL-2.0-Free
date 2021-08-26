@@ -1,6 +1,6 @@
-.env
-/db-data/
-/init-scripts/
+/src/.env
+/docker/db-data/
+/docker/init-scripts/
 /.idea/.name
 /.idea/
 /src/vendors/phpunit
