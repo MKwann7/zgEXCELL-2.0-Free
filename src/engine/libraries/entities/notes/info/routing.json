@@ -1,0 +1,14 @@
+{
+  "controllers": {
+    "index": {
+      "models":["Note"],
+      "verb":"GET",
+      "returnType":"DEFAULT"
+    },
+    "note_data": {
+      "models":["Note"],
+      "verb":"POST",
+      "returnType":"AJAX"
+    }
+  }
+}

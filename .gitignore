@@ -1,0 +1,6 @@
+.env
+/db-data/
+/init-scripts/
+/.idea/.name
+/.idea/
+/src/vendors/phpunit

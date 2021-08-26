@@ -1,0 +1,44 @@
+{
+  "cart": {
+    "Routes": {
+      "cart": {
+        "Alias:": "cart"
+      }
+    },
+    "ModulePath": "cart",
+    "Main": {
+      "Name": "Cart",
+      "Icon": "cart-main.png"
+    },
+    "Permissions": {
+      "Create": ["admin","webmaster","editor"],
+      "Update": ["admin","webmaster","editor"],
+      "Delete": ["admin","webmaster","editor"]
+    },
+    "PublicRouting": {
+      "page-css": {
+        "models":["Cart"],
+        "verbs":["GET"],
+        "returnType":"AJAX"
+      },
+      "page-js": {
+        "models":["Cart"],
+        "verbs":["GET"],
+        "returnType":"AJAX"
+      },
+      "page-ajax": {
+        "model":["Cart"],
+        "verbs":["GET","POST","DELETE","CREATE"],
+        "returnType":"AJAX"
+      },
+      "widget-ajax": {
+        "models":["Cart"],
+        "verbs":["GET","POST","DELETE","CREATE"],
+        "returnType":"AJAX"
+      }
+    },
+    "Widgets": {
+      "page_cart": ["admin","webmaster","editor","user","public"]
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "controllers": {
+    "index": {
+      "models":["Card"],
+      "verb":"GET",
+      "returnType":"DEFAULT"
+    },
+    "card_data2": {
+      "models":["Card"],
+      "verb":"POST",
+      "returnType":"AJAX"
+    },
+    "card_groups": {
+      "models":["Card"],
+      "verb":"GET",
+      "returnType":"DEFAULT"
+    },
+    "report_issue": {
+      "models":["Card"],
+      "verb":"GET",
+      "returnType":"DEFAULT"
+    }
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "controllers": {
+    "index": {
+      "models":["Report"],
+      "verb":"GET",
+      "returnType":"DEFAULT"
+    },
+    "add_new_report": {
+      "models":["Report"],
+      "verb":"POST",
+      "returnType":"AJAX"
+    },
+    "create_new_report_dialog": {
+      "models":["Report"],
+      "verb":"GET",
+      "returnType":"AJAX"
+    },
+    "delete_report": {
+      "models":["Report"],
+      "verb":"POST",
+      "returnType":"AJAX"
+    },
+    "view_all_reports_ajax": {
+      "models":["Report"],
+      "verb":"GET",
+      "returnType":"AJAX"
+    },
+    "modify_report": {
+      "models":["Report"],
+      "verb":"POST",
+      "returnType":"AJAX"
+    },
+    "modify_report_dialog": {
+      "models":["Report"],
+      "verb":"GET",
+      "returnType":"AJAX"
+    },
+    "report": {
+      "models":["Report"],
+      "verb":"GET",
+      "returnType":"DEFAULT"
+    },
+    "report_ajax": {
+      "models":["Report"],
+      "verb":"GET",
+      "returnType":"AJAX"
+    }
+  }
+}

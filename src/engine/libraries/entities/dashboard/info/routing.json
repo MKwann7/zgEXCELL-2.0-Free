@@ -1,0 +1,49 @@
+{
+  "controllers": {
+    "index": {
+      "models":["Dashboard"],
+      "verb":"GET",
+      "returnType":"DEFAULT"
+    },
+    "add_new_dashboard": {
+      "models":["Dashboard"],
+      "verb":"POST",
+      "returnType":"AJAX"
+    },
+    "create_new_dashboard_dialog": {
+      "models":["Dashboard"],
+      "verb":"GET",
+      "returnType":"AJAX"
+    },
+    "delete_dashboard": {
+      "models":["Dashboard"],
+      "verb":"POST",
+      "returnType":"AJAX"
+    },
+    "view_all_dashboards_ajax": {
+      "models":["Dashboard"],
+      "verb":"GET",
+      "returnType":"AJAX"
+    },
+    "modify_dashboard": {
+      "models":["Dashboard"],
+      "verb":"POST",
+      "returnType":"AJAX"
+    },
+    "modify_dashboard_dialog": {
+      "models":["Dashboard"],
+      "verb":"GET",
+      "returnType":"AJAX"
+    },
+    "dashboard": {
+      "models":["Dashboard"],
+      "verb":"GET",
+      "returnType":"DEFAULT"
+    },
+    "dashboard_ajax": {
+      "models":["Dashboard"],
+      "verb":"GET",
+      "returnType":"AJAX"
+    }
+  }
+}

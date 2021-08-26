@@ -1,0 +1,14 @@
+{
+  "controllers": {
+    "index": {
+      "models":["Media"],
+      "verb":"ALL",
+      "returnType":"DEFAULT"
+    },
+    "api": {
+      "models":["User"],
+      "verb":"ALL",
+      "returnType":"AJAX"
+    }
+  }
+}

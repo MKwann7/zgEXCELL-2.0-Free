@@ -1,0 +1,44 @@
+{
+  "dashboard": {
+    "Routes": {
+      "dashboard": {
+        "Alias:": "dashboard"
+      }
+    },
+    "ModulePath": "dashboard",
+    "Main": {
+      "Name": "Dashboard",
+      "Icon": "dashboard-main.png"
+    },
+    "Permissions": {
+      "Create": ["admin","webmaster","editor"],
+      "Update": ["admin","webmaster","editor"],
+      "Delete": ["admin","webmaster","editor"]
+    },
+    "PublicRouting": {
+      "page-css": {
+        "models":["Dashboard"],
+        "verbs":["GET"],
+        "returnType":"AJAX"
+      },
+      "page-js": {
+        "models":["Dashboard"],
+        "verbs":["GET"],
+        "returnType":"AJAX"
+      },
+      "page-ajax": {
+        "model":["Dashboard"],
+        "verbs":["GET","POST","DELETE","CREATE"],
+        "returnType":"AJAX"
+      },
+      "widget-ajax": {
+        "models":["Dashboard"],
+        "verbs":["GET","POST","DELETE","CREATE"],
+        "returnType":"AJAX"
+      }
+    },
+    "Widgets": {
+      "page_dashboard": ["admin","webmaster","editor","user","public"]
+    }
+  }
+}

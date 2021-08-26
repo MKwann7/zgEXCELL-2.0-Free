@@ -1,0 +1,44 @@
+{
+  "quotes": {
+    "Routes": {
+      "quotes": {
+        "Alias:": "quotes"
+      }
+    },
+    "ModulePath": "quotes",
+    "Main": {
+      "Name": "Quotes",
+      "Icon": "quote-main.png"
+    },
+    "Permissions": {
+      "Create": ["admin","webmaster","editor"],
+      "Update": ["admin","webmaster","editor"],
+      "Delete": ["admin","webmaster","editor"]
+    },
+    "PublicRouting": {
+      "quote-css": {
+        "models":["Quote"],
+        "verbs":["GET"],
+        "returnType":"AJAX"
+      },
+      "quote-js": {
+        "models":["Quote"],
+        "verbs":["GET"],
+        "returnType":"AJAX"
+      },
+      "quote-ajax": {
+        "model":["Quote"],
+        "verbs":["GET","POST","DELETE","CREATE"],
+        "returnType":"AJAX"
+      },
+      "widget-ajax": {
+        "models":["Quote"],
+        "verbs":["GET","POST","DELETE","CREATE"],
+        "returnType":"AJAX"
+      }
+    },
+    "Widgets": {
+      "quote_quote": ["admin","webmaster","editor","user","public"]
+    }
+  }
+}

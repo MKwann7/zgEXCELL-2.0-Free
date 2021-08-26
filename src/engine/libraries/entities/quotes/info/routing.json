@@ -1,0 +1,49 @@
+{
+  "controllers": {
+    "index": {
+      "models":["Quote"],
+      "verb":"GET",
+      "returnType":"DEFAULT"
+    },
+    "add_new_quote": {
+      "models":["Quote"],
+      "verb":"POST",
+      "returnType":"AJAX"
+    },
+    "create_new_quote_dialog": {
+      "models":["Quote"],
+      "verb":"GET",
+      "returnType":"AJAX"
+    },
+    "delete_quote": {
+      "models":["Quote"],
+      "verb":"POST",
+      "returnType":"AJAX"
+    },
+    "view_all_quotes_ajax": {
+      "models":["Quote"],
+      "verb":"GET",
+      "returnType":"AJAX"
+    },
+    "modify_quote": {
+      "models":["Quote"],
+      "verb":"POST",
+      "returnType":"AJAX"
+    },
+    "modify_quote_dialog": {
+      "models":["Quote"],
+      "verb":"GET",
+      "returnType":"AJAX"
+    },
+    "quote": {
+      "models":["Quote"],
+      "verb":"GET",
+      "returnType":"DEFAULT"
+    },
+    "quote_ajax": {
+      "models":["Quote"],
+      "verb":"GET",
+      "returnType":"AJAX"
+    }
+  }
+}

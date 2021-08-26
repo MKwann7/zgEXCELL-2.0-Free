@@ -1,0 +1,19 @@
+{
+  "controllers": {
+    "index": {
+      "models":["Contact"],
+      "verb":"ALL",
+      "returnType":"DEFAULT"
+    }
+    "dashboard_ajax": {
+      "models":["Contact"],
+      "verb":"GET",
+      "returnType":"AJAX"
+    },
+    "report_issue": {
+      "models":["Contact"],
+      "verb":"ALL",
+      "returnType":"DEFAULT"
+    }
+  }
+}

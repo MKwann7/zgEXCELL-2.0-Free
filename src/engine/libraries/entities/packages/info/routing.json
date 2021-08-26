@@ -1,0 +1,54 @@
+{
+  "controllers": {
+    "index": {
+      "models":["Package"],
+      "verb":"GET",
+      "returnType":"DEFAULT"
+    },
+    "add_new_package": {
+      "models":["Package"],
+      "verb":"POST",
+      "returnType":"AJAX"
+    },
+    "package_data": {
+      "models":["Package"],
+      "verb":"POST",
+      "returnType":"AJAX"
+    },
+    "create_new_package_dialog": {
+      "models":["Package"],
+      "verb":"GET",
+      "returnType":"AJAX"
+    },
+    "delete_package": {
+      "models":["Package"],
+      "verb":"POST",
+      "returnType":"AJAX"
+    },
+    "view_all_packages_ajax": {
+      "models":["Package"],
+      "verb":"GET",
+      "returnType":"AJAX"
+    },
+    "modify_package": {
+      "models":["Package"],
+      "verb":"POST",
+      "returnType":"AJAX"
+    },
+    "modify_package_dialog": {
+      "models":["Package"],
+      "verb":"GET",
+      "returnType":"AJAX"
+    },
+    "package": {
+      "models":["Package"],
+      "verb":"GET",
+      "returnType":"DEFAULT"
+    },
+    "package_ajax": {
+      "models":["Package"],
+      "verb":"GET",
+      "returnType":"AJAX"
+    }
+  }
+}

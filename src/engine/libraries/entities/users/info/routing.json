@@ -1,0 +1,59 @@
+{
+  "controllers": {
+    "index": {
+      "models":["User"],
+      "verb":"ALL",
+      "returnType":"DEFAULT"
+    },
+    "add_new_user": {
+      "models":["User"],
+      "verb":"POST",
+      "returnType":"AJAX"
+    },
+    "user_data": {
+      "models":["User"],
+      "verb":"POST",
+      "returnType":"AJAX"
+    },
+    "create_new_user_dialog": {
+      "models":["User"],
+      "verb":"GET",
+      "returnType":"AJAX"
+    },
+    "delete_user": {
+      "models":["User"],
+      "verb":"POST",
+      "returnType":"AJAX"
+    },
+    "view_all_users_ajax": {
+      "models":["User"],
+      "verb":"GET",
+      "returnType":"AJAX"
+    },
+    "modify_user": {
+      "models":["User"],
+      "verb":"POST",
+      "returnType":"AJAX"
+    },
+    "modify_user_dialog": {
+      "models":["User"],
+      "verb":"GET",
+      "returnType":"AJAX"
+    },
+    "user": {
+      "models":["User"],
+      "verb":"GET",
+      "returnType":"DEFAULT"
+    },
+    "user_ajax": {
+      "models":["User"],
+      "verb":"GET",
+      "returnType":"AJAX"
+    },
+    "api": {
+      "models":["User"],
+      "verb":"POST",
+      "returnType":"AJAX"
+    }
+  }
+}

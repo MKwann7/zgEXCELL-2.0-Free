@@ -1,0 +1,190 @@
+
+body div.universal-float-shield {
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+    background: url(/website/images/LoadingIcon2.gif) no-repeat left 50% center / auto 35px,rgba(255,255,255,.4) ;
+    z-index:5;
+    overflow-y: auto;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+}
+
+.vue-float-shield-inner {
+    display: flex;
+    flex-direction: column;
+    max-height: 100vh;
+    max-height: -webkit-fill-available;
+}
+
+.zgpopup-dialog-box {
+    background: #ffffff;
+    background: -moz-linear-gradient(top,  #ffffff 0%, #eaeaea 100%);
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#ffffff), color-stop(100%,#eaeaea));
+    background: -webkit-linear-gradient(top,  #ffffff 0%, #eaeaea 100%);
+    background: -o-linear-gradient(top,  #ffffff 0%, #eaeaea 100%);
+    background: -ms-linear-gradient(top,  #ffffff 0%, #eaeaea 100%);
+    background: linear-gradient(top,  #ffffff 0%, #eaeaea 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#eaeaea',GradientType=0 );
+    border-radius: 0px;
+    box-shadow: 0 0 10px #000000;
+    max-width: calc(100vw - 50px);
+    min-width: 250px;
+}
+
+.zgpopup-dialog-header {
+    background: -moz-linear-gradient(top, #ffffff 0%, #FAFAFA 100%);
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#ffffff), color-stop(100%,#FAFAFA));
+    background: -webkit-linear-gradient(top, #ffffff 0%, #FAFAFA 100%);
+    background: -o-linear-gradient(top, #ffffff 0%, #FAFAFA 100%);
+    background: -ms-linear-gradient(top, #ffffff 0%, #FAFAFA 100%);
+    background: linear-gradient(top, #ffffff 0%, #FAFAFA 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#FAFAFA',GradientType=0 );
+    border-radius: 0 15px 0 0;
+    border-radius: 0px 0px 0 0;
+    margin-bottom: -7px;
+    margin-top: -5px;
+    padding: 15px 20px 7px;
+}
+
+.general-dialog-close {
+    background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAAUCAYAAABiS3YzAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAqxJREFUeNqclFuLUlEUx885ozOlMQ7eLw++iJGX1wyCqZgIsnrwhoIEYZc3YSrqCxR9AZ/mRbzV5PQkBH2DHuzBSyWa0oNRUInXQcd0tLVlb9vqcYQ2LM45++z9O2v91/9shpkdLPN/g+V74HCg5zHEKBgMjlaRQqHQwj4UZIKTy+UbTqfzLNxvQAjxhlVAIVrvcrnO4fsJbw1DBR6P55pCoXiu0+kqxWLxN/pyOp0e22y28QnA0z6f75JarX5hNBor+Xz+G8qUQLlcLvfdarVuyWSy+xqNplIqlX7xgWkgJLKtUqmedjqd17FY7B3MDRGUaIrg62hhIBB4IBaLr1er1WepVOoDzB1BDLBmLA2EDJ+02+1kNBp9BXNdiD8kUzKQyONMJvPRbDZLQIq7dMZ4jWAJsIc/PCIZMtBpBsok4FE2m83PgWsYeMrtdm/D3DwQZXjMUGUzoNkkloEhvpbL5bbD4bgIjXzcarX2QcN9PuAMlFwp8BjAn0wm0xaUesdgMJyB6+1Go5GMx+NJoiFUeYz3TMeCF2ERMTHSaBCJRBLdbvczuOIWZPg+kUik8Lsh0XB+cCf8dqiKNSj5vEgksvb7/S8SieSC3W4343fcst96pnweH17WarW79Xr9ADLeAynESApoVJn2MeWORegc8AoAHqGmQMlIwx5onIHmbfLYbQY8hdJAr9e7A3/Kw2az+ZJqSh91mcduC+AJFEpgKeBVpVK5i4EHGDjAtlmwG8hThrPiJ37/D4pFF/r9/h04rVDJCQC+IUBkGz4fWyyWTVh/T6/XFwuFwg9iRY4+V6G7Nw4PD6Ng7CQN5LEbMnw3HA7v9Xq9t2C3m7QT6ENaIJVK16HTI1zKkAbOHX0s2YOqhWzZWq1G/qzpKcVSgcZ41cmPwTN7SPwVYAArcoAyG20N/QAAAABJRU5ErkJggg==') no-repeat center center / 100%;
+    height:18px;
+    width:18px;
+    position:absolute;
+    right:8px;
+    top:7px;
+    cursor:pointer;
+}
+
+.dialog-right-loading-anim:after {
+    background: url(/website/images/LoadingIcon2.gif) no-repeat left 50% center / auto 35px, rgba(255,255,255,.4);
+    content: " ";
+    position: absolute;
+    right: 35px;
+    top: 45px;
+    display: block;
+    width: 25px;
+    height: 25px;
+    z-index:100;
+}
+
+.ajax-loading-anim:after {
+    background: url(/website/images/LoadingIcon2.gif) no-repeat left 50% center / auto 35px, linear-gradient(to bottom, rgba(255,255,255,.4) 0%, rgba(234,234,234,.4) 100%);
+    content: " ";
+    position: absolute;
+    display: block;
+    width: 100%;
+    height: 100%;
+    top:0;
+    left:0;
+    right:0;
+    bottom:0;
+    z-index:100;
+}
+
+.ajax-loading-anim-inner {
+    position:relative;
+}
+
+.ajax-loading-anim-inner:after {
+    background-image: url(/website/images/LoadingIcon2.gif) !important;
+    background-repeat: no-repeat;
+    background-position-x: calc(100% - 15px);
+    background-size: 35px !important;
+    background-position-y: center;
+    content: " ";
+    position: absolute;
+    display: block;
+    width: 100%;
+    height: 100%;
+    top:0;
+    left:0;
+    right:0;
+    bottom:0;
+    z-index:100;
+}
+
+.ajax-loading-anim-inline {
+    background-image: url(/website/images/LoadingIcon2.gif) !important;
+    background-repeat: no-repeat;
+    background-position-x: center;
+    background-size: 35px !important;
+    background-position-y: center;
+    min-height: inherit;
+}
+
+.table .table {
+    background-color: transparent !important;;
+}
+
+.zgpopup-dialog-body {
+    margin: 5px 20px 20px;
+    position: relative;
+    height: 100%;
+    padding: 8px 0px;
+}
+.zgpopup-dialog-body-inner-append {
+    padding-left: 26px;
+    padding-bottom: 3px;
+}
+.zgpopup-dialog-body-inner-checked {
+    margin: 15px 0 0 0;
+    background: url(/media/images/CheckMarkIconGreen.png) no-repeat left 0px top 1px / 19px;
+}
+.zgpopup-dialog-body-inner-error {
+    margin: 15px 0 0 0;
+    background: url(/media/images/ErrorIconRed.png) no-repeat left 0px top 1px / 19px;
+}
+
+.pop-up-dialog-main-title {
+    font-size:25px;
+}
+
+.pop-up-dialog-main-title-text {
+    font-family: HelveticaCondensedBold;
+}
+
+.divTable {
+    display:table;
+    width:100%;
+}
+.divHeader {
+    width:100%;
+    display: table-header-group;
+    vertical-align: middle;
+    border-color: inherit;
+}
+.divTBody {
+    width:100%;
+    display: table-row-group;
+    vertical-align: middle;
+    border-color: inherit;
+}
+.divRow {
+    display:table-row;
+    width:100%;
+    clear:both;
+    vertical-align:top;
+}
+.divCell {
+    display:table-cell;
+    width:auto;
+    vertical-align:top;
+}
+
+@media(max-width:500px)
+{
+    .zgpopup-dialog-box {
+        margin-bottom: 50px;
+    }
+    .no-columns .BodyContentBox {
+        height: calc(100vh - 200px) !important;
+    }
+    .two-columns .BodyContentBox {
+        height: calc(100vh - 200px) !important;;
+    }
+}

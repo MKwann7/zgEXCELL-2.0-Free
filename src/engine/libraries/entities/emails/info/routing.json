@@ -1,0 +1,9 @@
+{
+  "controllers": {
+    "index": {
+      "models":["Email"],
+      "verb":"ALL",
+      "returnType":"DEFAULT"
+    }
+  }
+}

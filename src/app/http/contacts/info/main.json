@@ -1,0 +1,44 @@
+{
+  "contacts": {
+    "Routes": {
+      "contacts": {
+        "Alias:": "contacts"
+      }
+    },
+    "ModulePath": "contacts",
+    "Main": {
+      "Name": "Contacts",
+      "Icon": "contact-main.png"
+    },
+    "Permissions": {
+      "Create": ["admin","webmaster","editor"],
+      "Update": ["admin","webmaster","editor"],
+      "Delete": ["admin","webmaster","editor"]
+    },
+    "PublicRouting": {
+      "page-css": {
+        "models":["Contact"],
+        "verbs":["GET"],
+        "returnType":"AJAX"
+      },
+      "page-js": {
+        "models":["Contact"],
+        "verbs":["GET"],
+        "returnType":"AJAX"
+      },
+      "page-ajax": {
+        "model":["Contact"],
+        "verbs":["GET","POST","DELETE","CREATE"],
+        "returnType":"AJAX"
+      },
+      "widget-ajax": {
+        "models":["Contact"],
+        "verbs":["GET","POST","DELETE","CREATE"],
+        "returnType":"AJAX"
+      }
+    },
+    "Widgets": {
+      "page_contact": ["admin","webmaster","editor","user","public"]
+    }
+  }
+}

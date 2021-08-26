@@ -1,0 +1,49 @@
+{
+  "controllers": {
+    "index": {
+      "models":["Order"],
+      "verb":"GET",
+      "returnType":"DEFAULT"
+    },
+    "add_new_order": {
+      "models":["Order"],
+      "verb":"POST",
+      "returnType":"AJAX"
+    },
+    "create_new_order_dialog": {
+      "models":["Order"],
+      "verb":"GET",
+      "returnType":"AJAX"
+    },
+    "delete_order": {
+      "models":["Order"],
+      "verb":"POST",
+      "returnType":"AJAX"
+    },
+    "view_all_orders_ajax": {
+      "models":["Order"],
+      "verb":"GET",
+      "returnType":"AJAX"
+    },
+    "modify_order": {
+      "models":["Order"],
+      "verb":"POST",
+      "returnType":"AJAX"
+    },
+    "modify_order_dialog": {
+      "models":["Order"],
+      "verb":"GET",
+      "returnType":"AJAX"
+    },
+    "order": {
+      "models":["Order"],
+      "verb":"GET",
+      "returnType":"DEFAULT"
+    },
+    "order_ajax": {
+      "models":["Order"],
+      "verb":"GET",
+      "returnType":"AJAX"
+    }
+  }
+}

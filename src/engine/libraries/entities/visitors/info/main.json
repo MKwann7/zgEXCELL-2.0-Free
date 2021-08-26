@@ -1,0 +1,44 @@
+{
+  "visitors": {
+    "Routes": {
+      "visitors": {
+        "Alias:": "visitors"
+      }
+    },
+    "ModulePath": "visitors",
+    "Main": {
+      "Name": "Visitors",
+      "Icon": "visitor-main.png"
+    },
+    "Permissions": {
+      "Create": ["admin","webmaster","editor"],
+      "Update": ["admin","webmaster","editor"],
+      "Delete": ["admin","webmaster","editor"]
+    },
+    "PublicRouting": {
+      "user-css": {
+        "models":["Visitor"],
+        "verbs":["GET"],
+        "returnType":"AJAX"
+      },
+      "user-js": {
+        "models":["Visitor"],
+        "verbs":["GET"],
+        "returnType":"AJAX"
+      },
+      "user-ajax": {
+        "model":["Visitor"],
+        "verbs":["GET","POST","DELETE","CREATE"],
+        "returnType":"AJAX"
+      },
+      "widget-ajax": {
+        "models":["Visitor"],
+        "verbs":["GET","POST","DELETE","CREATE"],
+        "returnType":"AJAX"
+      }
+    },
+    "Widgets": {
+      "visitor_activty": ["admin","webmaster","editor","user","public"]
+    }
+  }
+}

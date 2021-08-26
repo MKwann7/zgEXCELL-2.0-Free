@@ -1,0 +1,54 @@
+{
+  "controllers": {
+    "index": {
+      "models":["Product"],
+      "verb":"GET",
+      "returnType":"DEFAULT"
+    },
+    "add_new_product": {
+      "models":["Product"],
+      "verb":"POST",
+      "returnType":"AJAX"
+    },
+    "product_data": {
+      "models":["Product"],
+      "verb":"POST",
+      "returnType":"AJAX"
+    },
+    "create_new_product_dialog": {
+      "models":["Product"],
+      "verb":"GET",
+      "returnType":"AJAX"
+    },
+    "delete_product": {
+      "models":["Product"],
+      "verb":"POST",
+      "returnType":"AJAX"
+    },
+    "view_all_products_ajax": {
+      "models":["Product"],
+      "verb":"GET",
+      "returnType":"AJAX"
+    },
+    "modify_product": {
+      "models":["Product"],
+      "verb":"POST",
+      "returnType":"AJAX"
+    },
+    "modify_product_dialog": {
+      "models":["Product"],
+      "verb":"GET",
+      "returnType":"AJAX"
+    },
+    "product": {
+      "models":["Product"],
+      "verb":"GET",
+      "returnType":"DEFAULT"
+    },
+    "product_ajax": {
+      "models":["Product"],
+      "verb":"GET",
+      "returnType":"AJAX"
+    }
+  }
+}

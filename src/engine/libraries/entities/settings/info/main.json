@@ -1,0 +1,44 @@
+{
+  "settings": {
+    "Routes": {
+      "settings": {
+        "Alias:": "settings"
+      }
+    },
+    "ModulePath": "settings",
+    "Main": {
+      "Name": "Settings",
+      "Icon": "setting-main.png"
+    },
+    "Permissions": {
+      "Create": ["admin","webmaster","editor"],
+      "Update": ["admin","webmaster","editor"],
+      "Delete": ["admin","webmaster","editor"]
+    },
+    "PublicRouting": {
+      "setting-css": {
+        "models":["Setting"],
+        "verbs":["GET"],
+        "returnType":"AJAX"
+      },
+      "setting-js": {
+        "models":["Setting"],
+        "verbs":["GET"],
+        "returnType":"AJAX"
+      },
+      "setting-ajax": {
+        "model":["Setting"],
+        "verbs":["GET","POST","DELETE","CREATE"],
+        "returnType":"AJAX"
+      },
+      "widget-ajax": {
+        "models":["Setting"],
+        "verbs":["GET","POST","DELETE","CREATE"],
+        "returnType":"AJAX"
+      }
+    },
+    "Widgets": {
+      "setting_setting": ["admin","webmaster","editor","user","public"]
+    }
+  }
+}

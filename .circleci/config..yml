@@ -1,0 +1,62 @@
+version: 1
+
+# ---------------------------------------------------
+# start with re-usable YAML anchors
+links:
+  - workspace_dir: &workspace_dir ~/project
+
+  - &job-defaults
+    working_directory: *workspace_dir
+    docker:
+      - containers.maxcard.app/ecommerce/excell-app-deploy
+
+  # for workflow development
+  -
+
+jobs:
+  prebuild_tasks:
+    <<: *job-defaults
+    environment:
+      BUILD: local
+      DOCKER_BUILDKIT: 1
+      ENV: dev
+      PROFILE: aed
+      ROLE: ??
+    steps:
+      - checkout
+      - add_ssh_keys
+      - setup_remoote_docker:
+            docker_layer_caching: false
+      - run:
+          name: Setup VARS and BASH_ENV
+          command: |-
+            # User $BASH_ENV for passing variables between steps
+            # https://circleci.com/docs/2.0/env-vars/#setting-an-environment-variable-in-a-shell-command
+
+            # This file may be used to preserve environment variables between jobs, so ensure it exists
+            touch VARS
+      - run:
+          name: Docker Deets
+          command: |-
+            docker --version
+
+            echo -e "\nDocker Images \n"
+            docker images
+      - run:
+          name: Build Excell App Local Image
+          command: |-
+            echo "BUILD=${BUILD} and CIRCLE_SHA1=${CIRCLE_SHA1:0:7}"
+
+            # note that --squash is only supported wtih expirimental mode
+            docker build --progress=plain --no-cache --rm --force-rm=true -t ${APP_NAME}-app-${BUILD}:${CIRCLE_SHA1:0:7} --file="./docker/"
+
+            docker build --progress=plain --no-cache --rm --force-rm=true -t excepp-app-${BUILD}:${CIRCLE_SHA1:0:7}
+
+
+workflows:
+  version: 1
+  # ---------------------------------------------------
+  # Main app deployment workflow that runs after a pull request is merged
+  develop-deploy:
+      jobs:
+        -

@@ -1,0 +1,44 @@
+{
+  "reports": {
+    "Routes": {
+      "reports": {
+        "Alias:": "reports"
+      }
+    },
+    "ModulePath": "reports",
+    "Main": {
+      "Name": "Reports",
+      "Icon": "report-main.png"
+    },
+    "Permissions": {
+      "Create": ["admin","webmaster","editor"],
+      "Update": ["admin","webmaster","editor"],
+      "Delete": ["admin","webmaster","editor"]
+    },
+    "PublicRouting": {
+      "report-css": {
+        "models":["Report"],
+        "verbs":["GET"],
+        "returnType":"AJAX"
+      },
+      "report-js": {
+        "models":["Report"],
+        "verbs":["GET"],
+        "returnType":"AJAX"
+      },
+      "report-ajax": {
+        "model":["Report"],
+        "verbs":["GET","POST","DELETE","CREATE"],
+        "returnType":"AJAX"
+      },
+      "widget-ajax": {
+        "models":["Report"],
+        "verbs":["GET","POST","DELETE","CREATE"],
+        "returnType":"AJAX"
+      }
+    },
+    "Widgets": {
+      "report_report": ["admin","webmaster","editor","user","public"]
+    }
+  }
+}

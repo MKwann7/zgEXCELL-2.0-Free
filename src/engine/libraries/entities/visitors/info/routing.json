@@ -1,0 +1,9 @@
+{
+  "controllers": {
+    "index": {
+      "models":["Visitor"],
+      "verb":"GET",
+      "returnType":"DEFAULT"
+    }
+  }
+}

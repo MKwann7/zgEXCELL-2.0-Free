@@ -1,0 +1,49 @@
+{
+  "controllers": {
+    "index": {
+      "models":["Security"],
+      "verb":"GET",
+      "returnType":"DEFAULT"
+    },
+    "add_new_security": {
+      "models":["Security"],
+      "verb":"POST",
+      "returnType":"AJAX"
+    },
+    "create_new_security_dialog": {
+      "models":["Security"],
+      "verb":"GET",
+      "returnType":"AJAX"
+    },
+    "delete_security": {
+      "models":["Security"],
+      "verb":"POST",
+      "returnType":"AJAX"
+    },
+    "view_all_securities_ajax": {
+      "models":["Security"],
+      "verb":"GET",
+      "returnType":"AJAX"
+    },
+    "modify_security": {
+      "models":["Security"],
+      "verb":"POST",
+      "returnType":"AJAX"
+    },
+    "modify_security_dialog": {
+      "models":["Security"],
+      "verb":"GET",
+      "returnType":"AJAX"
+    },
+    "security": {
+      "models":["Security"],
+      "verb":"GET",
+      "returnType":"DEFAULT"
+    },
+    "security_ajax": {
+      "models":["Security"],
+      "verb":"GET",
+      "returnType":"AJAX"
+    }
+  }
+}

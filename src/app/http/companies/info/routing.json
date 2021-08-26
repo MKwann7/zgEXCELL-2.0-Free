@@ -1,0 +1,49 @@
+{
+  "controllers": {
+    "index": {
+      "models":["Company"],
+      "verb":"GET",
+      "returnType":"DEFAULT"
+    },
+    "add_new_company": {
+      "models":["Company"],
+      "verb":"POST",
+      "returnType":"AJAX"
+    },
+    "create_new_company_dialog": {
+      "models":["Company"],
+      "verb":"GET",
+      "returnType":"AJAX"
+    },
+    "delete_company": {
+      "models":["Company"],
+      "verb":"POST",
+      "returnType":"AJAX"
+    },
+    "view_all_companies_ajax": {
+      "models":["Company"],
+      "verb":"GET",
+      "returnType":"AJAX"
+    },
+    "modify_company": {
+      "models":["Company"],
+      "verb":"POST",
+      "returnType":"AJAX"
+    },
+    "modify_company_dialog": {
+      "models":["Company"],
+      "verb":"GET",
+      "returnType":"AJAX"
+    },
+    "dashboard": {
+      "models":["Company"],
+      "verb":"GET",
+      "returnType":"DEFAULT"
+    },
+    "dashboard_ajax": {
+      "models":["Company"],
+      "verb":"GET",
+      "returnType":"AJAX"
+    }
+  }
+}
