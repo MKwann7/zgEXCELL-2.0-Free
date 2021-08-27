@@ -3,6 +3,7 @@
 if (!defined("AppCore"))
 {
     define("AppCore", __DIR__ . "/../../");
+    define("PublicData", __DIR__ . "/../../public/");
     define("XT", ".php");
 }
 
