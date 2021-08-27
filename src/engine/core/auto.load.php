@@ -1,5 +1,14 @@
 <?php
 
+if (!defined("AppCore"))
+{
+    define("AppCore", __DIR__ . "/../../");
+    define("XT", ".php");
+}
+
+// Load App Class
+require AppCore . "engine/core/definitions" . XT;
+
 /**
  *  Autoloader for the entities zgExcell app
  */

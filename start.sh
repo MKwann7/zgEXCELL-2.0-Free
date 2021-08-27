@@ -15,4 +15,4 @@ if [[ -z "$(ls -A ${project_path}/src/vendors/phpunit)" ]]; then
 fi
 
 
-docker-compose -f docker/docker-compose.yml up
+docker-compose -f docker/docker-compose.local.yml up
