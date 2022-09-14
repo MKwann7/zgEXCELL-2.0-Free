@@ -1,9 +1,9 @@
 <?php
 
-namespace Entities\Communication\Controllers;
+namespace Http\Communication\Controllers;
 
 use App\Utilities\Excell\ExcellHttpModel;
-use Entities\Communication\Classes\Base\CommunicationController;
+use Http\Communication\Controllers\Base\CommunicationController;
 use Entities\Communication\Classes\Communications;
 use Entities\Communication\Components\Vue\CommunicationMainApp;
 use Entities\Modules\Components\Vue\AppsWidget\ManageModuleAppsWidget;

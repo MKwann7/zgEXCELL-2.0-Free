@@ -12,7 +12,7 @@ use Entities\Tickets\Models\TicketModel;
 
 class Tickets extends AppEntity
 {
-    public $strEntityName       = "Tickets";
+    public string $strEntityName       = "Tickets";
     public $strDatabaseTable    = "ticket";
     public $strDatabaseName     = "Crm";
     public $strMainModelName    = TicketModel::class;
@@ -28,20 +28,20 @@ class Tickets extends AppEntity
     {
         $objWhereClause = "
             SELECT tk.*,
-            (SELECT cp.platform_name FROM `ezdigital_v2_main`.`company` cp WHERE cp.company_id = tk.company_id LIMIT 1) AS platform, 
-            (SELECT queue_type_id FROM `ezdigital_v2_crm`.`ticket_queue` tq WHERE tq.ticket_queue_id = tk.ticket_queue_id LIMIT 1) AS queue_type_id,
-            (SELECT CONCAT(ur.first_name, ' ', ur.last_name) FROM `ezdigital_v2_main`.`user` ur WHERE ur.user_id = tk.assignee_id LIMIT 1) AS owner,
-            (SELECT CONCAT(ur.first_name, ' ', ur.last_name) FROM `ezdigital_v2_main`.`user` ur WHERE ur.user_id = tk.user_id LIMIT 1) AS user 
-            FROM `ezdigital_v2_crm`.`ticket` tk ";
+            (SELECT cp.platform_name FROM `excell_main`.`company` cp WHERE cp.company_id = tk.company_id LIMIT 1) AS platform, 
+            (SELECT queue_type_id FROM `excell_crm`.`ticket_queue` tq WHERE tq.ticket_queue_id = tk.ticket_queue_id LIMIT 1) AS queue_type_id,
+            (SELECT CONCAT(ur.first_name, ' ', ur.last_name) FROM `excell_main`.`user` ur WHERE ur.user_id = tk.assignee_id LIMIT 1) AS owner,
+            (SELECT CONCAT(ur.first_name, ' ', ur.last_name) FROM `excell_main`.`user` ur WHERE ur.user_id = tk.user_id LIMIT 1) AS user 
+            FROM `excell_crm`.`ticket` tk ";
 
         $objWhereClause .= "WHERE tk.sys_row_id = '".$uuid."' LIMIT 1";
 
         $ticketResult = Database::getSimple($objWhereClause, "ticket_id");
-        $ticketResult->Data->HydrateModelData(TicketModel::class, true);
+        $ticketResult->getData()->HydrateModelData(TicketModel::class, true);
 
-        if ($ticketResult->Result->Count !== 1)
+        if ($ticketResult->result->Count !== 1)
         {
-            return new ExcellTransaction(false, $ticketResult->Result->Message, ["errors" => [$ticketResult->Result->Message, $objWhereClause]]);
+            return new ExcellTransaction(false, $ticketResult->result->Message, ["errors" => [$ticketResult->result->Message, $objWhereClause]]);
         }
 
         return $ticketResult;
@@ -75,7 +75,7 @@ class Tickets extends AppEntity
 
         $ticketCreationResult = (new Journeys())->createNew($newTicket);
 
-        if ($ticketCreationResult->Result->Success !== true)
+        if ($ticketCreationResult->result->Success !== true)
         {
             return;
         }
@@ -84,7 +84,7 @@ class Tickets extends AppEntity
         {
             foreach($journey->children as $currChildJourney)
             {
-                $this->recursivelyCreateTicketsFromJourney($currChildJourney, $ticketCreationResult->Data->First());
+                $this->recursivelyCreateTicketsFromJourney($currChildJourney, $ticketCreationResult->getData()->first());
             }
         }
     }

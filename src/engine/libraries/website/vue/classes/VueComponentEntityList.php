@@ -7,11 +7,11 @@ use App\Website\Vue\Classes\Base\VueCustomMethods;
 
 class VueComponentEntityList extends VueComponent
 {
-    protected $title = "My Component Entity List";
-    protected $batchLoadEndpoint;
-    protected $batchCount = 500;
-    protected $entityPageDisplayCount = 15;
-    protected $noEntitiesWarning = "There are no entities in this module.";
+    protected string $title = "My Component Entity List";
+    protected string $batchLoadEndpoint;
+    protected int $batchCount = 500;
+    protected int $entityPageDisplayCount = 15;
+    protected string $noEntitiesWarning = "There are no entities in this module.";
 
     protected function renderComponentDataAssignments() : string
     {
@@ -29,7 +29,7 @@ class VueComponentEntityList extends VueComponent
                     mainEntityPageTotal: 1,
                     mainEntityPageIndex: 1,
                     mainEntityList: [],
-                    batchLoadingUri: "' . $this->batchLoadEndpoint . '",
+                    batchLoadingUri: "' . ($this->batchLoadEndpoint ?? "") . '",
                     listLayoutType: "' . $this->listLayoutType() . '",
         ';
     }
@@ -37,6 +37,16 @@ class VueComponentEntityList extends VueComponent
     protected function listLayoutType() : string
     {
         return "list";
+    }
+
+    protected function getEntityManager() : ?VueComponent
+    {
+        return null;
+    }
+
+    protected function getManageEntityStaticId() : string
+    {
+        return "";
     }
 
     public function getEntitySortOrder(): string
@@ -187,40 +197,6 @@ class VueComponentEntityList extends VueComponent
                     containerElement.classList.remove("ajax-loading-anim");
                 });
             },
-            deleteMainEntity: function(card)
-            {
-                let self = this;
-                modal.EngageFloatShield();
-                let data = {title: "Delete Card?", html: "Are you sure you want to proceed?<br>Please confirm."};
-    
-                modal.EngagePopUpConfirmation(data, function() {
-//                    modal.EngageFloatShield();
-//                    const deletionUrl = "/module-widget/ezcard/member-directory/v1/delete-directory-record?member=" + member.member_directory_record_id;
-//                    ajax.SendExternal(deletionUrl, "", "post", "json", true, function(result)
-//                    {
-//                        if (result.success !== true)
-//                        {
-//                            modal.CloseFloatShield(function() {
-//                                modal.EngageFloatShield();
-//                                let alertData = {title: "Drat. Something Went Wrong!", html: "We\'ve recorded it and our developers will look into it soon.<hr/><i>Please contact customer service to see if we can resolve your deletion request on our end.</i>"};
-//                                modal.EngagePopUpAlert(alertData, function() {
-//                                    modal.CloseFloatShield(function() { modal.CloseFloatShield(); });
-//                                }, 500, 115, true);
-//                            },500);
-//                            return;
-//                        }
-//    
-//                        self.directoryMembers = self.directoryMembers.filter(function (currEntity) {
-//                            return member.member_directory_record_id != currEntity.member_directory_record_id;
-//                        });
-//    
-//                        self.$forceUpdate();
-//                        modal.CloseFloatShield(function() {
-//                            modal.CloseFloatShield();
-//                        },500);
-//                    });
-                }, 400, 115);
-            },
             addEntityToList: function(entity) 
             {
                 for (let currEntity of this.mainEntityList)
@@ -261,8 +237,6 @@ class VueComponentEntityList extends VueComponent
             {
                 const vc = this.findVc(this);
                 
-                console.log(vc);
-                
                 if ( this.batchLoadingUri === "") { this.removeAjaxClass(); return; }
                 
                 this.batchOffset++;
@@ -279,12 +253,19 @@ class VueComponentEntityList extends VueComponent
                     {
                         strBatchUrl += "&filterEntity=" + self.filterEntityId;
                     }
-                    
-                    ajax.Send(strBatchUrl, null, function(objCardResult)
-                    {             
+   
+                    ajax.Get(strBatchUrl, null, function(result)
+                    {
+                        if (result.success == false) { return; }
+                        objCardResult = result.response;
+                   
                         for(let currEntityIndex in objCardResult.data.list)
                         {
+                            let data = objCardResult.data.list[currEntityIndex];
+                            let key1 = Object.keys(data)[0];
+                            //self.mainEntityList[Number(data[key1])] = objCardResult.data.list[currEntityIndex];
                             self.mainEntityList.push(objCardResult.data.list[currEntityIndex]);
+                            //self.mainEntityList.splice(Number(data[key1]), 0, objCardResult.data.list[currEntityIndex]);
                         }
                         
                         setTimeout(function() { self.batchStart = true; self.removeAjaxClass(); } , 250);

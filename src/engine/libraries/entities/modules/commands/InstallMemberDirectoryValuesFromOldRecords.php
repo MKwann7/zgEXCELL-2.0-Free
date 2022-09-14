@@ -28,10 +28,10 @@ class InstallMemberDirectoryValuesFromOldRecords extends Command
         $objMemDir = new EzcardMemberDirectories();
         $objMemDirRecords = new EzcardMemberDirectoryRecords();
 
-        $colMemberDirectories = $objMemDir->getWhere(["instance_uuid" => "25b6248a-0fa9-4a92-8442-dbfb73c1338e"])->Data;
+        $colMemberDirectories = $objMemDir->getWhere(["instance_uuid" => "25b6248a-0fa9-4a92-8442-dbfb73c1338e"])->getData();
 
         $colMemberDirectories->Each(function(EzcardMemberDirectoryModel $currDirectory) use ($objMemDirRecords) {
-            $colMemDirRecords = $objMemDirRecords->getWhere(["member_directory_id" => $currDirectory->member_directory_id])->Data;
+            $colMemDirRecords = $objMemDirRecords->getWhere(["member_directory_id" => $currDirectory->member_directory_id])->getData();
 
             $objMemberRecordValues = new EzcardMemberDirectoryRecordValues();
 
@@ -61,7 +61,7 @@ class InstallMemberDirectoryValuesFromOldRecords extends Command
                 $this->processPositionCustomValueMigration($objMemberRecordValues, 1014, $currMemDirRecord, "position_3", $currMemDirRecord->member_directory_record_id, $currMemDirRecord->member_directory_id);
                 $this->processPositionCustomValueMigration($objMemberRecordValues, 1015, $currMemDirRecord, "position_4", $currMemDirRecord->member_directory_record_id, $currMemDirRecord->member_directory_id);
 
-                $currMemDirRecord->migrated = ExcellTrue;
+                $currMemDirRecord->migrated = EXCELL_TRUE;
                 $objMemDirRecords->update($currMemDirRecord);
 
                 dump("Name: " . $currMemDirRecord->first_name . " " . $currMemDirRecord->last_name);

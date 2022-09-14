@@ -1,0 +1,25 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: development-circle-cluster-dev
+  labels:
+    app: excell-app
+spec:
+  selector:
+    matchLabels:
+      app: ci-dev-deploy
+      tier: backend
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: ci-deploy
+        tier: backend
+    spec:
+      containers:
+        - image: gcr.io/pristine-coda-320122/excell_app:v1
+          name: excell-app-dev
+          ports:
+            - containerPort: 3010
+              name: ci-deploy

@@ -14,7 +14,8 @@ abstract class VueBase
     protected $instanceName;
     protected $parentId;
     protected $parentLinkActions = [];
-    protected $vueType;
+    protected ?AppModel $entity;
+    protected string $vueType;
     /** @var $defaultEntityModel AppModel */
     protected $defaultEntityModel;
     /** @var $defaultComponentInstanceId string */
@@ -30,10 +31,10 @@ abstract class VueBase
     /** @var $components VueComponent[] */
     protected $components;
     protected $dynamicComponents = [];
-    protected $selfAsApp = false;
+    protected bool $selfAsApp = false;
     protected $helpers;
     protected $templateSource = "inline";
-    protected $endpointUriAbstract = "";
+    protected string $endpointUriAbstract = "";
     protected $defaultAction = "view";
     protected $template = "";
 
@@ -72,6 +73,11 @@ abstract class VueBase
     public function getRef() : string
     {
         return $this->getInstanceName() . "Ref";
+    }
+
+    public function getDynRef() : string
+    {
+        return "dyn" . $this->instanceName . "Component";
     }
 
     public function setDefaultAction($action) : self
@@ -179,6 +185,27 @@ abstract class VueBase
         return $this;
     }
 
+    public function getDefaultComponentProps() : array
+    {
+        return $this->defaultComponentProps ?? [];
+    }
+
+    public function getDefaultComponentPropsJsObject() : string
+    {
+        $props = $this->getDefaultComponentProps();
+        $componentDefault = [];
+        $collection = new ExcellCollection();
+
+        /** @var $currProp VueProps */
+        foreach($props as $currProp) {
+            $componentDefault[$currProp->getName()] = $currProp->getValue();
+        }
+
+        $collection->Add($componentDefault);
+
+        return $collection->ConvertToJavaScriptArray();
+    }
+
     public function setTemplateSource($source)
     {
         $this->templateSource = $source;
@@ -218,6 +245,45 @@ abstract class VueBase
                 if (is_a($currProp, VueProps::class))
                 {
                     $arProps[] = $currProp->getName() . ": this." . $currProp->getName();
+                }
+            }
+        }
+
+        if ($this->defaultComponentProps !== null && is_array($this->defaultComponentProps))
+        {
+            foreach($this->defaultComponentProps as $currProp)
+            {
+                /** @var $currProp VueProps */
+                if (is_a($currProp, VueProps::class))
+                {
+                    $strType = $currProp->getType();
+                    switch(strtolower($strType))
+                    {
+                        case "number":
+                            $arProps[] .= $currProp->getName() . ':'. $currProp->getValue() .'';
+                            break;
+                        case "string":
+                            $string = $currProp->getValue();
+                            if (substr($string, 0,1) === "'" || substr($string, 0,1) === '"') {
+                                $string = substr($string, 1, -1);
+                            }
+                            $arProps[] .= $currProp->getName() . ':"'. $string .'"';
+                            break;
+                        case "boolean":
+                            $boolean = $currProp->getValue();
+                            if ($boolean === "true" || $boolean === true) {
+                                $boolean = "true";
+                            }
+                            else
+                            {
+                                $boolean = "false";
+                            }
+                            $arProps[] .= $currProp->getName() . ':'. $boolean;
+                            break;
+                        default:
+                            $arProps[] .= $currProp->getName() . ':this.' . $currProp->getName();
+                            break;
+                    }
                 }
             }
         }
@@ -343,9 +409,13 @@ abstract class VueBase
         foreach($this->dynamicComponents as $currInstanceId => $currComponent)
         {
             $component = $currComponent["component"];
+            $componentNamespace = 'dyn' . str_replace("-", "", $component->getInstanceId());
+            $componentComponentNamespace = $componentNamespace . 'Component';
+
             /** @var VueComponent $component */
-            $dynamicComponentList[] = '                    if (this.dyn' . str_replace("-", "", $component->getInstanceId()) . ' !== null) {
-                this.dyn' . str_replace("-", "", $component->getInstanceId()).'Component = this.dyn'.str_replace("-", "", $component->getInstanceId()) . ';
+            $dynamicComponentList[] = '                    if (this.' . $componentNamespace . ' !== null) {
+                this.' . $componentNamespace . '.methods.isDynamicComponent = function() { return true; }
+                this.' . $componentComponentNamespace . ' = this.' . $componentNamespace . ';
                 }';
         }
 
@@ -533,26 +603,33 @@ abstract class VueBase
 
     protected function renderRegisteredDynamicComponent(VueComponent $vueComponent, $vueOptions = null) : string
     {
+        $componentCaret = "";
+        if ($vueComponent->getMountType() !== "dynamic") {
+            $componentCaret = '<component ref="dyn' . str_replace("-", "", $vueComponent->getInstanceId()) . 'Component" :is="dyn' . str_replace("-", "", $vueComponent->getInstanceId()) . 'Component" ' . $this->renderProps($vueComponent->getProps()) . ' ' . $this->renderVueOptions($vueOptions) . '></component>';
+        }
         return ($this->getDynamicComponentByInstanceId($vueComponent->getInstanceId()) !== null) ? ('
-            <div id="' . $vueComponent->getInstanceId() . '" class="vue-app-body-component" data-static-id="' . $vueComponent->getId() . '">
-            <component :is="dyn' . str_replace("-", "", $vueComponent->getInstanceId()) . 'Component" ' . $this->renderProps($vueComponent->getProps()) . ' ' . $this->renderVueOptions($vueOptions) . '></component></div>
+            <div id="' . $vueComponent->getInstanceId() . '" class="vue-app-body-component" data-static-id="' . $vueComponent->getId() . '" vue-ref="dyn' . str_replace("-", "", $vueComponent->getInstanceId()) . 'Component">
+            '.$componentCaret.'</div>
             ') : ("Component: " . $vueComponent->getTitle() . " could not be loaded.");
     }
 
     public function loadRegisteredComponents($baseBinding = "") : string
     {
-        $data = "const rootVc = typeof this.findRootVc === 'function' ? this.findRootVc(this) : null;";
+        $data = "const rootVc = typeof this.findRootVc === 'function' ? this.findRootVc(this) : null; let newComponentProps = [];";
         foreach ($this->components as $currInstanceId => $currComponent)
         {
+            $props = $currComponent->getDefaultComponentPropsJsObject();
+
             /** @var VueComponent $currComponent */
             $data .= "
+                newComponentProps = " . $props . ";
                 if (rootVc === null || rootVc.getComponentById('{$currComponent->getId()}') === null)
                 {
-                    this.vc.addComponent(" . $currComponent->getComponentObject() . ", '{$baseBinding}');
+                    this.vc.addComponent(" . $currComponent->getComponentObject() . ", newComponentProps, '{$baseBinding}');
                 }
                 else
                 {
-                    this.vc.addExistingComponent(rootVc.getComponentById('{$currComponent->getId()}'), '{$baseBinding}');
+                    this.vc.addExistingComponent(rootVc.getComponentById('{$currComponent->getId()}'), newComponentProps, '{$baseBinding}');
                 }
             
             " . PHP_EOL;

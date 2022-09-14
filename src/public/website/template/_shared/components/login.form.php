@@ -22,7 +22,7 @@
             <div class="login-field-row">
                 <div class="editor-label">
                 </div>
-                <div class="editor-field">
+                <div class="editor-field reset-password-row">
                     <a class="small-capitalized-text reset-password-dialog pointer">Forgot Your Password?</a>
                 </div>
             </div>
@@ -68,6 +68,9 @@
                         let data = {};
                         data.html = "You're authenticated! We're entering the portal...";
                         modal.AddFloatDialogMessage(data, "checkbox");
+
+                        console.log("objAccountAuthResult");
+                        console.log(objAccountAuthResult);
 
                         const excellAuth = new ExcellAuthentication();
                         excellAuth.registerAuth(objAccountAuthResult.data);

@@ -10,7 +10,7 @@ use Entities\Tickets\Models\JourneyModel;
 
 class Journeys extends AppEntity
 {
-    public $strEntityName       = "Tickets";
+    public string $strEntityName       = "Tickets";
     public $strDatabaseTable    = "journey";
     public $strDatabaseName     = "Crm";
     public $strMainModelName    = JourneyModel::class;
@@ -32,21 +32,21 @@ class Journeys extends AppEntity
     {
         $objWhereClause = "
             SELECT jny.*,
-            (SELECT COUNT(*) FROM `ezdigital_v2_crm`.`journey` jny2 WHERE jny2.parent_id = jny.journey_id) AS child_journey_count,
-            (SELECT GROUP_CONCAT(jny2.journey_id) FROM `ezdigital_v2_crm`.`journey` jny2 WHERE jny2.parent_id = jny.journey_id) AS child_journey_ids
-            FROM `ezdigital_v2_crm`.`journey` jny ";
+            (SELECT COUNT(*) FROM `excell_crm`.`journey` jny2 WHERE jny2.parent_id = jny.journey_id) AS child_journey_count,
+            (SELECT GROUP_CONCAT(jny2.journey_id) FROM `excell_crm`.`journey` jny2 WHERE jny2.parent_id = jny.journey_id) AS child_journey_ids
+            FROM `excell_crm`.`journey` jny ";
 
         $objWhereClause .= "WHERE jny.journey_id IN (".implode(",", $journeyIds).")";
 
         $journeyResult = Database::getSimple($objWhereClause, "journey_id");
-        $journeyResult->Data->HydrateModelData(JourneyModel::class, true);
+        $journeyResult->getData()->HydrateModelData(JourneyModel::class, true);
 
-        if ($journeyResult->Result->Count === 0)
+        if ($journeyResult->result->Count === 0)
         {
             return new ExcellCollection();
         }
 
-        $journeyResult->Data->Foreach(function($currJourney)
+        $journeyResult->getData()->Foreach(function($currJourney)
         {
             if ($currJourney->child_journey_count === 0) { return; }
 
@@ -55,6 +55,6 @@ class Journeys extends AppEntity
             return $currJourney;
         });
 
-        return $journeyResult->Data;
+        return $journeyResult->getData();
     }
 }

@@ -29,7 +29,7 @@ foreach($this->app->arCssLibraries->vendor as $strVenderName => $arVenderLibrari
         {
             foreach($strLibraryFileNames as $strLibraryFileName)
             {
-                $strJsFilePath = AppVendors . $strVenderName . "/" . $strLibraryPath . "/min/" . $strLibraryFileName;
+                $strJsFilePath = APP_VENDORS . $strVenderName . "/" . $strLibraryPath . "/min/" . $strLibraryFileName;
 
                 if (is_file($strJsFilePath))
                 {
@@ -47,7 +47,7 @@ foreach($this->app->arCssLibraries->vendor as $strVenderName => $arVenderLibrari
                 !empty($arActiveCssLibraries["vendor"][$strVenderName][$arLibraryPaths[0]]) &&
                 $arActiveCssLibraries["vendor"][$strVenderName][$arLibraryPaths[0]] === true)
                 {
-                    $strJsFilePath = AppVendors . $strVenderName . "/" . $strLibraryPath . "/min/" . $strLibraryFileName;
+                    $strJsFilePath = APP_VENDORS . $strVenderName . "/" . $strLibraryPath . "/min/" . $strLibraryFileName;
 
                     if (is_file($strJsFilePath))
                     {
@@ -75,7 +75,7 @@ foreach($objPageVenders as $arVenderLibraryName => $arVenderLibraryCollection)
             {
                 foreach($strLibraryFileNames as $strLibraryFileName)
                 {
-                    $strCssFilePath = AppVendors . $arVenderLibraryName . "/" . $strLibraryFilePath . "/min/" . $strLibraryFileName;
+                    $strCssFilePath = APP_VENDORS . $arVenderLibraryName . "/" . $strLibraryFilePath . "/min/" . $strLibraryFileName;
                     if (is_file($strCssFilePath))
                     {
                         echo "/* ".$arVenderLibraryName . " " .$strLibraryPath . " " . $strLibraryFileName . " */" . PHP_EOL . PHP_EOL;

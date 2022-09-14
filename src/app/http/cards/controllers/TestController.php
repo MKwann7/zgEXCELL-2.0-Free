@@ -1,9 +1,9 @@
 <?php
 
-namespace Entities\Cards\Controllers;
+namespace Http\Cards\Controllers;
 
 use App\Utilities\Excell\ExcellHttpModel;
-use Entities\Cards\Classes\Base\CardController;
+use Http\Cards\Controllers\Base\CardController;
 
 class TestController extends CardController
 {

@@ -15,7 +15,7 @@ use App\Website\Website;
 class AppEntity extends ExcellIterator
 {
     public $AppEntity;
-    public $strEntityName;
+    public string $strEntityName;
     public $strAliasName;
     public $strDatabaseTable;
     public $strMainModelName;
@@ -56,12 +56,12 @@ class AppEntity extends ExcellIterator
 
     protected function setCompanyId() : int
     {
-        if ($this->app->objCustomPlatform === null)
+        if ($this->app->getCustomPlatform() === null)
         {
             return 0;
         }
 
-        return $this->app->objCustomPlatform->getCompanyId();
+        return $this->app->getCustomPlatform()->getCompanyId();
     }
 
     public static function getAlias()
@@ -93,9 +93,9 @@ class AppEntity extends ExcellIterator
         {
             $this->lstAppTransaction = new ExcellTransaction();
 
-            $this->lstAppTransaction->Result->Success = false;
-            $this->lstAppTransaction->Result->Count = 0;
-            $this->lstAppTransaction->Result->Message = "This module isn't setup correctly. Error #6934582";
+            $this->lstAppTransaction->result->Success = false;
+            $this->lstAppTransaction->result->Count = 0;
+            $this->lstAppTransaction->result->Message = "This module isn't setup correctly. Error #6934582";
 
             return $this->lstAppTransaction;
         }
@@ -104,9 +104,9 @@ class AppEntity extends ExcellIterator
         {
             $this->lstAppTransaction = new ExcellTransaction();
 
-            $this->lstAppTransaction->Result->Success = false;
-            $this->lstAppTransaction->Result->Count = 0;
-            $this->lstAppTransaction->Result->Message = "You must pass in an id to retrieve a " . $this->strMainModelName . " row.";
+            $this->lstAppTransaction->result->Success = false;
+            $this->lstAppTransaction->result->Count = 0;
+            $this->lstAppTransaction->result->Message = "You must pass in an id to retrieve a " . $this->strMainModelName . " row.";
 
             return $this->lstAppTransaction;
         }
@@ -118,10 +118,10 @@ class AppEntity extends ExcellIterator
         {
             $this->lstAppTransaction = new ExcellTransaction();
 
-            $this->lstAppTransaction->Result->Success = false;
-            $this->lstAppTransaction->Result->Count = 0;
-            $this->lstAppTransaction->Result->Message = "The value passed in for " . $this->strMainModelPrimary ." did not pass validation: " . $intEntityRowId;
-            $this->lstAppTransaction->Result->Errors = $objEntityModel->Errors;
+            $this->lstAppTransaction->result->Success = false;
+            $this->lstAppTransaction->result->Count = 0;
+            $this->lstAppTransaction->result->Message = "The value passed in for " . $this->strMainModelPrimary ." did not pass validation: " . $intEntityRowId;
+            $this->lstAppTransaction->result->Errors = $objEntityModel->Errors;
 
             return $this->lstAppTransaction;
         }
@@ -135,9 +135,9 @@ class AppEntity extends ExcellIterator
         {
             $this->lstAppTransaction = new ExcellTransaction();
 
-            $this->lstAppTransaction->Result->Success = false;
-            $this->lstAppTransaction->Result->Count = 0;
-            $this->lstAppTransaction->Result->Message = "This module isn't setup correctly. Error #6934582";
+            $this->lstAppTransaction->result->Success = false;
+            $this->lstAppTransaction->result->Count = 0;
+            $this->lstAppTransaction->result->Message = "This module isn't setup correctly. Error #6934582";
 
             return $this->lstAppTransaction;
         }
@@ -146,9 +146,9 @@ class AppEntity extends ExcellIterator
         {
             $this->lstAppTransaction = new ExcellTransaction();
 
-            $this->lstAppTransaction->Result->Success = false;
-            $this->lstAppTransaction->Result->Count = 0;
-            $this->lstAppTransaction->Result->Message = "You must pass in an id to retrieve a " . $this->strMainModelName . " row.";
+            $this->lstAppTransaction->result->Success = false;
+            $this->lstAppTransaction->result->Count = 0;
+            $this->lstAppTransaction->result->Message = "You must pass in an id to retrieve a " . $this->strMainModelName . " row.";
 
             return $this->lstAppTransaction;
         }
@@ -160,10 +160,10 @@ class AppEntity extends ExcellIterator
         {
             $this->lstAppTransaction = new ExcellTransaction();
 
-            $this->lstAppTransaction->Result->Success = false;
-            $this->lstAppTransaction->Result->Count = 0;
-            $this->lstAppTransaction->Result->Message = "The value passed in for the SysRowId did not pass validation: " . $sysRowId;
-            $this->lstAppTransaction->Result->Errors = $objEntityModel->Errors;
+            $this->lstAppTransaction->result->Success = false;
+            $this->lstAppTransaction->result->Count = 0;
+            $this->lstAppTransaction->result->Message = "The value passed in for the SysRowId did not pass validation: " . $sysRowId;
+            $this->lstAppTransaction->result->Errors = $objEntityModel->Errors;
 
             return $this->lstAppTransaction;
         }
@@ -258,9 +258,9 @@ class AppEntity extends ExcellIterator
 
         if ( empty($this->strEntityName) || empty($this->strMainModelName) )
         {
-            $objTransaction->Result->Success = false;
-            $objTransaction->Result->Count = 0;
-            $objTransaction->Result->Message = "This model is not setup correctly.";
+            $objTransaction->result->Success = false;
+            $objTransaction->result->Count = 0;
+            $objTransaction->result->Message = "This model is not setup correctly.";
 
             return $objTransaction;
         }
@@ -283,22 +283,22 @@ class AppEntity extends ExcellIterator
         $this->init();
         $objEntityResult = $this->Db->getComplex($strGetEntityByWhereClauseQuery,null,null, $this->strMainModelPrimary);
 
-        if ( $objEntityResult->Result->Success === false || $objEntityResult->Result->Count === 0 )
+        if ( $objEntityResult->result->Success === false || $objEntityResult->result->Count === 0 )
         {
             return $objEntityResult;
         }
 
-        foreach($objEntityResult->Data as $currEntityIndex => $currEntityResult)
+        foreach($objEntityResult->data as $currEntityIndex => $currEntityResult)
         {
             $objValidatedModel = $this->buildModel($currEntityResult);
 
-            $objEntityResult->Data->{$currEntityIndex} = $objValidatedModel->Data;
+            $objEntityResult->getData()->{$currEntityIndex} = $objValidatedModel->getData();
         }
 
-        $objTransaction->Result->Success = true;
-        $objTransaction->Result->Count = $objEntityResult->Result->Count;
-        $objTransaction->Result->Message = "This query returned " . $objEntityResult->Result->Count . " Results.";
-        $objTransaction->Data = $objEntityResult->Data;
+        $objTransaction->result->Success = true;
+        $objTransaction->result->Count = $objEntityResult->result->Count;
+        $objTransaction->result->Message = "This query returned " . $objEntityResult->result->Count . " Results.";
+        $objTransaction->data = $objEntityResult->getData();
 
         $this->noFks();
 
@@ -400,9 +400,9 @@ class AppEntity extends ExcellIterator
 
         if ( empty($this->strEntityName) || empty($this->strMainModelName) )
         {
-            $objTransaction->Result->Success = false;
-            $objTransaction->Result->Count = 0;
-            $objTransaction->Result->Message = "This model is not setup correctly.";
+            $objTransaction->result->Success = false;
+            $objTransaction->result->Count = 0;
+            $objTransaction->result->Message = "This model is not setup correctly.";
 
             return $objTransaction;
         }
@@ -411,22 +411,22 @@ class AppEntity extends ExcellIterator
 
         $objWhereClauseRequest = self::assembleWhereClauseArray($objAllArgs);
 
-        if ( $objWhereClauseRequest->Result->Success === false)
+        if ( $objWhereClauseRequest->result->Success === false)
         {
             return $objWhereClauseRequest;
         }
 
-        $objWhereClause = $this->processWhereClauseRequest($objWhereClauseRequest->Data["WhereClause"]);
+        $objWhereClause = $this->processWhereClauseRequest($objWhereClauseRequest->data["WhereClause"]);
 
-        $objWhereSortByFilter = $objWhereClauseRequest->Data["SortBy"];
-        $objWhereClauseLimit = $objWhereClauseRequest->Data["Limit"];
+        $objWhereSortByFilter = $objWhereClauseRequest->data["SortBy"];
+        $objWhereClauseLimit = $objWhereClauseRequest->data["Limit"];
 
-        if ($objWhereClause->Result->Success === false)
+        if ($objWhereClause->result->Success === false)
         {
             return $objWhereClause;
         }
 
-        $strWhereClause = !empty($objWhereClause->Data) ? " WHERE " . $objWhereClause->Data : "";
+        $strWhereClause = !empty($objWhereClause->getData()->first()) ? " WHERE " . $objWhereClause->getData()->first() : "";
 
         $strSelectClause = "COUNT(*)";
 
@@ -449,7 +449,7 @@ class AppEntity extends ExcellIterator
         $this->init();
         $objEntityResult = $this->Db->getComplex($strGetEntityByWhereClauseQuery,null,null, $this->strMainModelPrimary);
 
-        if ( $objEntityResult->Result->Success === false || $objEntityResult->Result->Count === 0 )
+        if ( $objEntityResult->result->Success === false || $objEntityResult->result->Count === 0 )
         {
             return $objEntityResult;
         }
@@ -457,12 +457,12 @@ class AppEntity extends ExcellIterator
         if ($this->selecteCountTrue === true)
         {
             $count = new \stdClass();
-            $count->count = $objEntityResult->Data->First()->{"COUNT(*)"};
-            $objTransaction->Result->Success = true;
-            $objTransaction->Result->Count = $count->count;
-            $objTransaction->Result->Message = "This query returned " . $count->count . " Results.";
-            $objTransaction->Result->Query = $strGetEntityByWhereClauseQuery;
-            $objTransaction->Data = $count;
+            $count->count = $objEntityResult->getData()->first()->{"COUNT(*)"};
+            $objTransaction->result->Success = true;
+            $objTransaction->result->Count = $count->count;
+            $objTransaction->result->Message = "This query returned " . $count->count . " Results.";
+            $objTransaction->result->Query = $strGetEntityByWhereClauseQuery;
+            $objTransaction->data = $count;
 
             $this->noFks();
             $this->selecteCountTrue = false;
@@ -470,11 +470,10 @@ class AppEntity extends ExcellIterator
             return $objTransaction;
         }
 
-        foreach($objEntityResult->Data as $currEntityIndex => $currEntityResult)
+        foreach($objEntityResult->getData() as $currEntityIndex => $currEntityResult)
         {
-            $objValidatedModel = $this->buildModel($currEntityResult);
-            $objValidatedModel->Data->ConvertDataTypes();
-            $objEntityResult->Data->{$currEntityIndex} = $objValidatedModel->Data;
+            $colValidatedModel = $this->buildModel($currEntityResult)->getData()->first();
+            $colValidatedModel->ConvertDataTypes();
 
             if (!empty($strLeftJoin))
             {
@@ -490,19 +489,23 @@ class AppEntity extends ExcellIterator
                             continue;
                         }
 
-                        $objJoinedValidatedModel = $objModule->buildModel($currEntityResult);
+                        $colJoinedValidatedModel = $objModule->buildModel($currEntityResult)->getData();
 
-                        $objEntityResult->Data->{$currEntityIndex}->AddUnvalidatedValue( $objModule->strMainModelName, $objJoinedValidatedModel->Data);
+                        $colValidatedModel->AddUnvalidatedValue($objModule->strMainModelName, $colJoinedValidatedModel);
                     }
                 }
             }
+
+            $collection = $objEntityResult->getData();
+            $collection->{$currEntityIndex} = $colValidatedModel;
+            $objEntityResult->setData($collection);
         }
 
-        $objTransaction->Result->Success = true;
-        $objTransaction->Result->Count = $objEntityResult->Result->Count;
-        $objTransaction->Result->Message = "This query returned " . $objEntityResult->Result->Count . " Results.";
-        $objTransaction->Result->Query = $strGetEntityByWhereClauseQuery;
-        $objTransaction->Data = $objEntityResult->Data;
+        $objTransaction->result->Success = true;
+        $objTransaction->result->Count = $objEntityResult->result->Count;
+        $objTransaction->result->Message = "This query returned " . $objEntityResult->result->Count . " Results.";
+        $objTransaction->result->Query = $strGetEntityByWhereClauseQuery;
+        $objTransaction->data = $objEntityResult->getData();
 
         $this->noFks();
 
@@ -515,9 +518,9 @@ class AppEntity extends ExcellIterator
 
         if ( empty($this->strEntityName) || empty($this->strMainModelName) )
         {
-            $objTransaction->Result->Success = false;
-            $objTransaction->Result->Count = 0;
-            $objTransaction->Result->Message = "This model is not setup correctly.";
+            $objTransaction->result->Success = false;
+            $objTransaction->result->Count = 0;
+            $objTransaction->result->Message = "This model is not setup correctly.";
 
             return $objTransaction;
         }
@@ -526,22 +529,22 @@ class AppEntity extends ExcellIterator
 
         if(empty($objAllArgs[0]) || !is_array($objAllArgs[0]))
         {
-            $objTransaction->Result->Success = false;
-            $objTransaction->Result->Count = 0;
-            $objTransaction->Result->Message = "No request array was provided to parse.";
+            $objTransaction->result->Success = false;
+            $objTransaction->result->Count = 0;
+            $objTransaction->result->Message = "No request array was provided to parse.";
 
             return $objTransaction;
         }
 
         $objWhereClauseRequest = self::assembleWhereClauseArray($objAllArgs);
 
-        if ( $objWhereClauseRequest->Result->Success === false)
+        if ( $objWhereClauseRequest->result->Success === false)
         {
             return $objWhereClauseRequest;
         }
 
-        $objWhereSortByFilter = $objWhereClauseRequest->Data["SortBy"];
-        $objWhereClauseLimit = $objWhereClauseRequest->Data["Limit"];
+        $objWhereSortByFilter = $objWhereClauseRequest->data["SortBy"];
+        $objWhereClauseLimit = $objWhereClauseRequest->data["Limit"];
 
         /** @var AppModel $objNewModel */
         $objNewModel = new $this->strMainModelName();
@@ -569,25 +572,25 @@ class AppEntity extends ExcellIterator
         $this->init();
         $objEntityResult = $this->Db->getComplex($strGetEntityByWhereClauseQuery,null,null, $this->strMainModelPrimary);
 
-        if ( $objEntityResult->Result->Success === false || $objEntityResult->Result->Count === 0 )
+        if ( $objEntityResult->result->Success === false || $objEntityResult->result->Count === 0 )
         {
             return $objEntityResult;
         }
 
-        foreach($objEntityResult->Data as $currEntityIndex => $currEntityResult)
+        foreach($objEntityResult->data as $currEntityIndex => $currEntityResult)
         {
             $objValidatedModel = $this->buildModel($currEntityResult);
 
-            $objValidatedModel->Data->ConvertDataTypes();
+            $objValidatedModel->getData()->ConvertDataTypes();
 
-            $objEntityResult->Data->{$currEntityIndex} = $objValidatedModel->Data;
+            $objEntityResult->getData()->{$currEntityIndex} = $objValidatedModel->getData();
         }
 
-        $objTransaction->Result->Success = true;
-        $objTransaction->Result->Count = $objEntityResult->Result->Count;
-        $objTransaction->Result->Message = "This query returned " . $objEntityResult->Result->Count . " Results.";
-        $objTransaction->Result->Query = $strGetEntityByWhereClauseQuery;
-        $objTransaction->Data = $objEntityResult->Data;
+        $objTransaction->result->Success = true;
+        $objTransaction->result->Count = $objEntityResult->result->Count;
+        $objTransaction->result->Message = "This query returned " . $objEntityResult->result->Count . " Results.";
+        $objTransaction->result->Query = $strGetEntityByWhereClauseQuery;
+        $objTransaction->data = $objEntityResult->getData();
 
         $this->noFks();
 
@@ -600,9 +603,9 @@ class AppEntity extends ExcellIterator
 
         if (!empty($values) && !is_array($values))
         {
-            $objTransaction->Result->Success = false;
-            $objTransaction->Result->Count = 0;
-            $objTransaction->Result->Message = "You must include an array as a second parameter for the getWhereIn method to work.";
+            $objTransaction->result->Success = false;
+            $objTransaction->result->Count = 0;
+            $objTransaction->result->Message = "You must include an array as a second parameter for the getWhereIn method to work.";
 
             return $objTransaction;
         }
@@ -822,15 +825,15 @@ class AppEntity extends ExcellIterator
             }
             else
             {
-                $objReturnTransaction->Result->Success = false;
-                $objReturnTransaction->Result->Count = 0;
-                $objReturnTransaction->Result->Message = "This where clause request was not is not setup correctly: " . json_encode($objAllArgs);
+                $objReturnTransaction->result->Success = false;
+                $objReturnTransaction->result->Count = 0;
+                $objReturnTransaction->result->Message = "This where clause request was not is not setup correctly: " . json_encode($objAllArgs);
             }
         }
 
-        $objReturnTransaction->Result->Success = true;
-        $objReturnTransaction->Result->Count = 1;
-        $objReturnTransaction->Data = array("WhereClause" => $objWhereClauseRequest, "SortBy" => $objWhereSortByFilter, "Limit" => $objWhereClauseLimit);
+        $objReturnTransaction->result->Success = true;
+        $objReturnTransaction->result->Count = 1;
+        $objReturnTransaction->data = array("WhereClause" => $objWhereClauseRequest, "SortBy" => $objWhereSortByFilter, "Limit" => $objWhereClauseLimit);
 
         return $objReturnTransaction;
     }
@@ -845,23 +848,23 @@ class AppEntity extends ExcellIterator
 
         foreach($objModel as $currFieldName => $currFieldValue)
         {
-            if (!empty($currFieldValue) && $currFieldName !== "created_on" && $currFieldName !== "sys_row_id" && $currFieldName != $this->strMainModelPrimary && strpos($currFieldName, "__value") === false)
+            if ((!empty($currFieldValue) || $currFieldValue === 0) && $currFieldName !== "created_on" && $currFieldName !== "sys_row_id" && $currFieldName != $this->strMainModelPrimary && strpos($currFieldName, "__value") === false)
             {
                 $strUpdateFieldValue = "`" . $currFieldName . "` = ";
 
-                if ( $currFieldValue === ExcellNull)
+                if ( $currFieldValue === EXCELL_NULL)
                 {
                     $strUpdateFieldValue .= 'null';
                 }
-                elseif ( $currFieldValue === ExcellTrue)
+                elseif ( $currFieldValue === EXCELL_TRUE)
                 {
                     $strUpdateFieldValue .= 'TRUE';
                 }
-                elseif ( $currFieldValue === ExcellFalse)
+                elseif ( $currFieldValue === EXCELL_FALSE)
                 {
                     $strUpdateFieldValue .= 'FALSE';
                 }
-                elseif ( $currFieldValue === ExcellEmptyString)
+                elseif ( $currFieldValue === EXCELL_EMPTY_STRING)
                 {
                     $strUpdateFieldValue .= "''";
                 }
@@ -899,9 +902,9 @@ class AppEntity extends ExcellIterator
                         }
 
                         $objValueTransaction = new ExcellTransaction();
-                        $objValueTransaction->Data = $currFieldValue;
+                        $objValueTransaction->data = $currFieldValue;
 
-                        $currFieldValue = json_encode(Database::base64Encode($objValueTransaction)->Data);
+                        $currFieldValue = json_encode(Database::base64Encode($objValueTransaction)->data);
                     }
 
                     if (is_array($currFieldValue))
@@ -916,10 +919,10 @@ class AppEntity extends ExcellIterator
             }
         }
 
-        $objReturnTransaction->Data->{0} = implode(", ", $arUpdateFields);
+        $objReturnTransaction->getData()->{0} = implode(", ", $arUpdateFields);
 
-        $objReturnTransaction->Result->Success = true;
-        $objReturnTransaction->Result->Count = 1;
+        $objReturnTransaction->result->Success = true;
+        $objReturnTransaction->result->Count = 1;
 
         return $objReturnTransaction;
     }
@@ -942,15 +945,15 @@ class AppEntity extends ExcellIterator
             {
                 $arInsertionValues[] = 'null';
             }
-            elseif ( $currFieldValue === ExcellTrue)
+            elseif ( $currFieldValue === EXCELL_TRUE)
             {
                 $arInsertionValues[] = 'TRUE';
             }
-            elseif ( $currFieldValue === ExcellFalse)
+            elseif ( $currFieldValue === EXCELL_FALSE)
             {
                 $arInsertionValues[] = 'FALSE';
             }
-            elseif ( $currFieldValue === ExcellEmptyString)
+            elseif ( $currFieldValue === EXCELL_EMPTY_STRING)
             {
                 $arInsertionValues[] = "''";
             }
@@ -984,20 +987,28 @@ class AppEntity extends ExcellIterator
                     }
 
                     $objValueTransaction = new ExcellTransaction();
-                    $objValueTransaction->Data = $currFieldValue;
+                    $objValueTransaction->data = $currFieldValue;
 
-                    $currFieldValue = json_encode(Database::base64Encode($objValueTransaction)->Data);
+                    $currFieldValue = json_encode(Database::base64Encode($objValueTransaction)->data);
                 }
 
                 $arInsertionValues[] = "'" . $currFieldValue . "'";
             }
         }
 
-        $objReturnTransaction->Data->{0} = implode(", ", $arInsertionFields);
-        $objReturnTransaction->Data->{1} = implode(", ", $arInsertionValues);
+        $collection = new ExcellCollection();
 
-        $objReturnTransaction->Result->Success = true;
-        $objReturnTransaction->Result->Count = 2;
+        $line1 = new \stdClass();
+        $line1->string = implode(", ", $arInsertionFields);
+        $line2 = new \stdClass();
+        $line2->string = implode(", ", $arInsertionValues);
+
+        $collection->Add(0, $line1);
+        $collection->Add(1, $line2);
+
+        $objReturnTransaction->setData($collection);
+        $objReturnTransaction->result->Success = true;
+        $objReturnTransaction->result->Count = 2;
 
         return $objReturnTransaction;
     }
@@ -1014,31 +1025,31 @@ class AppEntity extends ExcellIterator
         {
             $this->lstAppTransaction = new ExcellTransaction();
 
-            $this->lstAppTransaction->Result->Success = false;
-            $this->lstAppTransaction->Result->Count = 0;
-            $this->lstAppTransaction->Result->Message = "You must pass in a data model.";
+            $this->lstAppTransaction->result->Success = false;
+            $this->lstAppTransaction->result->Count = 0;
+            $this->lstAppTransaction->result->Message = "You must pass in a data model.";
 
             return $this->lstAppTransaction;
         }
 
         $objEntityModelResult = $this->buildModel($objEntityData);
 
-        if ( $objEntityModelResult->Result->Success === false)
+        if ( $objEntityModelResult->result->Success === false)
         {
             return $objEntityModelResult;
         }
 
-        $objEntityInsertionResult = $this->insertModelData($objEntityModelResult->Data);
+        $objEntityInsertionResult = $this->insertModelData($objEntityModelResult->data->first());
 
-        if ($objEntityInsertionResult->Result->Success === false )
+        if ($objEntityInsertionResult->result->Success === false )
         {
             return $objEntityInsertionResult;
         }
 
         $this->noFks();
 
-        $newEntityResult = $this->getById($objEntityInsertionResult->Data->new_id);
-        $newEntityResult->Result->Query = $objEntityInsertionResult->Result->Query;
+        $newEntityResult = $this->getById($objEntityInsertionResult->getExtraData("new_id"));
+        $newEntityResult->result->Query = $objEntityInsertionResult->getResult()->Query;
 
         return $newEntityResult;
     }
@@ -1050,9 +1061,9 @@ class AppEntity extends ExcellIterator
         if ( empty($objEntityData->{$this->strMainModelPrimary}) )
         {
 
-            $objReturnTransaction->Result->Success = false;
-            $objReturnTransaction->Result->Count = 0;
-            $objReturnTransaction->Result->Message = "You must supply a valid id for " . $this->strMainModelPrimary . ": " . $objEntityData->{$this->strMainModelPrimary};
+            $objReturnTransaction->result->Success = false;
+            $objReturnTransaction->result->Count = 0;
+            $objReturnTransaction->result->Message = "You must supply a valid id for " . $this->strMainModelPrimary . ": " . $objEntityData->{$this->strMainModelPrimary};
 
             return $objReturnTransaction;
         }
@@ -1064,31 +1075,31 @@ class AppEntity extends ExcellIterator
 
         if ( empty($objEntityData->{$this->strMainModelPrimary}) || !$objEntityData->ValidateField($this->strMainModelPrimary, $objPrimaryKeyValue))
         {
-            $objReturnTransaction->Result->Success = false;
-            $objReturnTransaction->Result->Count = 0;
-            $objReturnTransaction->Result->Message = "You must supply a valid id for " . $this->strMainModelPrimary . ": " . $objEntityData->{$this->strMainModelPrimary};
+            $objReturnTransaction->result->Success = false;
+            $objReturnTransaction->result->Count = 0;
+            $objReturnTransaction->result->Message = "You must supply a valid id for " . $this->strMainModelPrimary . ": " . $objEntityData->{$this->strMainModelPrimary};
 
             return $objReturnTransaction;
         }
 
         $objEntityModelResult = $this->buildModel($objEntityData);
 
-        if ( $objEntityModelResult->Result->Success === false)
+        if ( $objEntityModelResult->result->Success === false)
         {
             return $objEntityModelResult;
         }
 
-        $objEntitUpdateResult = $this->modifyModelData($objEntityModelResult->Data);
+        $objEntityUpdateResult = $this->modifyModelData($objEntityModelResult->getData()->first());
 
         //logText("UpdateInsert.Process.log",json_encode($objEntitUpdateResult));
 
-        if ($objEntitUpdateResult->Result->Success === false )
+        if ($objEntityUpdateResult->result->Success === false )
         {
-            return $objEntitUpdateResult;
+            return $objEntityUpdateResult;
         }
 
-        $objNewEntityData = $this->getById($objEntitUpdateResult->Data->current_id);
-        $objNewEntityData->Result->Query = $objEntitUpdateResult->Result->Query;
+        $objNewEntityData = $this->getById($objEntityUpdateResult->getExtraData("current_id"));
+        $objNewEntityData->result->Query = $objEntityUpdateResult->result->Query;
 
         $this->noFks();
 
@@ -1101,10 +1112,10 @@ class AppEntity extends ExcellIterator
 
         if (!isInteger($intEntityId))
         {
-            $objDeletionResult->Result->Success = false;
-            $objDeletionResult->Result->Count = 0;
-            $objDeletionResult->Result->Message = "The " . $this->strEntityName . " id passed into this deletion method must be an integer.";
-            $objDeletionResult->Result->Trace = trace();
+            $objDeletionResult->result->Success = false;
+            $objDeletionResult->result->Count = 0;
+            $objDeletionResult->result->Message = "The " . $this->strEntityName . " id passed into this deletion method must be an integer.";
+            $objDeletionResult->result->Trace = trace();
             return $objDeletionResult;
         }
 
@@ -1133,9 +1144,9 @@ class AppEntity extends ExcellIterator
 
         $objDeletionCompletionResult = new ExcellTransaction();
 
-        $objDeletionCompletionResult->Result->Success = true;
-        $objDeletionCompletionResult->Result->Count = $intDeletionCount;
-        $objDeletionCompletionResult->Result->Message = $intDeletionCount . " rows were successfully deleted.";
+        $objDeletionCompletionResult->result->Success = true;
+        $objDeletionCompletionResult->result->Count = $intDeletionCount;
+        $objDeletionCompletionResult->result->Message = $intDeletionCount . " rows were successfully deleted.";
 
         return $objDeletionCompletionResult;
     }
@@ -1169,13 +1180,13 @@ class AppEntity extends ExcellIterator
 
         $strInsertionStringsResult = $this->assembleInsertionStrings($objModel);
 
-        if ($strInsertionStringsResult->Result->Success === false)
+        if ($strInsertionStringsResult->result->Success === false)
         {
             return $strInsertionStringsResult;
         }
 
-        $strInsertionFields = "( " . $strInsertionStringsResult->Data->GetByIndex(0) . " )";
-        $strInsertionValues = "( " . $strInsertionStringsResult->Data->GetByIndex(1) . " )";
+        $strInsertionFields = "( " . $strInsertionStringsResult->getData()->GetByIndex(0)->string . " )";
+        $strInsertionValues = "( " . $strInsertionStringsResult->getData()->GetByIndex(1)->string . " )";
 
         $strInsertEntityQuery = "INSERT INTO `" . $this->strDatabaseTable . "` " . $strInsertionFields . " VALUES " . $strInsertionValues . ";";
 
@@ -1183,9 +1194,9 @@ class AppEntity extends ExcellIterator
 
         $objInsertTransaction = $this->Db->update($strInsertEntityQuery);
 
-        if ( $objInsertTransaction->Result->Success === true)
+        if ( $objInsertTransaction->result->Success === true)
         {
-            $objInsertTransaction->Data->new_id = $intNextEntityId;
+            $objInsertTransaction->setExtraData("new_id", $intNextEntityId);
         }
 
         return $objInsertTransaction;
@@ -1203,7 +1214,7 @@ class AppEntity extends ExcellIterator
         $intUpdateModelPrimary = $objModel->{$this->strMainModelPrimary};
         $strPrimaryKeyType = $objModel->getFieldType($this->strMainModelPrimary);
 
-        if ($strInsertionStringsResult->Result->Success === false)
+        if ($strInsertionStringsResult->result->Success === false)
         {
             return $strInsertionStringsResult;
         }
@@ -1215,17 +1226,17 @@ class AppEntity extends ExcellIterator
             $intUpdateModelPrimaryWhereId = "'{$intUpdateModelPrimary}'";
         }
 
-        $strUpdateFields = $strInsertionStringsResult->Data->GetByIndex(0);
+        $strUpdateFields = $strInsertionStringsResult->getData()->GetByIndex(0);
 
         $strInsertEntityQuery = "UPDATE `" . $this->strDatabaseTable . "` SET " . $strUpdateFields . " WHERE `" . $this->strMainModelPrimary . "` = " . $intUpdateModelPrimaryWhereId . " LIMIT 1;";
 
         $this->init();
         $objInsertTransaction = $this->Db->update($strInsertEntityQuery);
-        $objInsertTransaction->Result->Query = $strInsertEntityQuery;
+        $objInsertTransaction->result->Query = $strInsertEntityQuery;
 
-        if ( $objInsertTransaction->Result->Success === true)
+        if ( $objInsertTransaction->result->Success === true)
         {
-            $objInsertTransaction->Data->current_id = $intUpdateModelPrimary;
+            $objInsertTransaction->setExtraData("current_id", $intUpdateModelPrimary);
         }
 
         return $objInsertTransaction;
@@ -1237,10 +1248,10 @@ class AppEntity extends ExcellIterator
         {
             $objValidationResult = new ExcellTransaction();
 
-            $objValidationResult->Result->Success = true;
-            $objValidationResult->Result->Count = 1;
-            $objValidationResult->Result->Message = "The whereclause was parsed successfully.";
-            $objValidationResult->Data = "";
+            $objValidationResult->result->Success = true;
+            $objValidationResult->result->Count = 1;
+            $objValidationResult->result->Message = "The whereclause was parsed successfully.";
+            $objValidationResult->setData(new ExcellCollection());
 
             return $objValidationResult;
         }
@@ -1249,10 +1260,10 @@ class AppEntity extends ExcellIterator
         {
             $objFailureTransaction = new ExcellTransaction();
 
-            $objFailureTransaction->Result->Success = false;
-            $objFailureTransaction->Result->Count = 0;
-            $objFailureTransaction->Result->Message = "The where clause submitted to this process must be an array.";
-            $objFailureTransaction->Result->Trace  = trace();
+            $objFailureTransaction->result->Success = false;
+            $objFailureTransaction->result->Count = 0;
+            $objFailureTransaction->result->Message = "The where clause submitted to this process must be an array.";
+            $objFailureTransaction->result->Trace  = trace();
 
             return $objFailureTransaction;
         }
@@ -1263,18 +1274,18 @@ class AppEntity extends ExcellIterator
         {
             $objValidationResult = $this->processWhereClauseConditions($currWhereClause);
 
-            if ($objValidationResult->Result->Success === false)
+            if ($objValidationResult->result->Success === false)
             {
                 continue;
             }
 
-            $objWhereClause .= $objValidationResult->Data;
+            $objWhereClause .= $objValidationResult->getData()->first();
 
             $this->trimOffErrantlyAppendedAnds($objWhereClause);
 
-            if ( $objValidationResult->Result->Depth > 0 )
+            if ( $objValidationResult->result->Depth > 0 )
             {
-                for($intDepthIndex = 0; $intDepthIndex <= $objValidationResult->Result->Depth; $intDepthIndex++)
+                for($intDepthIndex = 0; $intDepthIndex <= $objValidationResult->result->Depth; $intDepthIndex++)
                 {
                     $objWhereClause .= ")";
                 }
@@ -1285,10 +1296,14 @@ class AppEntity extends ExcellIterator
 
         $objValidationResult = new ExcellTransaction();
 
-        $objValidationResult->Result->Success = true;
-        $objValidationResult->Result->Count = 1;
-        $objValidationResult->Result->Message = "The where clause was parsed successfully.";
-        $objValidationResult->Data = $objWhereClause;
+        $objValidationResult->result->Success = true;
+        $objValidationResult->result->Count = 1;
+        $objValidationResult->result->Message = "The where clause was parsed successfully.";
+
+        $whereClause = new ExcellCollection();
+        $whereClause->Add("whereClause", $objWhereClause);
+
+        $objValidationResult->setData($whereClause);
 
         return $objValidationResult;
     }
@@ -1303,13 +1318,27 @@ class AppEntity extends ExcellIterator
 
     public function processWhereClauseConditions($currWhereClause, $intDepthIndex = 0) : ExcellTransaction
     {
-        $objWhereClause = "";
-        $lstOperands = array("=","!=",">","<",">=","<=","LIKE","CONTAINS","IN","NOT IN","IS","IS NOT");
+        $whereClause = $this->getWhereClauseFromRequest($currWhereClause, $intDepthIndex);
 
-        $objValidationResult = new ExcellTransaction();
-        $objValidationResult->Result->Depth = $intDepthIndex;
-        $objValidationResult->Result->Success = true;
-        $objValidationResult->Result->Count = 1;
+        $objWhereClause = new ExcellCollection();
+        $objWhereClause->Add("whereClause", $whereClause);
+
+        $objValidationFailureResult = new ExcellTransaction(
+            $whereClause !== "",
+            "",
+            $objWhereClause,
+            $whereClause !== "" ? 1 : 0
+        );
+
+        $objValidationFailureResult->result->Depth = $intDepthIndex;
+
+        return $objValidationFailureResult;
+    }
+
+    protected function getWhereClauseFromRequest($currWhereClause, $intDepthIndex) : string
+    {
+        $lstOperands = array("=","!=",">","<",">=","<=","LIKE","CONTAINS","IN","NOT IN","IS","IS NOT");
+        $whereClause = "";
 
         if (is_array($currWhereClause) && count($currWhereClause) === 3 && !empty($currWhereClause[0]) && is_string($currWhereClause[0]) && !empty($currWhereClause[1]) && is_string($currWhereClause[1]) && in_array($currWhereClause[1], $lstOperands, true))
         {
@@ -1317,23 +1346,23 @@ class AppEntity extends ExcellIterator
             {
                 if ( is_numeric($currWhereClause[2]) === true)
                 {
-                    $objValidationResult->Data = "{$currWhereClause[0]} {$currWhereClause[1]} {$currWhereClause[2]}";
+                    $whereClause = "{$currWhereClause[0]} {$currWhereClause[1]} {$currWhereClause[2]}";
                 }
                 elseif ($currWhereClause[2] === "__#ExcellNullable#__")
                 {
-                    $objValidationResult->Data = "{$currWhereClause[0]} {$currWhereClause[1]} NULL";
+                    $whereClause = "{$currWhereClause[0]} {$currWhereClause[1]} NULL";
                 }
-                elseif ($currWhereClause[2] === ExcellFalse)
+                elseif ($currWhereClause[2] === EXCELL_FALSE)
                 {
                     $arWhereClauseCombo[] = "{$currWhereClause[0]} {$currWhereClause[1]} false";
                 }
-                elseif ($currWhereClause[2] === ExcellTrue)
+                elseif ($currWhereClause[2] === EXCELL_TRUE)
                 {
                     $arWhereClauseCombo[] = "{$currWhereClause[0]} {$currWhereClause[1]} true";
                 }
                 else
                 {
-                    $objValidationResult->Data = "{$currWhereClause[0]} {$currWhereClause[1]} '{$currWhereClause[2]}'";
+                    $whereClause = "{$currWhereClause[0]} {$currWhereClause[1]} '{$currWhereClause[2]}'";
                 }
             }
             else
@@ -1341,11 +1370,11 @@ class AppEntity extends ExcellIterator
                 if (!is_array($currWhereClause[2]))
                 {
                     $objValidationFailureResult = new ExcellTransaction();
-                    $objValidationFailureResult->Result->Depth = $intDepthIndex;
-                    $objValidationFailureResult->Result->Success = false;
-                    $objValidationFailureResult->Result->Count = 0;
+                    $objValidationFailureResult->result->Depth = $intDepthIndex;
+                    $objValidationFailureResult->result->Success = false;
+                    $objValidationFailureResult->result->Count = 0;
 
-                    return $objValidationFailureResult;
+                    return "";
                 }
 
                 foreach($currWhereClause[2] as $currWhereInIndex => $currWhereInValue)
@@ -1358,52 +1387,41 @@ class AppEntity extends ExcellIterator
 
                 $strInClause = implode(",",$currWhereClause[2]);
 
-                switch(strtolower($currWhereClause[1]))
-                {
-                    case "not in":
-                        if (is_array($currWhereClause[2]) && count($currWhereClause[2]) > 0)
-                        {
-                            $objValidationResult->Data = "{$currWhereClause[0]} NOT IN ({$strInClause})";
-                        }
+                $i = strtolower($currWhereClause[1]);
 
-                        break;
-                    default:
-                        $objValidationResult->Data = "{$currWhereClause[0]} IN ({$strInClause})";
-                        break;
+                if ($i == "not in")
+                {
+                    if (is_array($currWhereClause[2]) && count($currWhereClause[2]) > 0) {
+                        $whereClause = "{$currWhereClause[0]} NOT IN ({$strInClause})";
+                    }
+                }
+                else
+                {
+                    $whereClause = "{$currWhereClause[0]} IN ({$strInClause})";
                 }
             }
 
-            return $objValidationResult;
+            return $whereClause;
         }
         elseif ( ( !empty($currWhereClause[0]) && is_array($currWhereClause[0]) && count($currWhereClause[0]) === 1 && is_string($currWhereClause[0]) && ( strtolower($currWhereClause[0]) == "or" || strtolower($currWhereClause[0]) == "and" || strtolower($currWhereClause[0]) == "||" || strtolower($currWhereClause[0]) == "&&") ) )
         {
-            $objValidationResult->Data = $currWhereClause[0];
-
-            return $objValidationResult;
+            return $currWhereClause[0];
         }
         elseif ( ( is_string($currWhereClause) && ( strtolower($currWhereClause) == "or" || strtolower($currWhereClause) == "and" || strtolower($currWhereClause) == "||" || strtolower($currWhereClause) == "&&" ) ) )
         {
-            $objValidationResult->Data = $currWhereClause;
-
-            return $objValidationResult;
+            return $currWhereClause;
         }
         elseif ( ( is_string($currWhereClause) && strtolower($currWhereClause) == "(" ) )
         {
-            $objValidationResult->Data = $currWhereClause[0];
-
-            return $objValidationResult;
+            return $currWhereClause[0];
         }
         elseif ( ( is_string($currWhereClause) && strtolower($currWhereClause) == ")" ) )
         {
-            $objValidationResult->Data = $currWhereClause[0];
-
-            return $objValidationResult;
+            return $currWhereClause[0];
         }
         elseif ( ( !empty($currWhereClause[0]) && is_array($currWhereClause[0]) && count($currWhereClause[0]) === 1 && is_string($currWhereClause[0]) && strtolower($currWhereClause[0]) == "(" ) )
         {
-            $objValidationResult->Data = $currWhereClause[0];
-
-            return $objValidationResult;
+            return $currWhereClause[0];
         }
         else
         {
@@ -1427,11 +1445,11 @@ class AppEntity extends ExcellIterator
                             {
                                 $arWhereClauseCombo[] = "$strWhereClauseField IS NULL";
                             }
-                            elseif ($strWhereClauseValue === ExcellFalse)
+                            elseif ($strWhereClauseValue === EXCELL_FALSE)
                             {
                                 $arWhereClauseCombo[] = "$strWhereClauseField = false";
                             }
-                            elseif ($strWhereClauseValue === ExcellTrue)
+                            elseif ($strWhereClauseValue === EXCELL_TRUE)
                             {
                                 $arWhereClauseCombo[] = "$strWhereClauseField = true";
                             }
@@ -1442,9 +1460,7 @@ class AppEntity extends ExcellIterator
                         }
                     }
 
-                    $objValidationResult->Data = "(".implode(" AND ", $arWhereClauseCombo).")";
-
-                    return $objValidationResult;
+                    return "(".implode(" AND ", $arWhereClauseCombo).")";
                 }
                 else
                 {
@@ -1458,10 +1474,7 @@ class AppEntity extends ExcellIterator
                         $intArrayCounter++;
                         $objChildWhereClause = $this->processWhereClauseConditions($currChildWhereClause, $intNewDepthIndex);
 
-                        if (!is_a($objChildWhereClause->Data, App\Utilities\Excell\ExcellCollection::class))
-                        {
-                            $strWhereClauseChildClause .= $objChildWhereClause->Data . " ";
-                        }
+                        $strWhereClauseChildClause .= $objChildWhereClause->getData()->first() . " ";
                     }
 
                     if ($intArrayCounter > 1 )
@@ -1469,19 +1482,12 @@ class AppEntity extends ExcellIterator
                         $strWhereClauseChildClause = "(" . $strWhereClauseChildClause . ")";
                     }
 
-                    $objValidationResult->Data =  $strWhereClauseChildClause;
-
-                    return $objValidationResult;
+                    return $strWhereClauseChildClause;
                 }
             }
         }
 
-        $objValidationFailureResult = new ExcellTransaction();
-        $objValidationFailureResult->Result->Depth = $intDepthIndex;
-        $objValidationFailureResult->Result->Success = false;
-        $objValidationFailureResult->Result->Count = 0;
-
-        return $objValidationFailureResult;
+        return "";
     }
 
     public function buildModel($objParamValues) : ExcellTransaction
@@ -1515,11 +1521,14 @@ class AppEntity extends ExcellIterator
             }
         }
 
+        $collection = new ExcellCollection();
+        $collection->Add($objNewModel);
+
         $objTransaction = new ExcellTransaction();
-        $objTransaction->Result->Success = true;
-        $objTransaction->Result->Message = "success";
-        $objTransaction->Result->Count = 1;
-        $objTransaction->Data = $objNewModel;
+        $objTransaction->result->Success = true;
+        $objTransaction->result->Message = "success";
+        $objTransaction->result->Count = 1;
+        $objTransaction->setData($collection);
 
         return $objTransaction;
     }
@@ -1549,7 +1558,7 @@ class AppEntity extends ExcellIterator
             }
         }
 
-        $strControllerRequest = $strModuleModelPath = "Entities\\" . $strActiveModule->Main->Name . "\Controllers\\" . ucwords($strControllerRequest) . "Controller";
+        $strControllerRequest = $strModuleModelPath = "Http\\" . $strActiveModule->Main->Name . "\Controllers\\" . ucwords($strControllerRequest) . "Controller";
 
         if (!class_exists($strControllerRequest))
         {

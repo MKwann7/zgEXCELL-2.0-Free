@@ -20,7 +20,7 @@
     </thead>
     <tbody>
     <h5>Directory Members <span class="pointer addNewEntityButton entityButtonFixInTitle"></span></h5>
-    <?php $objMemberDirectoryResult->Data->Each(function($currMember) {
+    <?php $objMemberDirectoryResult->getData()->Each(function($currMember) {
         /** @var $currMember \Modules\Contacts\Models\ContactMemberDirectoryModel */
         ?>
     <tr>

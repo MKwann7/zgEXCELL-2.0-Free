@@ -1,0 +1,145 @@
+version: '3.8'
+
+services: 
+   app:
+      hostname: app.excell.docker
+      container_name: excell-app
+      #image: excell_app:v1
+      build:
+         context: ./../
+         dockerfile: ./docker/excell-app-local.dockerfile
+      env_file: ./env/excell-app-local.env
+      ports:
+         - 3010:8080
+         - 4010:4443
+         - 9003:9004
+      volumes:
+         - "./../src:/app/excell/code"
+         - "./../docker/env/excell-app-local.env:/app/excell/code/.env"
+         - "./../../list:/app/excell/list"
+         - "./../../logs:/app/excell/logs"
+         - "./../../tmp:/app/excell/tmp"
+         - "./../k6:/app/excell/k6"
+      networks: 
+         excell:
+            ipv4_address: 172.1.0.5
+      links:
+         - db
+      privileged: true
+   db:
+      hostname: db.excell.docker
+      image: 'mysql:5.7.35'
+      container_name: excell-db
+      shm_size: 2gb
+      environment:
+         MYSQL_ROOT_PASSWORD: MYSQL_pass
+      ports:
+         - "3307:3306"
+      volumes:
+         - "./mysql-data:/var/lib/mysql"
+         - "./init-scripts/main:/docker-entrypoint-initdb.d"
+      networks:
+         excell:
+            ipv4_address: 172.1.0.7
+   pg:
+      hostname: pg.excell.docker
+      image: 'postgres:13-alpine'
+      container_name: excell-pg
+      environment:
+         POSTGRES_USER: postgres
+         POSTGRES_PASSWORD: password1
+      ports:
+         - "5433:5432"
+      volumes:
+         - "./postgres-data:/var/lib/postgresql/data"
+         - "./init-scripts/postgres:/docker-entrypoint-initdb.d"
+      networks:
+         excell:
+            ipv4_address: 172.1.0.8
+   socket:
+      container_name: excell-socket
+      #image: excell_socket:v1
+      build:
+         context: ./../../../socket/
+         dockerfile: ./docker/excell-socket-local.dockerfile
+         args:
+            ENV: local
+      ports:
+         - 3015:8080
+         - 4015:4443
+      volumes:
+         - "./../../../socket/src:/app/excell/code/src"
+      networks:
+         excell:
+            ipv4_address: 172.1.0.3
+      links:
+         - db
+   process:
+      container_name: excell-process
+      #image: excell_process:v1
+      build:
+         context: ./../../../process
+         dockerfile: ./docker/excell-process-local.dockerfile
+         args:
+            ENV: local
+      ports:
+         - 3021:8080
+         - 4021:4443
+      volumes:
+         - "./../../../process/src:/app/excell/code/src"
+      networks:
+         excell:
+            ipv4_address: 172.1.0.9
+      links:
+         - db
+   media:
+      hostname: media.excell.docker
+      container_name: excell-media
+      #image: excell_process:v1
+      build:
+         context: ./../../../media/code
+         dockerfile: ./docker/excell-media-local.dockerfile
+         args:
+            ENV: local
+      ports:
+         - 3027:8080
+         - 4027:4443
+      volumes:
+         - "./../../../media/code/app/media:/app/code"
+         - "./../../../media/media:/media"
+         - "./../../../media/tmp:/app/tmp"
+         - "./../../../media/logs:/app/logs"
+         - "./../../../media/code/docker/env/app-local.env:/app/code/.env"
+      networks:
+         excell:
+            ipv4_address: 172.1.0.10
+      links:
+         - db
+   api:
+      container_name: excell-api
+      #image: excell_api:v1
+      build:
+         context: ./../../../api
+         dockerfile: ./docker/excell-api-local.dockerfile
+         args:
+            ENV: local
+      ports:
+         - 3001:8080
+         - 4001:4443
+      volumes:
+         - "./../../../api/src:/app/excell/code/src"
+      networks:
+         excell:
+            ipv4_address: 172.1.0.11
+      links:
+         - db
+
+networks:
+   excell:
+      external: false
+      driver: bridge
+      ipam:
+         driver: default
+         config:
+            - subnet: 172.1.0.0/16
+              gateway: 172.1.0.1

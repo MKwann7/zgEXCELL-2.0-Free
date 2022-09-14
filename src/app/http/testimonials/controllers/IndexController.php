@@ -1,9 +1,9 @@
 <?php
 
-namespace Entities\Testimonials\Controllers;
+namespace Http\Testimonials\Controllers;
 
 use App\Utilities\Excell\ExcellHttpModel;
-use Entities\Settings\Classes\Base\SettingController;
+use Http\Settings\Controllers\Base\SettingController;
 
 class IndexController extends SettingController
 {

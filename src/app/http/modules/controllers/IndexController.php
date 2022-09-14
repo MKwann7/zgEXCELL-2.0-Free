@@ -1,9 +1,9 @@
 <?php
 
-namespace Entities\Modules\Controllers;
+namespace Http\Modules\Controllers;
 
 use App\Utilities\Excell\ExcellHttpModel;
-use Entities\Modules\Classes\Base\ModulesController;
+use Http\Modules\Controllers\Base\ModulesController;
 use Entities\Modules\Classes\Modules;
 use Entities\Modules\Components\Vue\ModulesAdminApp;
 use Entities\Modules\Components\Vue\ModulesMainApp;
@@ -97,18 +97,18 @@ class IndexController extends ModulesController
 
         $objModule = new Modules();
         $objModuleResult = $objModule->getWhere(["module_uuid" => $strUuid]);
-        $objModuleResult->Data;
+        $objModuleResult->getData();
 
-        if ($objModuleResult->Result->Count !== 1)
+        if ($objModuleResult->result->Count !== 1)
         {
             return $this->renderReturnJson(false, null, "No module found for unique id: {$strUuid}");
         }
 
-        $objModuleSyncResult = $objModule->syncModule($objJsonForSync, $objModuleResult->Data->First());
+        $objModuleSyncResult = $objModule->syncModule($objJsonForSync, $objModuleResult->getData()->first());
 
-        if ($objModuleSyncResult->Result->Success === false)
+        if ($objModuleSyncResult->result->Success === false)
         {
-            return $this->renderReturnJson(false, $objModuleSyncResult->Data, $objModuleSyncResult->Result->Message);
+            return $this->renderReturnJson(false, $objModuleSyncResult->data, $objModuleSyncResult->result->Message);
         }
 
         return $this->renderReturnJson(true, null, "This module synced successfully");

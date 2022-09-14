@@ -213,7 +213,7 @@ abstract class ExcellModel extends ExcellIterator
             return true;
         }
 
-        if (($this->Definitions[$strName]["nullable"] ?? false) == true && $objValue === ExcellNull)
+        if (($this->Definitions[$strName]["nullable"] ?? false) == true && $objValue === EXCELL_NULL)
         {
             return true;
         }
@@ -233,7 +233,7 @@ abstract class ExcellModel extends ExcellIterator
             switch($this->Definitions[$strName]["type"])
             {
                 case "int":
-                    if (!isInteger($objValue) || $objValue === ExcellNull)
+                    if (!isInteger($objValue) || $objValue === EXCELL_NULL)
                     {
                         $this->Errors[$strName]["type"] = "The value passed in is not an integer.";
                         return false;
@@ -246,7 +246,7 @@ abstract class ExcellModel extends ExcellIterator
                     break;
 
                 case "decimal":
-                    if (!isDecimal($objValue) || $objValue === ExcellNull)
+                    if (!isDecimal($objValue) || $objValue === EXCELL_NULL)
                     {
                         $this->Errors[$strName]["type"] = "The value passed in  is not a decimal.";
                         return false;
@@ -259,7 +259,7 @@ abstract class ExcellModel extends ExcellIterator
                     break;
 
                 case "datetime":
-                    if (!isDateTime($objValue) || $objValue === ExcellNull)
+                    if (!isDateTime($objValue) || $objValue === EXCELL_NULL)
                     {
                         $this->Errors[$strName]["type"] = $objValue . " is not a datetime.";
                         return false;
@@ -298,7 +298,7 @@ abstract class ExcellModel extends ExcellIterator
                         return false;
                     }
 
-                    if ( $objValue === ExcellNull )
+                    if ( $objValue === EXCELL_NULL )
                     {
                         $objValue = "";
                     }
@@ -311,7 +311,7 @@ abstract class ExcellModel extends ExcellIterator
                     break;
                 default:
 
-                    if ($objValue === ExcellNull)
+                    if ($objValue === EXCELL_NULL)
                     {
                         $objValue = "";
                     }
@@ -408,32 +408,16 @@ abstract class ExcellModel extends ExcellIterator
     {
         foreach ($this->Properties as $strName => $currValue)
         {
-            if (!empty($this->Definitions[$strName]["type"]))
+            if (!empty($this->Definitions[$strName]["type"]) && $this->Definitions[$strName]["type"] === "json")
             {
-                switch($this->Definitions[$strName]["type"])
+                $objDataValueTest = json_decode(json_encode($currValue, JSON_FORCE_OBJECT), true);
+
+                if ( !empty($objDataValueTest) && (is_array($objDataValueTest) || $objDataValueTest instanceof Countable) && count($objDataValueTest) > 0 )
                 {
-                    case "int":
-                    case "decimal":
-                    case "datetime":
-                        break;
+                    $objValueTransaction = new ExcellTransaction();
+                    $objValueTransaction->setExtraData("toUnEncode", $currValue);
 
-                    case "json":
-
-                        $objDataValueTest = json_decode(json_encode($currValue, JSON_FORCE_OBJECT), true);
-
-                        if ( !empty($objDataValueTest) && (is_array($objDataValueTest) || $objDataValueTest instanceof Countable) && count($objDataValueTest) > 0 )
-                        {
-                            $objValueTransaction = new ExcellTransaction();
-                            $objValueTransaction->Data = $currValue;
-
-                            $this->Properties[$strName] = Database::unBase64Encode($objValueTransaction)->Data;
-                        }
-
-                        break;
-
-                    default:
-
-                        break;
+                    $this->Properties[$strName] = Database::unBase64Encode($objValueTransaction, "toUnEncode")->getExtraData("toUnEncode");
                 }
             }
         }

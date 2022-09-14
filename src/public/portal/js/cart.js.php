@@ -8,31 +8,54 @@ const AppCart = function(cartVueWidget)
 
     const __construct = function(cartVueWidget)
     {
-        vue = cartVueWidget;
+        vue = cartVueWidget
     }
 
-    this.openPackagesByClass = function(name, parentEntity, userId)
+    this.openPackagesByClass = function(name, parentEntity, customerId, userId)
     {
-        vue.selectPackagesByClass(name, false, parentEntity, userId)
-        return _;
+        vue.selectPackagesByClass(name, false, parentEntity, customerId, userId)
+        return _
+    }
+
+    this.openCart = function(parentEntity, public)
+    {
+        vue.assignParentEntityToCartById(parentEntity)
+        vue.openCart({}, public)
+        return _
+    }
+
+    this.openAssignUser = function(parentEntity)
+    {
+        vue.assignParentEntityToCartById(parentEntity)
+        vue.openAssignUser(false)
+        return _
+    }
+
+    this.addPackageToCart = function(packageId)
+    {
+        vue.addPackageToCartById(packageId)
+        return _
+    }
+
+    this.setCartPrivacy = function(logical)
+    {
+        vue.setCartPrivacy(logical)
+        return _
     }
 
     this.registerEntityListAndManager = function(listId, managerId)
     {
+        if (!listId) return _
         vue.registerEntityListAndManager(listId, managerId)
-        return _;
+        return _
     }
 
-    this.openCart = function(options)
+    this.setCustomerByUuid = function(uuid)
     {
-        vue.openCart(options)
-    }
+        if (uuid === null) return;
 
-    this.addPackageToCart = function(id)
-    {
-        ajax.Send("/cart/get-package?id=" + id, {}, function() {
-
-        });
+        vue.registerCustomerByUuid(uuid)
+        return _
     }
 
     __construct(cartVueWidget);

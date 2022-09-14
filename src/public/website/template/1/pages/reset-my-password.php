@@ -5,7 +5,7 @@ use Entities\Users\Classes\Users;
 
 $this->CurrentPage->BodyId            = "password-reset-page";
 $this->CurrentPage->BodyClasses       = ["page", "login-page", "no-columns"];
-$this->CurrentPage->Meta->Title       = "Reset Your Password | " . $this->app->objCustomPlatform->getPortalDomain();
+$this->CurrentPage->Meta->Title       = "Reset Your Password | " . $this->app->objCustomPlatform->getPortalDomainName();
 $this->CurrentPage->Meta->Description = "Your digital card is one step away. Login now to manage it!";
 $this->CurrentPage->Meta->Keywords    = "Digital Cards, Online Business Cards, Greg Sanders";
 $this->CurrentPage->SnipIt->Title     = "Reset Your Password";
@@ -21,7 +21,7 @@ $objUserResult = (new Users())->getWhere(["password_reset_token" => $resetPasswo
         <h1 class="page-title-main">Reset Your Password</h1>
 
         <div class="space10"></div>
-        <?php if ( $objUserResult->Result->Success === false || $objUserResult->Result->Count === 0)
+        <?php if ( $objUserResult->result->Success === false || $objUserResult->result->Count === 0)
             { ?>
                 <h2>Woops.</h2>
                 <hr>

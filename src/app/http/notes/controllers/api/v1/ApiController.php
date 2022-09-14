@@ -1,10 +1,10 @@
 <?php
 
-namespace Entities\Notes\Controllers\Api\V1;
+namespace Http\Notes\Controllers\Api\V1;
 
 use App\Utilities\Database;
 use App\Utilities\Excell\ExcellHttpModel;
-use Entities\Notes\Classes\Base\NotesController;
+use Http\Notes\Controllers\Base\NotesController;
 use Entities\Notes\Classes\Notes;
 use Entities\Notes\Models\NoteModel;
 
@@ -46,13 +46,13 @@ class ApiController extends NotesController
 
         $result = $objNotes->createNew($noteModel);
 
-        if  ($result->Result->Success === false)
+        if  ($result->result->Success === false)
         {
-            return $this->renderReturnJson(false, ["error" => $result->Result->Message], "There was an error creating this note.");
+            return $this->renderReturnJson(false, ["error" => $result->result->Message], "There was an error creating this note.");
         }
 
         $arEntityResult = array(
-            "note" => $result->Data->First()->ToPublicArray(["note_id", "company_id", "division_id", "created_on" => "date", "summary", "description", "visibility", "type"]),
+            "note" => $result->getData()->first()->ToPublicArray(["note_id", "company_id", "division_id", "created_on" => "date", "summary", "description", "visibility", "type"]),
         );
         $arEntityResult["note"]["creator"] = $this->app->getActiveLoggedInUser()->first_name . " " . $this->app->getActiveLoggedInUser()->last_name;
 
@@ -82,7 +82,7 @@ class ApiController extends NotesController
         }
 
         $objNotes = new Notes();
-        $noteModel = $objNotes->getById($objPost->note_id)->Data->First();
+        $noteModel = $objNotes->getById($objPost->note_id)->getData()->first();
         $noteModel->summary = $objPost->summary;
         $noteModel->description = $objPost->description;
         $noteModel->visibility = $objPost->visibility;
@@ -90,13 +90,13 @@ class ApiController extends NotesController
 
         $result = $objNotes->update($noteModel);
 
-        if  ($result->Result->Success === false)
+        if  ($result->result->Success === false)
         {
-            return $this->renderReturnJson(false, ["error" => $result->Result->Message], "There was an error updating this note.");
+            return $this->renderReturnJson(false, ["error" => $result->result->Message], "There was an error updating this note.");
         }
 
         $arEntityResult = array(
-            "note" => $result->Data->First()->ToPublicArray(["note_id", "company_id", "division_id", "created_on" => "date", "summary", "description", "visibility", "type"]),
+            "note" => $result->getData()->first()->ToPublicArray(["note_id", "company_id", "division_id", "created_on" => "date", "summary", "description", "visibility", "type"]),
         );
         $arEntityResult["note"]["creator"] = $this->app->getActiveLoggedInUser()->first_name . " " . $this->app->getActiveLoggedInUser()->last_name;
 
@@ -122,9 +122,9 @@ class ApiController extends NotesController
                 nt.created_on AS date,
                 nt.note_id AS id,
                 nt.ticket_id AS ticket,
-                (SELECT CONCAT(user.first_name, ' ', user.last_name) FROM `ezdigital_v2_main`.`user` WHERE user.user_id = nt.note_owner_id LIMIT 1) AS creator,
+                (SELECT CONCAT(user.first_name, ' ', user.last_name) FROM `excell_main`.`user` WHERE user.user_id = nt.note_owner_id LIMIT 1) AS creator,
             FROM 
-                `ezdigital_v2_crm`.`note` nt
+                `excell_crm`.`note` nt
             ";
 
         $objWhereClause .= "WHERE nt.company_id = {$this->app->objCustomPlatform->getCompanyId()}";
@@ -149,9 +149,9 @@ class ApiController extends NotesController
                 nt.created_on AS date,
                 nt.note_id AS id,
                 nt.ticket_id AS ticket,
-                (SELECT CONCAT(user.first_name, ' ', user.last_name) FROM `ezdigital_v2_main`.`user` WHERE user.user_id = nt.note_owner_id LIMIT 1) AS creator,
+                (SELECT CONCAT(user.first_name, ' ', user.last_name) FROM `excell_main`.`user` WHERE user.user_id = nt.note_owner_id LIMIT 1) AS creator,
             FROM 
-                `ezdigital_v2_crm`.`note` nt
+                `excell_crm`.`note` nt
             ";
 
         $objWhereClause .= "WHERE nt.company_id = {$this->app->objCustomPlatform->getCompanyId()}";
@@ -181,9 +181,9 @@ class ApiController extends NotesController
                 nt.created_on AS date,
                 nt.note_id AS id,
                 nt.ticket_id AS ticket,
-                (SELECT CONCAT(user.first_name, ' ', user.last_name) FROM `ezdigital_v2_main`.`user` WHERE user.user_id = nt.note_owner_id LIMIT 1) AS creator
+                (SELECT CONCAT(user.first_name, ' ', user.last_name) FROM `excell_main`.`user` WHERE user.user_id = nt.note_owner_id LIMIT 1) AS creator
             FROM 
-                `ezdigital_v2_crm`.`note` nt
+                `excell_crm`.`note` nt
             ";
 
         $objWhereClause .= "WHERE nt.company_id = {$this->app->objCustomPlatform->getCompanyId()}";
@@ -211,9 +211,9 @@ class ApiController extends NotesController
                 nt.created_on AS date,
                 nt.note_id AS id,
                 nt.ticket_id AS ticket,
-                (SELECT CONCAT(user.first_name, ' ', user.last_name) FROM `ezdigital_v2_main`.`user` WHERE user.user_id = nt.note_owner_id LIMIT 1) AS creator
+                (SELECT CONCAT(user.first_name, ' ', user.last_name) FROM `excell_main`.`user` WHERE user.user_id = nt.note_owner_id LIMIT 1) AS creator
             FROM 
-                `ezdigital_v2_crm`.`note` nt
+                `excell_crm`.`note` nt
             ";
 
         $objWhereClause .= "WHERE nt.company_id = {$this->app->objCustomPlatform->getCompanyId()}";
@@ -232,19 +232,19 @@ class ApiController extends NotesController
     {
         $appInstanceResult = Database::getSimple($whereclause, "note_id");
 
-        if ($appInstanceResult->Data->Count() < $batchCount)
+        if ($appInstanceResult->getData()->Count() < $batchCount)
         {
             $strEnd = "true";
         }
 
-        $appInstanceResult->Data->HydrateModelData(NoteModel::class, true);
+        $appInstanceResult->getData()->HydrateModelData(NoteModel::class, true);
 
         $arUserDashboardInfo = array(
-            "list" => $appInstanceResult->Data->FieldsToArray($arFields),
+            "list" => $appInstanceResult->getData()->FieldsToArray($arFields),
             "end"     => $strEnd,
             //"query" => $objWhereClause,
         );
 
-        return $this->renderReturnJson(true, $arUserDashboardInfo, "We found " . $appInstanceResult->Data->Count() . " notes in this batch.", 200, "data", $strEnd);
+        return $this->renderReturnJson(true, $arUserDashboardInfo, "We found " . $appInstanceResult->getData()->Count() . " notes in this batch.", 200, "data", $strEnd);
     }
 }

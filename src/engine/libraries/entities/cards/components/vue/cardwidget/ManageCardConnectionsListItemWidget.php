@@ -8,8 +8,8 @@ use Entities\Users\Components\Vue\ConnectionWidget\ManageUserConnectionsWidget;
 
 class ManageCardConnectionsListItemWidget extends VueComponentListTable
 {
-    protected $id = "342ff244-4185-4ddc-9b7f-720783cdcf16";
-    protected $noMount = true;
+    protected string $id = "342ff244-4185-4ddc-9b7f-720783cdcf16";
+    protected string $mountType = "no_mount";
 
     public function __construct(?array $props = [])
     {
@@ -106,7 +106,7 @@ class ManageCardConnectionsListItemWidget extends VueComponentListTable
             {
                 let intEntityId = self.$parent.$parent.card.card_id;
                 let blnVisibility = tab.rel_visibility;
-                ajax.Send("/cards/card-data/update-card-data?type=update-tab-rel-visibility&id=" + intEntityId + "&card_tab_id=" + tab.card_tab_id + "&card_tab_rel_id=" + tab.card_tab_rel_id + "&rel_visibility=" + blnVisibility, null, function (objResult) {
+                ajax.Post("/cards/card-data/update-card-data?type=update-tab-rel-visibility&id=" + intEntityId + "&card_tab_id=" + tab.card_tab_id + "&card_tab_rel_id=" + tab.card_tab_rel_id + "&rel_visibility=" + blnVisibility, null, function (objResult) {
                     //console.log(objResult);
                 });
             },500);
@@ -127,7 +127,7 @@ class ManageCardConnectionsListItemWidget extends VueComponentListTable
                     let intConnectionId = connection.connection_id;
                     let intCardId = intEntityId;
                     
-                    ajax.Send("cards/card-data/update-card-data?type=remove-social-media&id=" + intCardId + "&connection_id=" + intConnectionId + "&card_socialmedia_id=" + socialMediaId, null, null,"POST");
+                    ajax.Post("cards/card-data/update-card-data?type=remove-social-media&id=" + intCardId + "&connection_id=" + intConnectionId + "&card_socialmedia_id=" + socialMediaId, null, null);
                     
                     for(let currSocialMediaIndex in self.entityList)
                     {
@@ -151,7 +151,7 @@ class ManageCardConnectionsListItemWidget extends VueComponentListTable
                     let intConnectionId = connection.connection_id;
                     let intCardId = intEntityId;
                     
-                    ajax.Send("cards/card-data/update-card-data?type=remove-connection&id=" + intCardId + "&connection_id=" + intConnectionId + "&connection_rel_id=" + intConnectionRelId, null, null,"POST");
+                    ajax.Post("cards/card-data/update-card-data?type=remove-connection&id=" + intCardId + "&connection_id=" + intConnectionId + "&connection_rel_id=" + intConnectionRelId);
                     
                     connection.connection_rel_id = null;
                     connection.connection_id = null;

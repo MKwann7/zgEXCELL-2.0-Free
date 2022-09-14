@@ -10,9 +10,9 @@ use Entities\Users\Components\Vue\ConnectionWidget\ManageUserConnectionsWidget;
 
 class ManageCardCommunicationWidget extends VueComponent
 {
-    protected $id = "8c7cb199-b362-425c-9e2c-080f113b7439";
-    protected $modalWidth = 750;
-    protected $noMount = true;
+    protected string $id = "8c7cb199-b362-425c-9e2c-080f113b7439";
+    protected string $modalWidth = "750";
+    protected string $mountType = "no_mount";
 
     public function __construct ($props = [], ?VueComponentListTable $listTable = null, ?VueComponentSortableList $sortableList = null)
     {
@@ -121,9 +121,7 @@ class ManageCardCommunicationWidget extends VueComponent
                 let connectionList = self.shareTypeList;
                 let swapType = "shares";
                 let createNew = true;
-                
-                ezLog(self.createConnection, "self.createConnection")
-                
+ 
                 '. $this->activateDynamicComponentByIdInModal(SwapCardConnectionWidget::getStaticId(),"", "edit", "entity", "cardConnections", ["ownerId"=> "ownerId", "connectionList" => "connectionList", "swapType" => "swapType", "functionType" =>"'update'", "createNew" => "createNew"], "self", true,"function(component) {
                         let modal = self.findModal(self);
                         modal.vc.setTitle('Swap Share Button Link');
@@ -137,7 +135,7 @@ class ManageCardCommunicationWidget extends VueComponent
             {
                 let intEntityId = self.$parent.$parent.card.card_id;
                 let blnVisibility = tab.rel_visibility;
-                ajax.Send("/cards/card-data/update-card-data?type=update-tab-rel-visibility&id=" + intEntityId + "&card_tab_id=" + tab.card_tab_id + "&card_tab_rel_id=" + tab.card_tab_rel_id + "&rel_visibility=" + blnVisibility, null, function (objResult) {
+                ajax.Post("/cards/card-data/update-card-data?type=update-tab-rel-visibility&id=" + intEntityId + "&card_tab_id=" + tab.card_tab_id + "&card_tab_rel_id=" + tab.card_tab_rel_id + "&rel_visibility=" + blnVisibility, null, function (objResult) {
                     //console.log(objResult);
                 });
             },500);
@@ -146,7 +144,6 @@ class ManageCardCommunicationWidget extends VueComponent
         {
             if (connection.connection_type_name === "blank") { return; }
             let self = this;
-            console.log(self.$parent);
             let intEntityId = self.$parent.entity.card_id;
             modal.EngageFloatShield();
             let data = {title: "Remove Card Connection?", html: "Are you sure you want to proceed?<br>Please confirm."};
@@ -155,7 +152,7 @@ class ManageCardCommunicationWidget extends VueComponent
                 let intConnectionRelId = connection.connection_rel_id;
                 let intConnectionId = connection.connection_id;
                 let intCardId = intEntityId;
-                ajax.Send("cards/card-data/update-card-data?type=remove-connection&id=" + intCardId + "&connection_id=" + intConnectionId + "&connection_rel_id=" + intConnectionRelId, null, null,"POST");
+                ajax.Post("cards/card-data/update-card-data?type=remove-connection&id=" + intCardId + "&connection_id=" + intConnectionId + "&connection_rel_id=" + intConnectionRelId);
                 connection.connection_rel_id = null;
                 connection.connection_id = null;
                 connection.connection_type_id = 0;
@@ -177,12 +174,12 @@ class ManageCardCommunicationWidget extends VueComponent
             }
             let self = this;
             const url = "/api/v1/users/get-connection-types";
-            ajax.Send(url, null, function(result)
+            ajax.Get(url, null, function(result)
             {
-                self.shareTypeList = result.data.list;
+                self.shareTypeList = result.response.data.list;
                 self.$forceUpdate();
                 if (typeof callback === "function") callback();
-            }, "GET");
+            });
         },
         ';
     }

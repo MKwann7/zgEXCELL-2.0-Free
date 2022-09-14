@@ -1,11 +1,11 @@
 <?php
 
-namespace Entities\Packages\Controllers;
+namespace Http\Packages\Controllers;
 
 use App\Utilities\Database;
 use App\Utilities\Excell\ExcellHttpModel;
 use Entities\Companies\Models\CompanyModel;
-use Entities\Packages\Classes\Base\PackageController;
+use Http\Packages\Controllers\Base\PackageController;
 use Entities\Packages\Models\PackageModel;
 
 class IndexController extends PackageController
@@ -64,19 +64,19 @@ class IndexController extends PackageController
 
         $objCards = Database::getSimple($objWhereClause,"package_id");
 
-        if ($objCards->Data->Count() < $batchCount)
+        if ($objCards->getData()->Count() < $batchCount)
         {
             $strEnd = "true";
         }
 
-        $objCards->Data->HydrateModelData(PackageModel::class, true);
+        $objCards->getData()->HydrateModelData(PackageModel::class, true);
 
         $arUserDashboardInfo = array(
-            "list" => $objCards->Data->FieldsToArray($arFields),
+            "list" => $objCards->getData()->FieldsToArray($arFields),
             "query" => $objWhereClause
         );
 
-        return $this->renderReturnJson(true, $arUserDashboardInfo, "We found " . $objCards->Data->Count() . " packages in this batch.", 200, "data", $strEnd);
+        return $this->renderReturnJson(true, $arUserDashboardInfo, "We found " . $objCards->getData()->Count() . " packages in this batch.", 200, "data", $strEnd);
     }
 
     public function getCustomPlatformPackageBatches(ExcellHttpModel $objData) : bool
@@ -97,18 +97,18 @@ class IndexController extends PackageController
 
         $objCards = Database::getSimple($objWhereClause,"package_id");
 
-        if ($objCards->Data->Count() < $batchCount)
+        if ($objCards->getData()->Count() < $batchCount)
         {
             $strEnd = "true";
         }
 
-        $objCards->Data->HydrateModelData(PackageModel::class, true);
+        $objCards->getData()->HydrateModelData(PackageModel::class, true);
 
         $arUserDashboardInfo = array(
-            "list" => $objCards->Data->FieldsToArray($arFields),
+            "list" => $objCards->getData()->FieldsToArray($arFields),
             "query" => $objWhereClause
         );
 
-        return $this->renderReturnJson(true, $arUserDashboardInfo, "We found " . $objCards->Data->Count() . " packages in this batch.", 200, "data", $strEnd);
+        return $this->renderReturnJson(true, $arUserDashboardInfo, "We found " . $objCards->getData()->Count() . " packages in this batch.", 200, "data", $strEnd);
     }
 }

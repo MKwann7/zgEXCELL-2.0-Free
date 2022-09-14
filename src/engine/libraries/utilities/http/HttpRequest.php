@@ -337,7 +337,7 @@ class HttpRequest
      */
     public function getData()
     {
-        return $this->data;
+        return $this->getData();
     }
 
     /**
@@ -389,7 +389,7 @@ class HttpRequest
             case static::ENCODING_QUERY:
                 return (!is_null($this->data) ? http_build_query($this->data) : '');
             case static::ENCODING_RAW:
-                return $this->data;
+                return $this->getData();
             default:
                 $msg = "Encoding [$this->encoding] not a known Request::ENCODING_* constant";
                 throw new \UnexpectedValueException($msg);

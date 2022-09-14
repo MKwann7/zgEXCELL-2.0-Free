@@ -1,0 +1,19 @@
+{
+  "controllers": {
+    "index": {
+      "models":["Directory"],
+      "verb":"GET",
+      "returnType":"DEFAULT"
+    },
+    "directory_data": {
+      "models":["Directory"],
+      "verb":"POST",
+      "returnType":"AJAX"
+    },
+    "report_issue": {
+      "models":["Directory"],
+      "verb":"GET",
+      "returnType":"DEFAULT"
+    }
+  }
+}

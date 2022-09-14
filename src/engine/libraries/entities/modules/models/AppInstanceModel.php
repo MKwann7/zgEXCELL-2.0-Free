@@ -20,11 +20,8 @@ class AppInstanceModel extends AppModel
         return [
             "app_instance_id" => ["type" => "int","length" => 15],
             "owner_id" => ["type" => "int","length" => 15],
-            "card_id" => ["type" => "int","length" => 15],
-            "card_tab_id" => ["type" => "int","length" => 15],
-            "card_addon_id" => ["type" => "int","length" => 15],
             "module_app_id" => ["type" => "int","length" => 15],
-            "module_app_widget_id" => ["type" => "int","length" => 15],
+            "order_line_id" => ["type" => "int","length" => 15],
             "instance_uuid" => ["type" => "uuid"],
             "product_id" => ["type" => "int","length" => 15],
             "created_on" => ["type" => "datetime"],

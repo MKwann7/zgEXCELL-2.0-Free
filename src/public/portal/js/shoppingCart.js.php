@@ -54,7 +54,6 @@ if (typeof shoppingCart !== "function")
 
         const sendAjax = function(url, data, callback)
         {
-            console.log(url);
             let xhttp = new XMLHttpRequest();
             xhttp.onreadystatechange = function()
             {

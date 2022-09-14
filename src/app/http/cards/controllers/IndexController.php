@@ -1,12 +1,20 @@
 <?php
 
-namespace Entities\Cards\Controllers;
+namespace Http\Cards\Controllers;
 
 use App\Utilities\Excell\ExcellHttpModel;
+use App\Website\Vue\Classes\VueProps;
+use Entities\Cards\Components\Vue\Maxtech\Purchase\PurchaseSiteWidget;
 use Entities\Cards\Classes\Cards;
-use Entities\Cards\Classes\Base\CardController;
+use Entities\Cards\Components\Vue\Maxtech\MySiteMainApp;
+use Entities\Cards\Components\Vue\Maxtech\SiteMainApp;
+use Entities\Cards\Components\Vue\Maxtech\Sitewidget\ListMySiteInactiveWidget;
+use Entities\Cards\Components\Vue\Maxtech\Sitewidget\ListMySiteWidget;
+use Entities\Cards\Components\Vue\Maxtech\Sitewidget\ManageSiteWidget;
+use Entities\Companies\Classes\Companies;
+use Http\Cards\Controllers\Base\CardController;
 use Entities\Cards\Classes\CardPage;
-use Entities\Cards\Classes\EzDigital\EzDigitalCardFactory;
+use Entities\Cards\Classes\EzDigital\ExcellCardFactory;
 use Entities\Cards\Components\Vue\CardMainApp;
 use Entities\Cards\Components\Vue\CardWidget\ManageCardWidget;
 use Entities\Cards\Components\Vue\MyCardMainApp;
@@ -43,6 +51,50 @@ class IndexController extends CardController
         return false;
     }
 
+    public function mySites(ExcellHttpModel $objData) : bool
+    {
+        if (!$this->app->isAdminUrlRequest() || !$this->app->isUserLoggedIn() || $this->app->strActivePortalBinding !== "account") {
+            $this->app->redirectToLogin();
+            return false;
+        }
+
+        switch($objData->Uri[2]) {
+            case "purchase":
+                $vueApp = (new MySiteMainApp("vueApp"))
+                    ->setDefaultComponentId(PurchaseSiteWidget::getStaticId())->setDefaultComponentAction("view")
+                    ->setDefaultComponentProps([
+                        new VueProps("productGroup", "string", "'card'"),
+                        new VueProps("inModal", "boolean", "false"),
+                        new VueProps("loggedInUserId", "number", $this->app->getActiveLoggedInUser()->user_id),
+                    ])
+                    ->setUriBase($objData->PathControllerBase);
+                break;
+            case "inactive":
+                $vueApp = (new MySiteMainApp("vueApp"))
+                    ->setDefaultComponentId(ListMySiteInactiveWidget::getStaticId())->setDefaultComponentAction("view")
+                    ->setUriBase($objData->PathControllerBase)
+                    ->registerComponentAbstracts([
+                        ManageSiteWidget::getStaticId() => ManageSiteWidget::getStaticUriAbstract(),
+                    ]);
+                break;
+            default:
+                $vueApp = (new MySiteMainApp("vueApp"))
+                    ->setDefaultComponentId(ListMySiteWidget::getStaticId())->setDefaultComponentAction("view")
+                    ->setUriBase($objData->PathControllerBase)
+                    ->registerComponentAbstracts([
+                        ManageSiteWidget::getStaticId() => ManageSiteWidget::getStaticUriAbstract(),
+                    ]);
+                break;
+        }
+
+        (new Cards())->renderApp(
+            "admin.admin_view_all_cards",
+            $this->app->strAssignedPortalTheme,
+            $vueApp
+        );
+        return true;
+    }
+
     public function myhub(ExcellHttpModel $objData) : bool
     {
         if(!$this->app->isPublicWebsite())
@@ -55,11 +107,25 @@ class IndexController extends CardController
 
     public function RenderCardDashboard(ExcellHttpModel $objData, $strApproach = "list") : void
     {
-        $vueApp = (new MyCardMainApp("vueApp"))
-            ->setUriBase($objData->PathControllerBase)
-            ->registerComponentAbstracts([
-                ManageCardWidget::getStaticId() => ManageCardWidget::getStaticUriAbstract(),
-            ]);
+        $vueApp = null;
+
+        switch ($this->app->objCustomPlatform->getApplicationType())
+        {
+            case Companies::APP_TYPE_MAXTECH:
+                $vueApp = (new MySiteMainApp("vueApp"))
+                    ->setUriBase($objData->PathControllerBase)
+                    ->registerComponentAbstracts([
+                        ManageSiteWidget::getStaticId() => ManageSiteWidget::getStaticUriAbstract(),
+                    ]);
+                break;
+            default:
+                $vueApp = (new MyCardMainApp("vueApp"))
+                    ->setUriBase($objData->PathControllerBase)
+                    ->registerComponentAbstracts([
+                        ManageCardWidget::getStaticId() => ManageCardWidget::getStaticUriAbstract(),
+                    ]);
+                break;
+        }
 
         (new Cards())->renderApp(
             "user.view_my_cards",
@@ -70,14 +136,26 @@ class IndexController extends CardController
 
     public function RenderCardAdminDashboard(ExcellHttpModel $objData) : void
     {
-        $vueApp = (new CardMainApp("vueApp"))
-            ->setUriBase($objData->PathControllerBase)
-            ->registerComponentAbstracts([
-                ManageCardWidget::getStaticId() => ManageCardWidget::getStaticUriAbstract(),
-            ]);
+        switch ($this->app->objCustomPlatform->getApplicationType())
+        {
+            case Companies::APP_TYPE_MAXTECH:
+                $vueApp = (new SiteMainApp("vueApp"))
+                    ->setUriBase($objData->PathControllerBase)
+                    ->registerComponentAbstracts([
+                        ManageSiteWidget::getStaticId() => ManageSiteWidget::getStaticUriAbstract(),
+                    ]);
+                break;
+            default:
+                $vueApp = (new CardMainApp("vueApp"))
+                    ->setUriBase($objData->PathControllerBase)
+                    ->registerComponentAbstracts([
+                        ManageCardWidget::getStaticId() => ManageCardWidget::getStaticUriAbstract(),
+                    ]);
+                break;
+        }
 
         (new Cards())->renderApp(
-            "admin.admin_view_all_cards_new",
+            "admin.admin_view_all_cards",
             $this->app->strAssignedPortalTheme,
             $vueApp
         );
@@ -85,9 +163,13 @@ class IndexController extends CardController
 
     public function RenderCardOrWebsite(ExcellHttpModel $objData, $myHub = false) : bool
     {
-        if (!empty($objData->Uri[0]))
+        if (
+            (!empty($objData->Uri[0]) ||
+            $this->app->getActiveDomain()->getType() !== "app") &&
+            !in_array($objData->Uri[0], ["api", "process", "module-widget"])
+        )
         {
-            $ezDigitalFactory = new EzDigitalCardFactory($objData, $this->app);
+            $ezDigitalFactory = new ExcellCardFactory($this->app, $objData, new Cards());
 
             if ($myHub === false && !$ezDigitalFactory->process($objData))
             {
@@ -98,7 +180,7 @@ class IndexController extends CardController
 
                 $objCardResult = (new Cards())->getById($objData->Params[0]);
 
-                if ($objCardResult->Result->Success === true)
+                if ($objCardResult->result->Success === true)
                 {
                     $this->app->executeUrlRedirect(getFullUrl() . "/". $objData->Params[0]);
                 }
@@ -124,7 +206,7 @@ class IndexController extends CardController
                 if($this->app->strActivePortalBinding === "account")
                 {
                     $objUser = $this->app->getActiveLoggedInUser();
-                    $lstImagesFromUser = (new Images())->getWhere([["user_id", "=", $objUser->user_id], "AND", ["image_class", "!=", "user-avatar"]])->Data;
+                    $lstImagesFromUser = (new Images())->getWhere([["user_id", "=", $objUser->user_id], "AND", ["image_class", "!=", "user-avatar"]])->getData();
 
                     $lstImagesFromUser->ConvertDatesToFormat("m/d/Y");
 
@@ -163,7 +245,7 @@ class IndexController extends CardController
                 {
 
                     $objUser = $this->app->getActiveLoggedInUser();
-                    $lstLibraryTabs = (new CardPage())->getFks()->getRelations(['card_count'])->getWhere([["user_id", "=", $objUser->user_id], "AND", ["library_tab", "=", true]])->Data;
+                    $lstLibraryTabs = (new CardPage())->getFks()->getRelations(['card_count'])->getWhere([["user_id", "=", $objUser->user_id], "AND", ["library_tab", "=", true]])->getData();
                     $lstLibraryTabs->ConvertDatesToFormat("m/d/Y");
 
                     (new Cards())->renderAppPage("widget_library", $this->app->strAssignedPortalTheme, [
@@ -172,7 +254,7 @@ class IndexController extends CardController
                 }
                 elseif($this->app->strActivePortalBinding === "account/admin")
                 {
-                    $lstLibraryTabs = (new CardPage())->getFks()->getWhere([["library_tab", "=", true]])->Data;
+                    $lstLibraryTabs = (new CardPage())->getFks()->getWhere([["library_tab", "=", true]])->getData();
                     $lstLibraryTabs->ConvertDatesToFormat("m/d/Y");
 
                     (new Cards())->renderAppPage("admin.admin_widget_library", $this->app->strAssignedPortalTheme, [
@@ -234,7 +316,7 @@ class IndexController extends CardController
             return $users->renderWebsitePage("public.password_reset_bad_token", $this->app->strAssignedWebsiteTheme);
         }
 
-        $user = $users->getWhere(["password_reset_token" => $passwordResetRequestId])->Data->First();
+        $user = $users->getWhere(["password_reset_token" => $passwordResetRequestId])->getData()->first();
 
         if ($user === null)
         {
@@ -246,6 +328,6 @@ class IndexController extends CardController
 
     public function healthCheck()
     {
-        die('{"success":true}');
+        die('{"Success":true}');
     }
 }

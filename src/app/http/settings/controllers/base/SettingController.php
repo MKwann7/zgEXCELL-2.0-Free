@@ -1,6 +1,6 @@
 <?php
 
-namespace Entities\Settings\Classes\Base;
+namespace Http\Settings\Controllers\Base;
 
 use App\Core\AppController;
 use Entities\Users\Classes\UserSettings;

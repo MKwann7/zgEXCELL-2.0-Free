@@ -51,10 +51,10 @@ class MobinitiBase implements ApiClass
         {
             $objTransaction = new ExcellTransaction();
 
-            $objTransaction->Result->Success = false;
-            $objTransaction->Result->Count = 0;
-            $objTransaction->Result->Errors = [0 => $ex];
-            $objTransaction->Result->Message = "There was an error processing this request";
+            $objTransaction->result->Success = false;
+            $objTransaction->result->Count = 0;
+            $objTransaction->result->Errors = [0 => $ex];
+            $objTransaction->result->Message = "There was an error processing this request";
 
             return $objTransaction;
         }
@@ -66,9 +66,9 @@ class MobinitiBase implements ApiClass
 
         if ($page_limit > 100)
         {
-            $objTransaction->Result->Success = false;
-            $objTransaction->Result->Count = 0;
-            $objTransaction->Result->Message = "The record count request cannot be less than the offset of " . $page_limit;
+            $objTransaction->result->Success = false;
+            $objTransaction->result->Count = 0;
+            $objTransaction->result->Message = "The record count request cannot be less than the offset of " . $page_limit;
         }
 
         list($intRecordCount, $intPageCount, $intPageOffset, $intPageLimit, $strQuery) = $this->ParseFilterOrderAndPagination($record_count, $page_offset, $page_limit);
@@ -76,7 +76,7 @@ class MobinitiBase implements ApiClass
         try
         {
             $objTransaction = $this->GetMobinitiData($intRecordCount, $intPageCount, $intPageOffset, $intPageLimit, $strQuery);
-            $objTransaction->Result->Depth = ($page_limit * ($intPageOffset - 1));
+            $objTransaction->result->Depth = ($page_limit * ($intPageOffset - 1));
 
             return $objTransaction;
         }
@@ -111,36 +111,36 @@ class MobinitiBase implements ApiClass
         {
             if (empty($objHttpResponse->body))
             {
-                $objTransaction->Result->Success = false;
-                $objTransaction->Result->Count = 0;
-                $objTransaction->Result->Message = $objHttpResponse->statusText;
-                $objTransaction->Result->Query = $strMobinitiUrl . " POST: " . $objEntity->ToJson();
+                $objTransaction->result->Success = false;
+                $objTransaction->result->Count = 0;
+                $objTransaction->result->Message = $objHttpResponse->statusText;
+                $objTransaction->result->Query = $strMobinitiUrl . " POST: " . $objEntity->ToJson();
                 return $objTransaction;
             }
 
             $objEntityList = json_decode($objHttpResponse->body);
 
-            $objTransaction->Result->Success = false;
-            $objTransaction->Result->Count = 0;
-            $objTransaction->Result->Message = "FROM Mobiniti: " . $objEntityList->message;
-            $objTransaction->Result->Query = $strMobinitiUrl  . " POST: " . $objEntity->ToJson();
-            $objTransaction->Result->Errors = $objEntityList->errors;
+            $objTransaction->result->Success = false;
+            $objTransaction->result->Count = 0;
+            $objTransaction->result->Message = "FROM Mobiniti: " . $objEntityList->message;
+            $objTransaction->result->Query = $strMobinitiUrl  . " POST: " . $objEntity->ToJson();
+            $objTransaction->result->Errors = $objEntityList->errors;
             return $objTransaction;
         }
 
         if (empty($objHttpResponse->body))
         {
-            $objTransaction->Result->Success = false;
-            $objTransaction->Result->Count = 0;
-            $objTransaction->Result->Message = "No body returned from Mobiniti API endpint.";
+            $objTransaction->result->Success = false;
+            $objTransaction->result->Count = 0;
+            $objTransaction->result->Message = "No body returned from Mobiniti API endpint.";
             return $objTransaction;
         }
 
         $objEntityList = json_decode($objHttpResponse->body);
 
-        $objTransaction->Result->Success = true;
-        $objTransaction->Result->Count = 1;
-        $objTransaction->Data = $objEntityList;
+        $objTransaction->result->Success = true;
+        $objTransaction->result->Count = 1;
+        $objTransaction->data = $objEntityList;
 
         return $objTransaction;
     }
@@ -165,36 +165,36 @@ class MobinitiBase implements ApiClass
         {
             if (empty($objHttpResponse->body))
             {
-                $objTransaction->Result->Success = false;
-                $objTransaction->Result->Count = 0;
-                $objTransaction->Result->Message = $objHttpResponse->statusText;
-                $objTransaction->Result->Query = $strMobinitiUrl . " PUT    : " . $objEntity->ToJson();
+                $objTransaction->result->Success = false;
+                $objTransaction->result->Count = 0;
+                $objTransaction->result->Message = $objHttpResponse->statusText;
+                $objTransaction->result->Query = $strMobinitiUrl . " PUT    : " . $objEntity->ToJson();
                 return $objTransaction;
             }
 
             $objEntityList = json_decode($objHttpResponse->body);
 
-            $objTransaction->Result->Success = false;
-            $objTransaction->Result->Count = 0;
-            $objTransaction->Result->Message = "FROM Mobiniti: " . $objEntityList->message;
-            $objTransaction->Result->Query = $strMobinitiUrl  . " PUT: " . $objEntity->ToJson();
-            $objTransaction->Result->Errors = $objEntityList->errors;
+            $objTransaction->result->Success = false;
+            $objTransaction->result->Count = 0;
+            $objTransaction->result->Message = "FROM Mobiniti: " . $objEntityList->message;
+            $objTransaction->result->Query = $strMobinitiUrl  . " PUT: " . $objEntity->ToJson();
+            $objTransaction->result->Errors = $objEntityList->errors;
             return $objTransaction;
         }
 
         if (empty($objHttpResponse->body))
         {
-            $objTransaction->Result->Success = false;
-            $objTransaction->Result->Count = 0;
-            $objTransaction->Result->Message = "No body returned from Mobiniti API endpint.";
+            $objTransaction->result->Success = false;
+            $objTransaction->result->Count = 0;
+            $objTransaction->result->Message = "No body returned from Mobiniti API endpint.";
             return $objTransaction;
         }
 
         $objEntityList = json_decode($objHttpResponse->body);
 
-        $objTransaction->Result->Success = true;
-        $objTransaction->Result->Count = 1;
-        $objTransaction->Data = $objEntityList;
+        $objTransaction->result->Success = true;
+        $objTransaction->result->Count = 1;
+        $objTransaction->data = $objEntityList;
 
         return $objTransaction;
     }
@@ -259,27 +259,27 @@ class MobinitiBase implements ApiClass
         {
             if (empty($objHttpResponse->body))
             {
-                $objTransaction->Result->Success = false;
-                $objTransaction->Result->Count = 0;
-                $objTransaction->Result->Message = $objHttpResponse->statusText ?? "";
-                $objTransaction->Result->Query = $strMobinitiUrl;
+                $objTransaction->result->Success = false;
+                $objTransaction->result->Count = 0;
+                $objTransaction->result->Message = $objHttpResponse->statusText ?? "";
+                $objTransaction->result->Query = $strMobinitiUrl;
                 return $objTransaction;
             }
 
             $objEntityList = json_decode($objHttpResponse->body);
 
-            $objTransaction->Result->Success = false;
-            $objTransaction->Result->Count = 0;
-            $objTransaction->Result->Message = !empty($objEntityList->message) ? $objEntityList->message : "Unknown message.";
-            $objTransaction->Result->Query = $strMobinitiUrl;
+            $objTransaction->result->Success = false;
+            $objTransaction->result->Count = 0;
+            $objTransaction->result->Message = !empty($objEntityList->message) ? $objEntityList->message : "Unknown message.";
+            $objTransaction->result->Query = $strMobinitiUrl;
             return $objTransaction;
         }
 
         if (empty($objHttpResponse->body))
         {
-            $objTransaction->Result->Success = false;
-            $objTransaction->Result->Count = 0;
-            $objTransaction->Result->Message = "No body returned from Mobiniti API endpint.";
+            $objTransaction->result->Success = false;
+            $objTransaction->result->Count = 0;
+            $objTransaction->result->Message = "No body returned from Mobiniti API endpint.";
             return $objTransaction;
         }
 
@@ -287,9 +287,9 @@ class MobinitiBase implements ApiClass
 
         if (empty($objEntityList->data))
         {
-            $objTransaction->Result->Success = false;
-            $objTransaction->Result->Count = 0;
-            $objTransaction->Result->Message = "No data returned from Mobiniti API endpint in body.";
+            $objTransaction->result->Success = false;
+            $objTransaction->result->Count = 0;
+            $objTransaction->result->Message = "No data returned from Mobiniti API endpint in body.";
             return $objTransaction;
         }
 
@@ -306,7 +306,7 @@ class MobinitiBase implements ApiClass
 
             $strCurrentPage = $objEntityList->meta->pagination->current_page ?? 1;
             $strTotalPages = $objEntityList->meta->pagination->total_pages ?? 1;
-            $objTransaction->Result->Total = $objEntityList->meta->pagination->total ?? 1;
+            $objTransaction->result->Total = $objEntityList->meta->pagination->total ?? 1;
 
             if ($strTotalPages > $strCurrentPage && $page_count > 0)
             {
@@ -331,9 +331,9 @@ class MobinitiBase implements ApiClass
 
                 $objNextDataPageResult = $this->GetMobinitiData($record_count, $page_count, $offset, $page_limit, $strQuery, $strUri);
 
-                if ($objNextDataPageResult->Result->Count > 0)
+                if ($objNextDataPageResult->result->Count > 0)
                 {
-                    $colGroups->Merge($objNextDataPageResult->Data);
+                    $colGroups->Merge($objNextDataPageResult->data);
                 }
             }
         }
@@ -347,10 +347,10 @@ class MobinitiBase implements ApiClass
             $colGroups->Trim(0, $record_count);
         }
 
-        $objTransaction->Result->Success = true;
-        $objTransaction->Result->Count = $colGroups->Count();
-        $objTransaction->Result->Message = "We found " . $colGroups->Count() . " {$this->resource}.";
-        $objTransaction->Data = $colGroups;
+        $objTransaction->result->Success = true;
+        $objTransaction->result->Count = $colGroups->Count();
+        $objTransaction->result->Message = "We found " . $colGroups->Count() . " {$this->resource}.";
+        $objTransaction->data = $colGroups;
 
         return $objTransaction;
     }

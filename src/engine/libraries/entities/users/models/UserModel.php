@@ -4,8 +4,12 @@ namespace Entities\Users\Models;
 
 use App\Core\AppModel;
 use App\Utilities\Database;
+use App\Utilities\Excell\ExcellCollection;
 use App\Utilities\Transaction\ExcellTransaction;
+use Entities\Companies\Classes\Departments\Departments;
+use Entities\Companies\Classes\Departments\DepartmentTicketQueues;
 use Entities\Users\Classes\Connections;
+use Entities\Users\Classes\UserClass;
 
 class UserModel extends AppModel
 {
@@ -55,7 +59,6 @@ class UserModel extends AppModel
             "name_sufx" => ["type" => "varchar", "length" => 20],
             "preferred_name" => ["type" => "varchar", "length" => 50],
             "last_login" => ["type" => "datetime", "length" => 0],
-            "old_user_id" => ["type" => "int", "length" => 10, "nullable" => true],
             "sys_row_id" => ["type" => "char", "length" => 36, "nullable" => true]
         ];
     }
@@ -70,7 +73,7 @@ class UserModel extends AppModel
         global $app;
         $colUserConnectionsResult = $this->getConnectionsByUserId($this->user_id, $app->objCustomPlatform->getCompanyId());
 
-        $this->AddUnvalidatedValue("Connections", $colUserConnectionsResult->Data);
+        $this->AddUnvalidatedValue("Connections", $colUserConnectionsResult->data);
 
         return $this;
     }
@@ -90,23 +93,65 @@ class UserModel extends AppModel
                 cnt.action AS default_action,
                 cnt.font_awesome,
                 (SELECT COUNT(*) FROM connection_rel cr WHERE cr.connection_id = cn.connection_id) as cards
-            FROM ezdigital_v2_main.connection cn 
-            LEFT JOIN  ezdigital_v2_main.connection_type cnt ON cnt.connection_type_id = cn.connection_type_id 
+            FROM excell_main.connection cn 
+            LEFT JOIN  excell_main.connection_type cnt ON cnt.connection_type_id = cn.connection_type_id 
             WHERE cn.user_id = {$userId} AND cn.company_id = {$companyId} ORDER BY cn.connection_id ASC;";
 
         $colCardConnectionsResult = Database::getSimple($strCardConnectionsQuery);
-        $colCardConnectionsResult->Data->HydrateModelData(ConnectionModel::class, true);
+        $colCardConnectionsResult->getData()->HydrateModelData(ConnectionModel::class, true);
 
         return $colCardConnectionsResult;
     }
 
-    public function getOriginatorName() : string
+    public function loadRoles() : self
     {
-        // TODO - Get Originator Name
+        if (!is_numeric($this->user_id)) {
+            return $this;
+        }
+
+        $objUserClassResult = (new UserClass())->getFks()->getWhere(["user_id" => $this->user_id]);
+        if ($objUserClassResult->result->Success === true && $objUserClassResult->result->Count > 0)
+        {
+            $this->AddUnvalidatedValue("Roles", $objUserClassResult->data);
+        }
+
+        return $this;
     }
 
-    public function LoadUserContacts() : self
+    public function loadDepartments() : self
     {
+        $companyDepartmentResult = (new Departments())->getByUserId($this->user_id);
+        if ($companyDepartmentResult->result->Success === true)
+        {
+            $this->AddUnvalidatedValue("Departments", $companyDepartmentResult->data);
+
+            $ticketQueues = new DepartmentTicketQueues();
+            $ticketQueueResult = $ticketQueues->getByUserAndDepartmentIds($this->user_id, $this->Departments->FieldsToArray(["company_department_id"]));
+
+            if ($ticketQueueResult->result->Count > 0)
+            {
+                $this->Departments->Foreach(function($currDepartment) use ($ticketQueueResult)
+                {
+                    foreach($ticketQueueResult->data as $currTicketQueue)
+                    {
+                        if ($currTicketQueue->company_department_id === $currDepartment->company_department_id)
+                        {
+
+                            if (!is_a($currDepartment->ticketQueue, ExcellCollection::class))
+                            {
+                                $currDepartment->AddUnvalidatedValue("ticketQueue", new ExcellCollection());
+                            }
+
+                            $currDepartment->ticketQueue->Add($currTicketQueue);
+                        }
+                    }
+
+                    return $currDepartment;
+                });
+
+                $this->AddUnvalidatedValue("departmentTicketQueuesCount", $ticketQueueResult->result->Count);
+            }
+        }
         return $this;
     }
 }

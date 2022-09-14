@@ -6,7 +6,7 @@ namespace Entities\Media\Classes;
 
 class LocalFile
 {
-    protected $name;
+    protected string $name;
     protected $path;
     protected $fullPathAndName;
     protected $extension;
@@ -23,12 +23,12 @@ class LocalFile
         if (count($arFullFileName) >= 1)
         {
             $fullPath = array_reverse($arFullFileName);
-            makeRecursiveDirectories(AppTmp, $fullPath);
+            makeRecursiveDirectories(APP_TMP, $fullPath);
         }
 
         $this->extension = array_reverse(explode(".", $fullPathAndName))[0];
 
-        $this->fullPathAndName = AppTmp . $fullPathAndName;
+        $this->fullPathAndName = APP_TMP . $fullPathAndName;
     }
 
     public function getFullFileName() : string

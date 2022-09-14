@@ -7,8 +7,8 @@ use Entities\Cards\Models\CardModel;
 
 class ManageCardUserProfileWidget extends VueComponent
 {
-    protected $id = "b2268935-cfd5-405a-86ea-8c362b11d20c";
-    protected $modalWidth = 750;
+    protected string $id = "b2268935-cfd5-405a-86ea-8c362b11d20c";
+    protected string $modalWidth = "750";
 
     public function __construct (array $components = [])
     {
@@ -67,7 +67,7 @@ class ManageCardUserProfileWidget extends VueComponent
             {
                 let self = this;
                 
-                const url = "/api/v1/cards/update-card-user-profile?card_id=" + this.entityClone.card_id;
+                const url = "/api/v1/cards/update-card-user-profilewidget?card_id=" + this.entityClone.card_id;
                 const updateCardUser = {
                     card_user_id: this.entityClone.card_user_id,
                     card_user_title: this.cardUserTitle
@@ -75,18 +75,18 @@ class ManageCardUserProfileWidget extends VueComponent
                 
                 modal.EngageFloatShield();
                 
-                ajax.Send(url, updateCardUser, function(result) 
+                ajax.Post(url, updateCardUser, function(result) 
                 {                    
                     if (result.success === false) 
                     {
                         return;
                     }
                     
-                    self.entity.card_user_id = result.data.card.card_user_id;
-					self.entity.card_owner_name = result.data.card.card_owner_name;
-                    self.entity.card_user_name = result.data.card.card_user_name;
-                    self.entity.card_user_email = result.data.card.card_user_email;
-                    self.entity.card_data = result.data.card.card_data;
+                    self.entity.card_user_id = result.response.data.card.card_user_id;
+					self.entity.card_owner_name = result.response.data.card.card_owner_name;
+                    self.entity.card_user_name = result.response.data.card.card_user_name;
+                    self.entity.card_user_email = result.response.data.card.card_user_email;
+                    self.entity.card_data = result.response.data.card.card_data;
                     
                     let vue = self.findApp(self);
                     vue.$forceUpdate();
@@ -229,16 +229,16 @@ class ManageCardUserProfileWidget extends VueComponent
             loadCustomers: function(callback)
             {
                 const self = this;
-                const url = "' . $app->objCustomPlatform->getFullPortalDomain() . '/cart/get-all-card-users-count";
+                const url = "' . $app->objCustomPlatform->getFullPortalDomainName() . '/cart/get-all-card-users-count";
                 
-                ajax.SendExternal(url, {}, "get", "json", true, function(result) 
+                ajax.GetExternal(url, {}, true, function(result) 
                 {
                     if (result.success === false)
                     {
                         return;
                     }
                     
-                    if (self.customerList.length == result.data.count) 
+                    if (self.customerList.length == result.response.data.count) 
                     {
                         const customersList = Object.entries(self.customerList);
                         customersList.forEach(function([user_id, currUser])
@@ -253,16 +253,16 @@ class ManageCardUserProfileWidget extends VueComponent
                     }
                     
                     self.customerList = [];
-                    const url = "' . $app->objCustomPlatform->getFullPortalDomain() . '/cart/get-all-card-users";
+                    const url = "' . $app->objCustomPlatform->getFullPortalDomainName() . '/cart/get-all-card-users";
                     
-                    ajax.SendExternal(url, {}, "get", "json", true, function(result) 
+                    ajax.GetExternal(url, {}, true, function(result) 
                     {
                         if (result.success === false)
                         {
                             return;
                         }
     
-                        const users = Object.entries(result.data.list);
+                        const users = Object.entries(result.response.data.list);
                                             
                         users.forEach(function([user_id, currUser])
                         {

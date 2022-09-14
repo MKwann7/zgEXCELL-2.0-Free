@@ -9,7 +9,7 @@ use Entities\Users\Classes\Users;
 
 class SelectNewCardPageWidget extends VueComponent
 {
-    protected $id = "f5ca8b43-6b4e-4872-a9b5-e5a4cc662df6";
+    protected string $id = "f5ca8b43-6b4e-4872-a9b5-e5a4cc662df6";
 
     public function __construct(?AppModel $entity = null, $name = "Card Page Widget", $props = [])
     {
@@ -51,7 +51,7 @@ class SelectNewCardPageWidget extends VueComponent
                 
                 `modal.EngageFloatShield();`
                 
-                ajax.Send(url, postData, function(objCardResult) 
+                ajax.Post(url, postData, function(objCardResult) 
                 {
                     let newEntity = objCardResult.data.cardPage;
                     self.entities.push(newEntity);    
@@ -216,7 +216,7 @@ class SelectNewCardPageWidget extends VueComponent
     protected function renderModulesForSelection()
     {
         $objModulesResult = (new ModuleApps())->getLatestModuleWidgetsByNameAsc();
-        $colModules = $objModulesResult->Data;
+        $colModules = $objModulesResult->getData();
         $modules = [];
 
         foreach($colModules as $currModule)
@@ -232,7 +232,7 @@ class SelectNewCardPageWidget extends VueComponent
     {
         global $app;
         $objUsersResult = (new Users())->getWhere(["company_id" => $app->objCustomPlatform->getCompanyId(), "status" => "Active"]);
-        $colUsers = $objUsersResult->Data;
+        $colUsers = $objUsersResult->getData();
 
         return $colUsers->ConvertToJavaScriptArray([
             "user_id",

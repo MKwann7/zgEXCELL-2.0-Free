@@ -17,9 +17,9 @@ class MobinitiContactsApiModule extends MobinitiBase
 
         if ($page_limit > 100)
         {
-            $objTransaction->Result->Success = false;
-            $objTransaction->Result->Count = 0;
-            $objTransaction->Result->Message = "The record count request cannot be less than the offset of " . $page_limit;
+            $objTransaction->result->Success = false;
+            $objTransaction->result->Count = 0;
+            $objTransaction->result->Message = "The record count request cannot be less than the offset of " . $page_limit;
         }
 
         list($intRecordCount, $intPageCount, $intPageOffset, $intPageLimit, $strQuery) = $this->ParseFilterOrderAndPagination($record_count, $page_offset, $page_limit);
@@ -31,9 +31,9 @@ class MobinitiContactsApiModule extends MobinitiBase
         }
         catch(\Exception $ex)
         {
-            $objTransaction->Result->Success = false;
-            $objTransaction->Result->Count = 0;
-            $objTransaction->Result->Message = "Error processing: " . $ex;
+            $objTransaction->result->Success = false;
+            $objTransaction->result->Count = 0;
+            $objTransaction->result->Message = "Error processing: " . $ex;
             return $objTransaction;
         }
     }

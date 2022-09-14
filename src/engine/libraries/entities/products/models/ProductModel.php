@@ -15,7 +15,7 @@ class ProductModel extends AppModel
         parent::__construct($entityData, $force);
     }
 
-    private function loadDefinitions()
+    private function loadDefinitions(): array
     {
         return [
             "product_id" => ["type" => "int","length" => 15],

@@ -1,6 +1,6 @@
 <?php
 
-namespace Entities\Cart\Controllers;
+namespace Http\Cart\Controllers;
 
 use App\Utilities\Database;
 use App\Utilities\Excell\ExcellCollection;
@@ -9,7 +9,11 @@ use Entities\Cart\Classes\CartTicketProcess;
 use Entities\Cart\Components\Vue\MarketplaceApp;
 use Entities\Cards\Classes\Cards;
 use Entities\Cards\Models\CardModel;
-use Entities\Cart\Classes\Base\CartController;
+use Entities\Companies\Classes\Departments\Departments;
+use Entities\Companies\Classes\Departments\DepartmentTicketQueues;
+use Entities\Packages\Classes\Packages;
+use Entities\Users\Classes\UserClass;
+use Http\Cart\Controllers\Base\CartController;
 use Entities\Cart\Classes\CartEmails;
 use Entities\Cart\Classes\CartProcess;
 use Entities\Cart\Classes\CartProductCapsule;
@@ -102,7 +106,6 @@ class IndexController extends CartController
     public function getPublicCart(ExcellHttpModel $objData): bool
     {
         $objCartWidget = new CartWidget();
-
         $widget = $objCartWidget->renderComponentForAjaxDelivery();
 
         return $this->renderReturnJson(true, base64_encode($widget), "Here's what we got.", 200, "widget");
@@ -123,11 +126,11 @@ class IndexController extends CartController
                                                                           "type_id"    => $typeId
         ]
         );
-        if ($paymentPropertyResult->Result->Count === 0)
+        if ($paymentPropertyResult->result->Count === 0)
         {
             return null;
         }
-        return $paymentPropertyResult->Data->First()->value;
+        return $paymentPropertyResult->getData()->first()->value;
     }
 
     public function submitOrderCheckout(ExcellHttpModel $objData): bool
@@ -137,7 +140,6 @@ class IndexController extends CartController
         if (!$this->validate($objPost, [
             "package_ids" => "required",
             "user_id"     => "required|integer",
-            "payment_id"  => "required|integer",
             "promo_code"  => "required|integer",
             "cart_type"   => "required",
         ]
@@ -152,7 +154,7 @@ class IndexController extends CartController
 
         if ($objPost->cart_type !== "card" && $objPost->parent_entity_type === "card")
         {
-            $parentEntity = (new Cards())->getById($objPost->parent_entity_id)->Data->First();
+            $parentEntity = (new Cards())->getById($objPost->parent_entity_id)->getData()->first();
         }
 
         $cartProcess = new CartProcess($objPost->package_ids, $userId, $paymentAccountId, $this->app);
@@ -164,9 +166,9 @@ class IndexController extends CartController
 
         $cartProcessTransaction = $cartProcess->processCheckout();
 
-        if ($cartProcessTransaction->getTransaction()->Result->Success !== true)
+        if ($cartProcessTransaction->getTransaction()->result->Success !== true)
         {
-            return $this->renderReturnJson(false, ["errors" => $cartProcessTransaction->getErrors()->ToPublicArray()], $cartProcessTransaction->getTransaction()->Result->Message);
+            return $this->renderReturnJson(false, ["errors" => $cartProcessTransaction->getErrors()->ToPublicArray()], $cartProcessTransaction->getTransaction()->result->Message);
         }
 
         $productProcessor = new ProductProcessor($cartProcessTransaction);
@@ -190,13 +192,15 @@ class IndexController extends CartController
             $cardResult = (new Cards())->getByUuid($currCartItem->getProductInstantiation()->sys_row_id);
 
             /** @var CardModel $card */
-            $card = $cardResult->Data->First();
+            $card = $cardResult->getData()->first();
 
-            $card->LoadCardPages(false);
-            $card->LoadCardConnections(false);
-            $card->LoadCardContacts();
+            if ( $card !== null) {
+                $card->LoadCardPages(false);
+                $card->LoadCardConnections(false);
+                $card->LoadCardContacts();
 
-            $cardItems->Add($card);
+                $cardItems->Add($card);
+            }
         }
 
         return $this->renderReturnJson(true, ["list" => $cardItems->ToPublicArray()], "We found this.");
@@ -228,19 +232,19 @@ class IndexController extends CartController
 
         $orderLineResult = (new Cards())->getOrderLineByCardId($objParams["id"]);
 
-        if ($orderLineResult->Result->Count !== 1)
+        if ($orderLineResult->result->Count !== 1)
         {
-            return $this->renderReturnJson(false, $orderLineResult->Result->Message, "No card found by requested Id.");
+            return $this->renderReturnJson(false, $orderLineResult->result->Message, "No card found by requested Id.");
         }
 
-        $card = $orderLineResult->Data->First();
+        $card = $orderLineResult->getData()->first();
         $card->payment_account_id = $objPost->payment_account_id;
 
         $cardUpdateResult = (new OrderLines())->update($card);
 
-        if ($cardUpdateResult->Result->Success === false)
+        if ($cardUpdateResult->result->Success === false)
         {
-            $this->renderReturnJson(false, ["errors" => [$cardUpdateResult->Result->Message]], "Card update error.");
+            $this->renderReturnJson(false, ["errors" => [$cardUpdateResult->result->Message]], "Card update error.");
         }
 
         return $this->renderReturnJson(true, [], "We found this.");
@@ -268,6 +272,11 @@ class IndexController extends CartController
             "expMonth" => "required|integer",
             "expYear" => "required|integer",
             "cvc" => "required|integer",
+            "street" => "",
+            "line1" => "required",
+            "city" => "required",
+            "zip" => "required",
+            "country" => "required",
         ]))
         {
             return $this->renderReturnJson(false, $this->validationErrors, "Validation errors.");
@@ -285,9 +294,21 @@ class IndexController extends CartController
 
         $result = $objUserPaymentProperty->getWhere(["user_id" => $intBillingUserAccountId, "company_id" => $customPlatformId, "state" => $environment, "type_id" => 1]);
 
-        if ($result->Result->Count === 0)
+        if ($result->result->Count === 0 || $result->result->Success === false)
         {
-            $stripeCustomer = $stripe->createCustomerFromUser((int) $intBillingUserAccountId);
+            $stripeCustomer = $stripe->createCustomerFromUser((int) $intBillingUserAccountId, [
+                "line1" => $objPost->line1,
+                "line2" => $objPost->line3,
+                "city" => $objPost->city,
+                "zip" => $objPost->zip,
+                "country" => $objPost->country,
+            ]);
+
+            if ($stripe->stripedErrored())
+            {
+                return $this->renderReturnJson(false, ["error" => "Could not create a user, missing email or phone"], $stripe->getFirstError());
+            }
+
             $userPaymentProperty = new UserPaymentPropertyModel();
             $userPaymentProperty->company_id = $customPlatformId;
             $userPaymentProperty->user_id = $intBillingUserAccountId;
@@ -296,9 +317,14 @@ class IndexController extends CartController
             $userPaymentProperty->value = $stripeCustomer->id;
 
             $result = $objUserPaymentProperty->createNew($userPaymentProperty);
+
+            if ($result->result->Count === 0)
+            {
+                return $this->renderReturnJson(false, ["error" => $result->result->Message], "Error in registering user payment property.");
+            }
         }
 
-        $stripeCustomerId = $result->Data->First()->value;
+        $stripeCustomerId = $result->getData()->first()->value;
 
         $token = $stripe->createCardToken(
             $objPost->name,
@@ -346,7 +372,12 @@ class IndexController extends CartController
 
         $paymentAccountResult = $objPaymentAccounts->createNew($paymentAccount);
 
-        return $this->renderReturnJson(($paymentAccountResult->Result->Count === 1 ? true : false), $paymentAccountResult->Data->First()->ToArray(), "We found this.");
+        if ($paymentAccountResult->result->Success === false)
+        {
+            return $this->renderReturnJson(false, ["error" => $paymentAccountResult->result->Message], "Error creating payment account.");
+        }
+
+        return $this->renderReturnJson(($paymentAccountResult->result->Count === 1 ? true : false), $paymentAccountResult->getData()->first()->ToArray(), "Payment account registered.");
     }
 
     public function getUserPaymentAccounts() : bool
@@ -368,7 +399,7 @@ class IndexController extends CartController
         $accountResult = $objPaymentAccounts->getWhere(["status"=> "active","company_id" => $customPlatformId, "user_id" => (!empty($globalBillingAccountId) ? $globalBillingAccountId->value : $objParams["id"])]);
 
         $arAccountList = array(
-            "paymentAccounts" => $accountResult->Data->ToPublicArray(["payment_account_id", "method", "type", "display_1", "display_2", "sys_row_id"]),
+            "paymentAccounts" => $accountResult->getData()->ToPublicArray(["payment_account_id", "method", "type", "display_1", "display_2", "sys_row_id"]),
         );
 
         return $this->renderReturnJson(true, $arAccountList, "We found this.");
@@ -394,7 +425,7 @@ class IndexController extends CartController
         $accountResult = $objPaymentAccounts->getWhere(["status"=> "active","company_id" => $customPlatformId, "user_id" => (!empty($globalBillingAccountId) ? $globalBillingAccountId->value : $objParams["id"])]);
 
         $objPromoCodes = new PromoCodes();
-        $whereClause = ["company_id" => $customPlatformId, "expired" => ExcellFalse];
+        $whereClause = ["company_id" => $customPlatformId, "expired" => EXCELL_FALSE];
 
 //        if (env("APP_ENV") === "production")
 //        {
@@ -403,19 +434,19 @@ class IndexController extends CartController
 
         $promoCodeResult = $objPromoCodes->getWhere($whereClause);
 
-        $promoCodeResult->Data->Each(function($currCode) use ($objPromoCodes)
+        $promoCodeResult->getData()->Each(function($currCode) use ($objPromoCodes)
         {
             if (!empty($currCode->expiration_date) && strtotime($currCode->expiration_date) < strtotime(date("Y-m-d H:i:s")))
             {
-                $currCode->expired = ExcellTrue;
+                $currCode->expired = EXCELL_TRUE;
                 $objPromoCodes->update($currCode);
             }
         });
 
         $arAccountList = array(
-            "paymentAccounts" => $accountResult->Data->ToPublicArray(["payment_account_id", "method", "type", "display_1", "display_2", "sys_row_id"]),
-            "promoCodes" => $promoCodeResult->Data->ToPublicArray(["promo_code_id", "promo_code", "title", "description", "discount_value", "discount_type"]),
-            "query" => $promoCodeResult->Result->Query,
+            "paymentAccounts" => $accountResult->getData()->ToPublicArray(["payment_account_id", "method", "type", "display_1", "display_2", "sys_row_id"]),
+            "promoCodes" => $promoCodeResult->getData()->ToPublicArray(["promo_code_id", "promo_code", "title", "description", "discount_value", "discount_type"]),
+            "query" => $promoCodeResult->result->Query,
         );
 
         return $this->renderReturnJson(true, $arAccountList, "We found this.");
@@ -435,11 +466,13 @@ class IndexController extends CartController
         $objUsers = new Users();
         $userResult = $objUsers->getFks()->getById($objParams["id"]);
 
+        $objUser = $userResult->getData()->first();
+
         $arUserList = array(
-            "user" => $userResult->Data->First()->ToPublicArray(["name_prefix", "first_name", "last_name", "name_sufx", "user_phone", "user_email", "user_id", "sys_row_id"]),
+            "user" => $objUser->ToPublicArray(["name_prefix", "first_name", "last_name", "name_sufx", "user_phone", "user_email", "user_id", "sys_row_id"]),
         );
 
-        return $this->renderReturnJson(($userResult->Result->Count === 1 ? true : false), $arUserList, "We found this.");
+        return $this->renderReturnJson(($userResult->result->Count === 1 ? true : false), $arUserList, "We found this.");
     }
 
     public function getAllUsers(ExcellHttpModel $objData) : bool
@@ -451,12 +484,24 @@ class IndexController extends CartController
 
         $objUsers = new Users();
         $userResult = $objUsers->getWhere(["company_id" => $customPlatformId, "status" => "Active"]);
+        $activeUser = $this->app->getActiveLoggedInUser();
+
+        $foundActiveUser = false;
+        $userResult->getData()->Foreach(function($currUser) use ($activeUser, &$foundActiveUser) {
+            if ($currUser->user_id === $activeUser->user_id) {
+                $foundActiveUser = true;
+            }
+        });
+
+        if ($foundActiveUser === false) {
+            $userResult->getData()->Add($activeUser);
+        }
 
         $arUserList = array(
-            "list" => $userResult->Data->FieldsToArray(["user_id", "first_name", "last_name"]),
+            "list" => $userResult->getData()->FieldsToArray(["user_id", "first_name", "last_name"]),
         );
 
-        return $this->renderReturnJson(($userResult->Result->Count > 0 ? true : false), $arUserList, "We found this.");
+        return $this->renderReturnJson(($userResult->result->Count > 0 ? true : false), $arUserList, "We found this.");
     }
 
     public function getAllCardUsers(ExcellHttpModel $objData) : bool
@@ -467,10 +512,10 @@ class IndexController extends CartController
         $userResult = $objUsers->getFks(["user_email","user_phone"])->getWhere(["company_id" => $customPlatformId, "status" => "Active"]);
 
         $arUserList = array(
-            "list" => $userResult->Data->FieldsToArray(["user_id", "first_name", "last_name","user_email","user_phone"]),
+            "list" => $userResult->getData()->FieldsToArray(["user_id", "first_name", "last_name","user_email","user_phone"]),
         );
 
-        return $this->renderReturnJson(($userResult->Result->Count > 0 ? true : false), $arUserList, "We found this.");
+        return $this->renderReturnJson(($userResult->result->Count > 0 ? true : false), $arUserList, "We found this.");
     }
 
     public function getAllCardUsersCount(ExcellHttpModel $objData) : bool
@@ -481,10 +526,10 @@ class IndexController extends CartController
         $userResult = $objUsers->getCountWhere(["company_id" => $customPlatformId, "status" => "Active"]);
 
         $arUserList = array(
-            "count" => $userResult->Result->Count,
+            "count" => $userResult->result->Count,
         );
 
-        return $this->renderReturnJson(($userResult->Result->Count > 0 ? true : false), $arUserList, "We found this.");
+        return $this->renderReturnJson(($userResult->result->Count > 0 ? true : false), $arUserList, "We found this.");
     }
 
     public function getAllAffiliates(ExcellHttpModel $objData) : bool
@@ -497,61 +542,38 @@ class IndexController extends CartController
             LEFT JOIN user u ON uc.user_id = u.user_id WHERE u.company_id = {$customPlatformId} AND uc.user_class_type_id = 15 AND u.status = 'Active'";
 
         $userResult = Database::getSimple($objWhereClause,"user_id");
-        $userResult->Data->HydrateModelData(UserModel::class, true);
+        $userResult->getData()->HydrateModelData(UserModel::class, true);
 
         $arUserList = array(
-            "list" => $userResult->Data->FieldsToArray(["user_id", "first_name", "last_name"]),
+            "list" => $userResult->getData()->FieldsToArray(["user_id", "first_name", "last_name"]),
         );
 
-        return $this->renderReturnJson(($userResult->Result->Count > 0 ? true : false), $arUserList, "We found this.");
+        return $this->renderReturnJson(($userResult->result->Count > 0 ? true : false), $arUserList, "We found this.");
     }
 
-    public function getPackagesByClassName(ExcellHttpModel $objData) : bool
+    public function getPackageByIdForCart(ExcellHttpModel $objData) : bool
     {
         $objParams= $this->app->objHttpRequest->Data->Params;
 
         if (!$this->validate($objParams, [
-            "name" => "required",
+            "id" => "required",
         ]))
         {
             return $this->renderReturnJson(false, $this->validationErrors, "Validation errors.");
         }
 
-        $customPlatformId = $this->app->objCustomPlatform->getCompany()->company_id;
-        $className = $objParams["name"];
+        $objPackages = (new Packages())->getById($objParams["id"]);
 
-        $onlyEndUser = "";
-
-        if (!userCan("manage-platforms"))
+        if ($objPackages->result->Count !== 1)
         {
-            $onlyEndUser = " AND p.enduser_id = 1";
+            return $this->renderReturnJson(true, null, "Package not found by id.");
         }
 
-        $objWhereClause = "
-            SELECT p.*
-            FROM ezdigital_v2_main.package_class pc
-            LEFT JOIN ezdigital_v2_main.package_class_rel pcr ON pc.package_class_id = pcr.package_class_id
-            LEFT JOIN ezdigital_v2_main.package p ON pcr.package_id = p.package_id ";
-
-        if (in_array($this->app->getActiveLoggedInUser()->user_id, [1002, 1003, 70726, 73837, 90999, 91003, 91015, 91014]))
-        {
-            $objWhereClause .= "WHERE p.company_id = {$customPlatformId} AND pc.name = '{$className}' AND p.package_id != 27 $onlyEndUser";
-        }
-        else
-        {
-            $objWhereClause .= "WHERE p.company_id = {$customPlatformId} AND pc.name = '{$className}'$onlyEndUser";
-        }
-
-        $objWhereClause .= " ORDER BY p.order ASC";
-
-        $objPackages = Database::getSimple($objWhereClause,"package_id");
-        $objPackages->Data->HydrateModelData(PackageModel::class, true);
-
-        $objPackageList = ( new PackageLines())->getWhereIn("package_id", $objPackages->Data->FieldsToArray(["package_id"]));
-        $objPackages->Data->HydrateChildModelData("line", ["package_id" => "package_id"], $objPackageList->Data, false);
+        $objPackageList = ( new PackageLines())->getWhereIn("package_id", $objPackages->getData()->FieldsToArray(["package_id"]));
+        $objPackages->getData()->HydrateChildModelData("line", ["package_id" => "package_id"], $objPackageList->data, false);
 
         $productIds = [];
-        $objPackageList->Data->Each(static function(PackageLineModel $currPackageLine) use (&$productIds) {
+        $objPackageList->getData()->Each(static function(PackageLineModel $currPackageLine) use (&$productIds) {
 
             if ($currPackageLine->product_entity === "product")
             {
@@ -562,7 +584,7 @@ class IndexController extends CartController
         $objProducts = new Products();
         $productResult = $objProducts->getWhereIn("product_id", $productIds);
 
-        $objPackages->Data->Foreach(static function(PackageModel $currPackage) use ($productResult) {
+        $objPackages->getData()->Foreach(static function(PackageModel $currPackage) use ($productResult) {
 
             if (empty($currPackage->line)) { return; }
 
@@ -570,7 +592,7 @@ class IndexController extends CartController
             {
                 if ($currPackageLine->product_entity = "product")
                 {
-                    $productResult->Data->Foreach(static function (ProductModel $currProductModel) use (&$currPackageLine)
+                    $productResult->getData()->Foreach(static function (ProductModel $currProductModel) use (&$currPackageLine)
                     {
                         if ($currPackageLine->product_entity_id === $currProductModel->product_id)
                         {
@@ -587,7 +609,96 @@ class IndexController extends CartController
         });
 
         $arPackageList = array(
-            "list" => $objPackages->Data->ToPublicArray(),
+            "package" => $objPackages->getData()->first()->ToArray(),
+        );
+
+        return $this->renderReturnJson(true, $arPackageList, "We found this.");
+    }
+
+    public function getPackagesByClassName(ExcellHttpModel $objData) : bool
+    {
+        $objParams= $this->app->objHttpRequest->Data->Params;
+
+        if (!$this->validate($objParams, [
+            "name" => "required",
+        ]))
+        {
+            return $this->renderReturnJson(false, $this->validationErrors, "Validation errors.");
+        }
+
+        $customPlatformId = $this->app->objCustomPlatform->getCompany()->company_id;
+        $className = $objParams["name"];
+        $isAdminRole = $objParams["e"];
+
+        $onlyEndUser = "";
+
+        if (!userCan("manage-platforms") || $isAdminRole !== true)
+        {
+            $onlyEndUser = " AND p.enduser_id = 1";
+        }
+
+        $objWhereClause = "
+            SELECT p.*, peu.enduser_label, peu.description as enduser_desc
+            FROM excell_main.package_class pc
+            LEFT JOIN excell_main.package_class_rel pcr ON pc.package_class_id = pcr.package_class_id
+            LEFT JOIN excell_main.package p ON pcr.package_id = p.package_id
+            LEFT JOIN excell_main.product_enduser peu ON peu.product_enduser_id = p.enduser_id ";
+
+        if (in_array($this->app->getActiveLoggedInUser()->user_id, [1002, 1003, 70726, 73837, 90999, 91003, 91015, 91014]))
+        {
+            $objWhereClause .= "WHERE p.company_id = {$customPlatformId} AND pc.name = '{$className}' AND p.package_id != 27 $onlyEndUser";
+        }
+        else
+        {
+            $objWhereClause .= "WHERE p.company_id = {$customPlatformId} AND pc.name = '{$className}'$onlyEndUser";
+        }
+
+        $objWhereClause .= " ORDER BY p.order ASC";
+
+        $objPackages = Database::getSimple($objWhereClause,"package_id");
+        $objPackages->getData()->HydrateModelData(PackageModel::class, true);
+
+        $objPackageList = ( new PackageLines())->getWhereIn("package_id", $objPackages->getData()->FieldsToArray(["package_id"]));
+        $objPackages->getData()->HydrateChildModelData("line", ["package_id" => "package_id"], $objPackageList->data, false);
+
+        $productIds = [];
+        $objPackageList->getData()->Each(static function(PackageLineModel $currPackageLine) use (&$productIds) {
+
+            if ($currPackageLine->product_entity === "product")
+            {
+                $productIds[] = $currPackageLine->product_entity_id;
+            }
+        });
+
+        $objProducts = new Products();
+        $productResult = $objProducts->getWhereIn("product_id", $productIds);
+
+        $objPackages->getData()->Foreach(static function(PackageModel $currPackage) use ($productResult) {
+
+            if (empty($currPackage->line)) { return; }
+
+            $currPackage->line->Foreach(static function(PackageLineModel $currPackageLine) use ($productResult)
+            {
+                if ($currPackageLine->product_entity = "product")
+                {
+                    $productResult->getData()->Foreach(static function (ProductModel $currProductModel) use (&$currPackageLine)
+                    {
+                        if ($currPackageLine->product_entity_id === $currProductModel->product_id)
+                        {
+                            $currPackageLine->AddUnvalidatedValue("product", $currProductModel);
+                            $currPackageLine->AddUnvalidatedValue("product_type_id", $currProductModel->product_type_id);
+                        }
+                    });
+
+                    return $currPackageLine;
+                }
+            });
+
+            return $currPackage;
+        });
+
+        $arPackageList = array(
+            "list" => $objPackages->getData()->ToPublicArray(),
         );
 
         return $this->renderReturnJson(true, $arPackageList, "We found this.");
@@ -611,31 +722,31 @@ class IndexController extends CartController
             platform_name AS platform,
             domain_portal AS portal_domain,
             domain_public AS public_domain,
-            (SELECT CONCAT(user.first_name, ' ', user.last_name) FROM `ezdigital_v2_main`.`user` WHERE user.user_id = company.owner_id LIMIT 1) AS owner,
-            (SELECT COUNT(*) FROM `ezdigital_v2_main`.`card` cd WHERE cd.company_id = company.company_id) AS cards
+            (SELECT CONCAT(user.first_name, ' ', user.last_name) FROM `excell_main`.`user` WHERE user.user_id = company.owner_id LIMIT 1) AS owner,
+            (SELECT COUNT(*) FROM `excell_main`.`card` cd WHERE cd.company_id = company.company_id) AS cards
             FROM `company` ";
 
         $objWhereClause .= " ORDER BY company.company_id ASC LIMIT {$pageIndex}, {$batchCount}";
 
         $objCards = Database::getSimple($objWhereClause,"company_id");
 
-        if ($objCards->Data->Count() < $batchCount)
+        if ($objCards->getData()->Count() < $batchCount)
         {
             $strEnd = "true";
         }
 
-        $objCards->Data->HydrateModelData(CompanyModel::class, true);
+        $objCards->getData()->HydrateModelData(CompanyModel::class, true);
 
         $arUserDashboardInfo = array(
-            "list" => $objCards->Data->FieldsToArray($arFields),
+            "list" => $objCards->getData()->FieldsToArray($arFields),
         );
 
-        return $this->renderReturnJson(true, $arUserDashboardInfo, "We found " . $objCards->Data->Count() . " companies in this batch.", 200, "data", $strEnd);
+        return $this->renderReturnJson(true, $arUserDashboardInfo, "We found " . $objCards->getData()->Count() . " companies in this batch.", 200, "data", $strEnd);
     }
 
     public function sendEmailsForCart(ExcellHttpModel $objData) : bool
     {
-        //$cartEmails = new CartEmails($this->app, (new Users())->getFks(["user_phone", "user_email"])->getById(1000)->Data->First());
+        //$cartEmails = new CartEmails($this->app, (new Users())->getFks(["user_phone", "user_email"])->getById(1000)->getData()->first());
         //$cartEmails->processEmailForConnectedCart($this->app);
 
         return true;

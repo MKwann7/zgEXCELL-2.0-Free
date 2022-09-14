@@ -42,12 +42,12 @@ class CartEmails
 
         $this->customPlatformProductNotificationEmail = $this->app->objCustomPlatform->getCompanySettings()->FindEntityByValue("label", "product_notification_email")->value ?? "noreply@ezdigital.com";
         $this->customPlatformProductNotificationEmailTitle = $this->app->objCustomPlatform->getCompanySettings()->FindEntityByValue("label", "product_notification_email_title")->value ?? "EZ Digital Product Support";
-        $this->customPlatformAdminUrl = $this->app->objCustomPlatform->getFullPublicDomain();
+        $this->customPlatformAdminUrl = $this->app->objCustomPlatform->getFullPublicDomainName();
         $this->customerServiceEmail = $this->app->objCustomPlatform->getCompanySettings()->FindEntityByValue("label", "customer_support_email")->value;
         $this->customerServicePhone = $this->app->objCustomPlatform->getCompanySettings()->FindEntityByValue("label", "customer_support_phone")->value;
         $this->customerServiceUserId = $this->app->objCustomPlatform->getCompanySettings()->FindEntityByValue("label", "customer_support_user_id")->value;
-        $this->customerServiceUser = (new Users())->getFks(["user_phone", "user_email"])->getById($this->customerServiceUserId)->Data->First();
-        $this->userSponsor = (new Users())->getFks(["user_phone", "user_email"])->getById($this->user->sponsor_id)->Data->First();
+        $this->customerServiceUser = (new Users())->getFks(["user_phone", "user_email"])->getById($this->customerServiceUserId)->getData()->first();
+        $this->userSponsor = (new Users())->getFks(["user_phone", "user_email"])->getById($this->user->sponsor_id)->getData()->first();
 
         $this->parsePurchase();
     }
@@ -229,5 +229,7 @@ class CartEmails
             case 6:
                 return 'Welcome [CLIENT_NAME],<br><br>Thank you for your purchase today. To get you up and running here are your next steps:<br><br>step 1 Email <a href="mailto:info@akbranding.com" target="_blank">info@akbranding.com</a> your contact info and website domain address.<br>step 2 Email <a href="mailto:info@akbranding.com" target="_blank">info@akbranding.com</a> your business name | business info | logo in a .jpg format.<br>step 3 Email <a href="mailto:info@akbranding.com" target="_blank">info@akbranding.com</a> any content | photos | bios you would like added to your app.<br><br><br>Thank you,<br><br>[COMPANY_NAME]<br><br><br>Date of purchase: [EZDIGITAL_NOW_DATE]<br><br>User Id: [USER_ID]<br>First: [FIRST_NAME]<br>Last: [LAST_NAME]<br>Email: [user&#39;s email]<br>Mobile: [USER_EMAIL]<br><br>Originator Name: [SPONSOR_FULL_NAME]<br>Originator User Id: [SPONSOR_ID]<br><br>Order Number: [ORDER_ID]<br><br> Order line (n): [quantity] [order_line_id]|| [discount code] Product: [product title] || [coupon title] <br> Line total: [price] Renewal:[cycle_type] Renewal Total[<br><br> Order line (n): [order_line_id] ||[discount code] Product: [product title] || [coupon title] <br> Line total: [price] Renewal:[cycle_type] Renewal Cost: [renewal fee]<br><br><br>GROSS SALE: [ORDER_TOTAL]<br>STRIPE FEES: [ORDER_STRIPE_FEE]<br>TAX: [ORDER_TAXES]<br>';
         }
+
+        return 'Welcome [CLIENT_NAME],<br><br>Thank you for your purchase today. To get you up and running here are your next steps:<br><br>step 1 Email <a href="mailto:info@akbranding.com" target="_blank">info@akbranding.com</a> your contact info and website domain address.<br>step 2 Email <a href="mailto:info@akbranding.com" target="_blank">info@akbranding.com</a> your business name | business info | logo in a .jpg format.<br>step 3 Email <a href="mailto:info@akbranding.com" target="_blank">info@akbranding.com</a> any content | photos | bios you would like added to your app.<br><br><br>Thank you,<br><br>[COMPANY_NAME]<br><br><br>Date of purchase: [EZDIGITAL_NOW_DATE]<br><br>User Id: [USER_ID]<br>First: [FIRST_NAME]<br>Last: [LAST_NAME]<br>Email: [user&#39;s email]<br>Mobile: [USER_EMAIL]<br><br>Originator Name: [SPONSOR_FULL_NAME]<br>Originator User Id: [SPONSOR_ID]<br><br>Order Number: [ORDER_ID]<br><br> Order line (n): [quantity] [order_line_id]|| [discount code] Product: [product title] || [coupon title] <br> Line total: [price] Renewal:[cycle_type] Renewal Total[<br><br> Order line (n): [order_line_id] ||[discount code] Product: [product title] || [coupon title] <br> Line total: [price] Renewal:[cycle_type] Renewal Cost: [renewal fee]<br><br><br>GROSS SALE: [ORDER_TOTAL]<br>STRIPE FEES: [ORDER_STRIPE_FEE]<br>TAX: [ORDER_TAXES]<br>';;
     }
 }

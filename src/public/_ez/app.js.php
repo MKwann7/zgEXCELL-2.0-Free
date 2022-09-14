@@ -8,7 +8,7 @@
 
 header('Content-Type:text/javascript');
 
-require PublicWebsite . "js/application.js.php";
+require PUBLIC_WEBSITE . "js/application.js.php";
 ?>
 
 function EZcard()
@@ -30,11 +30,8 @@ function EZcard()
                 let intCardId = $("#card_id").val();
                 $(".tab-open:not(#tab" + intTabId + ")").removeClass("tab-open");
 
-                console.log("here!");
-
                 ajax.Get("cards/card-data/get-card-page-data?card_tab_rel_id=" + intTabId + "&card_id=" + intCardId, function(result)
                 {
-                    console.log(result);
                     $(".tabContent:not(.tab-open)").slideUp(100);
                     try
                     {
@@ -108,8 +105,6 @@ function EZcard()
 
         ajax.Get("cards/card-data/get-card-page-data?card_tab_rel_id=" + intTabId + "&card_id=" + intCardId,function(result)
         {
-            console.log("here12345");
-
             objCardPage.removeClass("ajax-loading-anim-inner");
             try
             {

@@ -1,11 +1,11 @@
 <?php
 
-const AppCore = __DIR__ . "/";
-const AppStart = "Web";
+const APP_CORE = __DIR__ . "/";
+const APP_START = "Web";
 
 // Load Core Files
 /** @var App\Core\App $app */
-$app = require(AppCore.'engine/system.load.php');
+$app = require(APP_CORE . 'engine/system.load.php');
 
 // Load App Engine
 $app->load();

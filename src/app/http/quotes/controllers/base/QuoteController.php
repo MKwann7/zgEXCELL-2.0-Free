@@ -1,6 +1,6 @@
 <?php
 
-namespace Entities\Quotes\Classes\Base;
+namespace Http\Quotes\Controllers\Base;
 
 use App\Core\AppController;
 use Entities\Quotes\Classes\Quotes;

@@ -37,7 +37,7 @@ if (env("APP_ENV") !== "production") { ?>
 </footer>
 <?php } ?>
 
-</section>
+</dev>
 </div>
 <div class="DialogTransparentShield" style="display:none;" onclick="app.disableFloats()"></div>
 <div class="AvatarMenu" style="display:none;">

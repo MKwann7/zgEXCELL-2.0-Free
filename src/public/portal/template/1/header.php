@@ -51,9 +51,7 @@ switch ($this->app->objCustomPlatform->getCompanyId())
             <div class="nav-box-card">
                 <h5>MAIN</h5>
                 <ul>
-                    <?php if ( $companyId === 4 ) { ?>
                     <li<?php userCanHideElement("view-my-queue"); ?>><a href="/account/tickets"><span class="fas fa-stopwatch desktop-20px"></span> <span>My Queue</span></a></li>
-                    <?php } ?>
                     <li<?php userCanHideElement("view-my-card"); ?>><a href="/account/cards"><span class="fas fa-id-card desktop-20px"></span> <span>My Cards</span></a></li>
                     <li<?php userCanHideElement("view-my-apps"); ?>><a href="/account/modules"><span class="fas fa-th-large desktop-20px"></span> <span>My Modules</span></a></li>
                     <?php if ( $companyId === 4 ) { ?>
@@ -61,37 +59,35 @@ switch ($this->app->objCustomPlatform->getCompanyId())
                     <?php } ?>
                     <li<?php userCanHideElement("view-my-communication"); ?>><a href="/account/communication"><span class="fas fa-envelope desktop-20px"></span> <span>Communication</span></a></li>
                     <li<?php userCanHideElement("view-my-contacts"); ?>><a href="/account/contacts"><span class="fas fa-address-book desktop-20px"></span> <span>My Contacts</span></a></li>
-                    <?php if ( $companyId === 4 ) { ?>
-                        <li<?php userCanHideElement("view-marketplace"); ?>><a href="/account/marketplace"><span class="fas fa-shopping-basket desktop-20px"></span> <span>Marketplace</span></a></li>
-                    <?php } ?>
+                    <li<?php userCanHideElement("view-marketplace"); ?>><a href="/account/marketplace"><span class="fas fa-shopping-basket desktop-20px"></span> <span>Marketplace</span></a></li>
                 </ul>
             </div>
             <?php if (userCan("view-system")) { ?>
-            <div class="nav-box-card">
-                <h5>ADMIN</h5>
-                <ul>
-                    <li<?php userCanHideElement("view-admin-customers"); ?>><a href="/account/admin/customers"><span class="fas fa-users desktop-20px"></span> <span>Customers</span></a></li>
-                    <li<?php userCanHideElement("view-admin-cards"); ?>><a href="/account/admin/cards"><span class="fas fa-list-alt desktop-20px"></span> <span>Cards</span></a></li>
-                    <li<?php userCanHideElement("view-admin-apps"); ?>><a href="/account/admin/modules"><span class="fas fa-th-large desktop-20px"></span> <span>Modules</span></a></li>
-                    <li<?php userCanHideElement("view-admin-notes"); ?>><a href="/account/admin/notes"><span class="fas fa-sticky-note desktop-20px"></span> <span>Notes</span></a></li>
-                    <li<?php userCanHideElement("view-admin-tickets"); ?>><a href="/account/admin/tickets"><span class="fas fa-ticket-alt desktop-20px"></span> <span>Tickets</span></a></li>
-                    <li<?php userCanHideElement("view-admin-packages"); ?>><a href="/account/admin/packages"><span class="fas fa-box-open desktop-20px"></span> <span>Packages</span></a></li>
-                    <li<?php userCanHideElement("view-admin-packages"); ?>><a href="/account/admin/users"><span class="fas fa-user-shield desktop-20px"></span> <span>Users</span></a></li>
-                    <li<?php userCanHideElement("view-admin-reports"); ?>><a href="/account/admin/reports"><span class="fas fa-chart-pie desktop-20px"></span> <span>Reports</span></a></li>
-                </ul>
-            </div>
+                <div class="nav-box-card">
+                    <h5>ADMIN</h5>
+                    <ul>
+                        <li<?php userCanHideElement("view-admin-customers"); ?>><a href="/account/admin/customers"><span class="fas fa-users desktop-20px"></span> <span>Customers</span></a></li>
+                        <li<?php userCanHideElement("view-admin-cards"); ?>><a href="/account/admin/cards"><span class="fas fa-list-alt desktop-20px"></span> <span>Cards</span></a></li>
+                        <li<?php userCanHideElement("view-admin-apps"); ?>><a href="/account/admin/modules"><span class="fas fa-th-large desktop-20px"></span> <span>Modules</span></a></li>
+                        <li<?php userCanHideElement("view-admin-notes"); ?>><a href="/account/admin/notes"><span class="fas fa-sticky-note desktop-20px"></span> <span>Notes</span></a></li>
+                        <li<?php userCanHideElement("view-admin-tickets"); ?>><a href="/account/admin/tickets"><span class="fas fa-ticket-alt desktop-20px"></span> <span>Tickets</span></a></li>
+                        <li<?php userCanHideElement("view-admin-packages"); ?>><a href="/account/admin/packages"><span class="fas fa-box-open desktop-20px"></span> <span>Packages</span></a></li>
+                        <li<?php userCanHideElement("view-admin-packages"); ?>><a href="/account/admin/users"><span class="fas fa-user-shield desktop-20px"></span> <span>Users</span></a></li>
+                        <li<?php userCanHideElement("view-admin-reports"); ?>><a href="/account/admin/reports"><span class="fas fa-chart-pie desktop-20px"></span> <span>Reports</span></a></li>
+                    </ul>
+                </div>
             <?php } ?>
             <?php if (userCan("manage-platforms")) { ?>
-            <div class="nav-box-card">
-                <h5>SYSTEM</h5>
-                <ul>
-                    <li<?php userCanHideElement("view-super-customers"); ?>><a href="/account/admin/users"><span class="fas fa-users desktop-20px"></span> <span>All Customers</span></a></li>
-                    <li<?php userCanHideElement("view-super-users"); ?>><a href="/account/admin/users"><span class="fas fa-user-shield desktop-20px"></span> <span>All Users</span></a></li>
-                    <li<?php userCanHideElement("view-super-cards"); ?>><a href="/account/admin/cards/all"><span class="fas fa-list-alt desktop-20px"></span> <span>All Cards</span></a></li>
-                    <li<?php userCanHideElement("view-super-platforms"); ?>><a href="/account/admin/platforms"><span class="fas fa-cloud desktop-20px"></span> <span>Custom Platforms</span></a></li>
-                    <li<?php userCanHideElement("view-super-reports"); ?>><a href="/account/admin/reports"><span class="fas fa-chart-pie desktop-20px"></span> <span>Reports</span></a></li>
-                </ul>
-            </div>
+                <div class="nav-box-card">
+                    <h5>SYSTEM</h5>
+                    <ul>
+                        <li<?php userCanHideElement("view-super-customers"); ?>><a href="/account/admin/users"><span class="fas fa-users desktop-20px"></span> <span>All Customers</span></a></li>
+                        <li<?php userCanHideElement("view-super-users"); ?>><a href="/account/admin/users"><span class="fas fa-user-shield desktop-20px"></span> <span>All Users</span></a></li>
+                        <li<?php userCanHideElement("view-super-cards"); ?>><a href="/account/admin/cards/all"><span class="fas fa-list-alt desktop-20px"></span> <span>All Cards</span></a></li>
+                        <li<?php userCanHideElement("view-super-platforms"); ?>><a href="/account/admin/platforms"><span class="fas fa-cloud desktop-20px"></span> <span>Custom Platforms</span></a></li>
+                        <li<?php userCanHideElement("view-super-reports"); ?>><a href="/account/admin/reports"><span class="fas fa-chart-pie desktop-20px"></span> <span>Reports</span></a></li>
+                    </ul>
+                </div>
             <?php } ?>
         </div>
     </div>
@@ -125,4 +121,4 @@ switch ($this->app->objCustomPlatform->getCompanyId())
             </div>
         </div>
     </header>
-    <section class="portal-section">
+    <div class="portal-section">

@@ -18,7 +18,7 @@ class Tabs_ShareOrSaveCardController extends AppController
 
         ob_start();
 
-        $strViewPath = PublicData . "_ez/tabs/v1/views/share_or_save_cardView" . XT;
+        $strViewPath = PUBLIC_DATA . "_ez/tabs/v1/views/share_or_save_cardView" . XT;
 
         if(!is_file($strViewPath))
         {

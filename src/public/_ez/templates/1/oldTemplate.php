@@ -315,7 +315,7 @@ if ( empty($objCard->card_data->style->card) || empty($objCard->card_data->style
 <input id="card_id" type="hidden" value="<?php echo (isset($intCardId) ? $intCardId : "0"); ?>" />
 <input id="card_num" type="hidden" value="<?php echo (isset($intCardNum) ? $intCardNum : "0"); ?>" />
 <input id="user_id" type="hidden" value="<?php echo (isset($intUserId) ? $intUserId : "0"); ?>" />
-<input id="browser_id" type="hidden" value="<?php echo (isset($app->objAppSession["Core"]["Session"]["Browser"]) ? $app->objAppSession["Core"]["Session"]["Browser"] : ""); ?>" />
+<input id="browser_id" type="hidden" value="<?php echo (isset($_COOKIE["instance"]) ? $_COOKIE["instance"] : ""); ?>" />
 <input id="cardIdLegacy" type="hidden" value="<?php echo (isset($app->objAppSession["Core"]["Session"]["card"]["ActiveCard"]) ? $app->objAppSession["Core"]["Session"]["Card"]["ActiveCard"] : "0"); ?>" />
 <script type="text/javascript">
 

@@ -13,6 +13,9 @@ $arJavaScriptLibraries = [
         "lodash" => array(
             "main/v4.17.11" => ["lodash.min.js"],
         ),
+        "anime" => array(
+            "main/v3.2.1" => ["anime.min.js"],
+        ),
         "modernizr" => array(
             "main/v2.6.2" => ["modernizer.min.js"]
         ),

@@ -16,7 +16,7 @@ $portalLogoLight = $this->app->objCustomPlatform->getCompanySettings()->FindEnti
     background: url(<?php echo $portalLogoLight; ?>) no-repeat center center / 100% auto;
 }
 
-.app-wrapper {
+.app-wrapper:not(.app-in-editor) {
     width: 100vw;
     height: 100vh;
     height: -webkit-fill-available;
@@ -30,12 +30,23 @@ $portalLogoLight = $this->app->objCustomPlatform->getCompanySettings()->FindEnti
     justify-content: center;
     align-items: center;
 }
+.app-template-4 .app-wrapper:not(.app-in-editor) {
+    width: 100vw;
+    height: 100vh;
+    height: -webkit-fill-available;
+    position: fixed;
+    display: block;
+    top: 0px;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+    overflow-y: auto;
+}
 .theme_shade_light {
     background: #ccc;
 }
-.theme_shade_light .app-card {
+.theme_shade_light.app-template-4 {
     background: #fff;
-    box-shadow: rgba(0,0,0,0.2) 0px 0px 10px;
 }
 .app-wrapper-inner {
     display: flex;
@@ -44,18 +55,22 @@ $portalLogoLight = $this->app->objCustomPlatform->getCompanySettings()->FindEnti
     max-height: -webkit-fill-available;
 }
 .app-card {
-    width: 500px;
+    /*width: 500px;*/
     display: block;
-    height: 890px;
+    /*height: 890px;*/
     position: relative;
 }
 .app-main-comp-header {
     display: flex;
     width: 100%;
-    height: 305px;
-    background: #ccc;
     position: relative;
 }
+.app-template-2 .app-main-comp-header,
+.app-template-3 .app-main-comp-header {
+    height: 305px;
+    background: #ccc;
+}
+
 .app-main-comp-portal-header {
     display: flex;
     width: 100%;
@@ -130,19 +145,20 @@ $portalLogoLight = $this->app->objCustomPlatform->getCompanySettings()->FindEnti
 .vue-app-body {
     overflow:hidden;
 }
-.app-page-content {
+.app-template-2 .app-page-content {
     overflow-y: auto;
     height: 830px;
 }
-.management-hub .app-page-content {
+.management-hub .app-template-2 .app-page-content {
     overflow-y: auto;
     height: 747px;
 }
 .app-section {
-    overflow: hidden;
+    overflow-x: hidden;
     position: relative;
 }
-.app-kabob-float {
+.app-template-2 .app-kabob-float,
+.app-template-3 .app-kabob-float {
     position: absolute;
     top: 124px;
     height: 725px;
@@ -286,8 +302,86 @@ $portalLogoLight = $this->app->objCustomPlatform->getCompanySettings()->FindEnti
 .app-main-comp-footer div {
     display: flex;
 }
+.app-main-comp-nav,
 .app-main-comp-body {
     display: flex;
+}
+.app-template-4 .app-main-comp-nav-inner {
+    display: flex;
+    margin: auto;
+}
+.app-main-comp-nav-inner li {
+    list-style-type: none;
+}
+.app-template-4 .app-main-comp-nav-inner > ul,
+.app-template-4 .app-main-comp-nav-inner > span.toggle_menu {
+    flex-direction: row;
+}
+.app-template-4 .app-main-comp-nav-inner ul {
+    flex: 3;
+}
+.app-template-4 .app-main-comp-nav-inner li {
+    padding: 10px 15px;
+    cursor: pointer;
+}
+.displayDirectory {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+}
+.displayDirectory {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+}
+.displayDirectoryInner {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+.displayDirectoryItem {
+    cursor: pointer !important;
+    flex-direction: column;
+    display: flex;
+    flex: auto;
+    margin: 10px;
+    position: relative;
+    max-width: 48%;
+    -webkit-transition: -webkit-transform .1s ease-in-out;
+    -moz-transition: -moz-transform .1s ease-in-out;
+    -o-transition: -o-transform .1s ease-in-out;
+    transition: transform .1s ease-in-out;
+    align-items: center;
+}
+@media (max-width:950px) {
+    .displayDirectoryItem {
+        max-width: 100%;
+    }
+    .row {
+        margin-right: 0;
+        margin-left: 0;
+    }
+    .app-main-comp-body .column {
+        float: left;
+        padding-left: .75rem; /* beta3 */
+        padding-right: .75rem; /* beta3 */
+    }
+}
+.displayDirectoryItem:hover {
+    -webkit-transform: scale(1.05);
+    -moz-transform: scale(1.05);
+    -o-transform: scale(1.05);
+    transform: scale(1.05);
+}
+.displayDirectoryAvatar {
+
+}
+.app-template-4 .app-main-comp-nav-inner .nav-search {
+    display: flex;
+    justify-content: flex-end;
+    flex: 1;
+    align-content: center;
+    align-items: center;
 }
 .handed-left .app-main-comp-body {
     flex-direction: row;
@@ -295,13 +389,15 @@ $portalLogoLight = $this->app->objCustomPlatform->getCompanySettings()->FindEnti
 .handed-right .app-main-comp-body {
     flex-direction: row-reverse;
 }
-.app-main-comp-nav {
+.app-template-2 .app-main-comp-nav,
+.app-template-3 .app-main-comp-nav {
     display: flex;
     width: 25%;
     flex-direction: row;
     padding: 10px 0;
 }
-.app-main-comp-pages {
+.app-template-2 .app-main-comp-pages,
+.app-template-3 .app-main-comp-pages {
     display: flex;
     width: 75%;
     flex-direction: row;
@@ -331,8 +427,8 @@ $portalLogoLight = $this->app->objCustomPlatform->getCompanySettings()->FindEnti
     margin: 0;
     padding: 0;
 }
-.app-main-comp-nav ul li,
-.app-main-comp-pages ul li {
+.app-template-2 .app-main-comp-nav ul li,
+.app-template-3 .app-main-comp-nav ul li{
     display: flex;
     align-items: center;
     min-height: 98px;
@@ -366,10 +462,9 @@ $portalLogoLight = $this->app->objCustomPlatform->getCompanySettings()->FindEnti
 .theme_shade_light .app-main-comp-nav ul li span.app-main-comp-nav-item,
 .theme_shade_light .app-main-comp-pages ul li span.app-main-comp-page-item,
 .theme_shade_light .app-main-comp-footer {
-    background: #c4c4c4;
     font-family: Saira;
 }
-.app-main-comp-pages ul li span.app-main-comp-page-item {
+.app-template-2 .app-main-comp-pages ul li span.app-main-comp-page-item {
     padding: 12px 25px;
     border-radius: 25px;
     width: 100%;
@@ -506,6 +601,18 @@ body.theme_shade_light div.universal-float-shield {
     max-width: calc(100vw - 50px);
     min-width: 250px;
 }
+.zgpopup-dialog-box {
+    transition: all 0.1s ease-in-out 0s;
+    transform: scale(1.3);
+    visibility: hidden;
+    opacity: 0;
+}
+.activeModal .zgpopup-dialog-box {
+    transform: scale(1) !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    transition: all 0.2s ease-in-out 0s;
+}
 .theme_shade_light .zgpopup-dialog-box {
     background: #ffffff;
     background: linear-gradient(to bottom, #fff 0%, #eaeaea 100%);
@@ -515,11 +622,30 @@ body.theme_shade_light div.universal-float-shield {
     font-family: Saira;
     font-size: 27px;
     padding: 4px 0;
-    white-space: nowrap;
     overflow: hidden;
-    text-overflow: ellipsis;
 }
-.back-to-entity-list {
+.app-page-editor-text-transparent:focus,
+.app-page-editor-text-transparent:focus-visible,
+.app-page-editor-text-transparent:active,
+.app-page-editor-text-transparent {
+    white-space: nowrap;
+    border:0 !important;
+    outline: -webkit-focus-ring-color auto 0;
+    box-shadow: transparent 0 0 0 !important;
+    background: transparent !important;
+}
+body #divSnippetList {
+    top: 112px !important;
+    height: calc( 100% - 112px) !important;
+}
+.app-page-title:hover,
+.app-page-title:active,
+.app-page-title:focus-visible,
+.app-page-title:focus {
+    border:0 !important;
+    outline: -webkit-focus-ring-color auto 0;
+}
+.back-to-entity-list:not(.app-in-editor) {
     border-width: 0 4px 4px 0 !important;
     display: inline-block;
     padding: 4px;
@@ -553,6 +679,199 @@ body.theme_shade_light div.universal-float-shield {
 }
 .pointer {
     cursor:pointer;
+}
+
+/** MODULES APP **/
+.app-template-4 .app-main-comp-header,
+.app-template-6 .app-main-comp-header {
+    display:block;
+}
+.app-template-4 .app-main-comp-header-inner,
+.app-template-6 .app-main-comp-header-inner {
+    display:flex;
+    margin:auto;
+    width:100%;
+    flex-direction: column;
+    align-items: center;
+}
+.app-template-4 .app-main-comp-body-inner,
+.app-template-6 .app-main-comp-body-inner {
+    margin:auto;
+    width:100%;
+    display:block;
+}
+.app-template-4 .app-page-title {
+    color: #000 !important;
+    text-transform: uppercase;
+}
+.app-template-4 .app-main-comp-nav,
+.app-template-4 .app-main-comp-page-title,
+.app-template-4 .app-main-comp-body,
+.app-template-6 .app-main-comp-nav,
+.app-template-6 .app-main-comp-page-title,
+.app-template-6 .app-main-comp-body {
+    display: block;
+}
+.app-template-4 .floatRightHeader,
+.app-template-4 .mainImageLeftHeader,
+.app-template-6 .floatRightHeader,
+.app-template-6 .mainImageLeftHeader {
+    display:flex;
+}
+.app-template-4 .mainImageLeftHeader {
+    left: 20px;
+}
+.app-template-4 .floatRightHeader,
+.app-template-6 .floatRightHeader {
+    display:flex;
+    flex: 1 1 calc(100% - 230px);
+    flex-direction: column;
+}
+.app-template-4 .app-main-comp-header-flex,
+.app-template-6 .app-main-comp-header-flex {
+    display:flex;
+    flex: 1 1 auto;
+    align-items: center;
+    width: 100%;
+}
+.app-template-4 .mainImageHandler {
+    width:auto;
+    height:85px;
+    background:#c02c34 !important;
+}
+.app-template-4 .topSocialMedia {
+    display:flex;
+    flex-direction: row;
+    align-items:start;
+    width:100%;
+}
+.app-template-4 .topSocialMedia li {
+    padding:5px;
+}
+.app-template-4 .headerConnections {
+    display:flex;
+    flex-direction: row;
+    align-items: center;
+    width:100%;
+}
+.app-template-4 .headerConnections li {
+    display:flex;
+    flex: 1 1 auto;
+    padding:10px 15px;
+    color: #fff;
+}
+.app-template-4 .app-main-comp-page-item {
+    cursor:pointer;
+    color: #fff !important;
+    font-weight:bold;
+}
+.app-template-4 .app-main-comp-nav-item {
+    cursor:pointer;
+}
+.app-template-4 .app-main-comp-nav-item span {
+    font-size:40px;
+}
+.app-template-4 .connectionsContainer {
+    display: block;
+    width:100%;
+    text-align:center;
+}
+.app-template-4 .app-main-comp-body {
+    padding-top:35px;
+}
+.app-template-4 .app-main-comp-nav {
+    margin: auto;
+    background: linear-gradient(to right, #ffc000 0%, #fe5d4b 100%);
+}
+.app-template-4 .app-main-comp-page-title h2 {
+    margin:0;
+}
+.app-template-4 .app-main-comp-page-title > .container {
+    height: inherit;
+    align-items: center;
+    justify-content: center;
+    display: flex;
+}
+.app-template-4 .breadcrumb-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.app-template-4 .app-main-comp-page-title {
+    background-position: center;
+    height:225px;
+    position:relative;
+}
+.toggle_menu span:before {
+    top: -6px;
+}
+.toggle_menu span:after {
+    top: 6px;
+}
+.app-template-4 .toggle_menu span, .toggle_menu span:before, .toggle_menu span:after {
+    background-color: #fff;
+    content: "";
+    display: block;
+    height: 2px;
+    left: 0;
+    position: absolute;
+    -webkit-transition: all 0.2s ease-in-out 0s;
+    transition: all 0.2s ease-in-out 0s;
+    width: 24px;
+}
+.app-template-4 .toggle_menu span {
+    left: 18px;
+    margin-top: -1px;
+    top: 50%;
+}
+
+.app-template-4 .app-kabob {
+    top:85px;
+}
+.app-template-4 .breadcrumb {
+    background-color: transparent;
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    border-radius: 0;
+    color: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    margin: 5px auto 0;
+    padding: 0;
+    text-transform: uppercase;
+}
+.app-template-4 .breadcrumb>li+li:before {
+    color: #000;
+    content: "/";
+    padding: 0 16px 0 16px;
+}
+.app-template-4 .breadcrumb>li>a {
+    color: #000;
+}
+.app-template-4 .breadcrumb>li {
+    display: flex;
+    padding: 0;
+    cursor: pointer;
+    color: #000;
+}
+.app-template-4 .app-main-comp-pages {
+    display: block;
+    padding: 10px 0;
+    position: relative;
+}
+.app-template-4 .app-main-comp-pages .vue-app-body-component {
+    width:inherit;
+}
+
+/** COMP WRAPPER **/
+
+.management-hub .app-hub-comp-wrapper .vue-app-body-component {
+    height: calc(100vh - 95px);
+}
+.app-template-2 .management-hub .app-hub-comp-wrapper .vue-app-body-component {
+    height: 797px;
 }
 
 /** MODULES APP **/
@@ -704,7 +1023,7 @@ body.theme_shade_light div.universal-float-shield {
     padding:15px 15pc 15px 5px;
 }
 .social-media-icon {
-    background: url(<?php echo $this->app->objCustomPlatform->getFullPortalDomain(); ?>/_ez/images/social-media-icon.svg) no-repeat center center / 100% auto;
+    background: url(<?php echo $this->app->objCustomPlatform->getFullPortalDomainName(); ?>/_ez/images/social-media-icon.svg) no-repeat center center / 100% auto;
     width: 38px;
     height: 38px;
     display: block;
@@ -791,9 +1110,16 @@ body.theme_shade_light div.universal-float-shield {
     .app-main-comp-nav {
         width: 28%;
     }
+    .app-template-4 .app-main-comp-nav {
+        width: 100%;
+    }
     .app-main-comp-pages {
         width: 72%;
         max-height: calc(var(--vh) - (100vw * .565) - 70px);
+    }
+    .app-template-4 .app-main-comp-pages {
+        width:100%;
+        max-height: inherit;
     }
     .management-hub .app-main-comp-pages {
         max-height: calc(var(--vh) - (100vw * .565) - 160px);
@@ -807,8 +1133,10 @@ body.theme_shade_light div.universal-float-shield {
     .app-main-comp-pages {
         padding: 5px 0;
     }
-    .app-main-comp-nav ul li,
-    .app-main-comp-pages ul li {
+    .app-template-2 .app-main-comp-nav ul li,
+    .app-template-2 .app-main-comp-pages ul li,
+    .app-template-3 .app-main-comp-nav ul li,
+    .app-template-3 .app-main-comp-pages ul li {
         display: flex;
         align-items: center;
         min-height: calc((var(--vh) - (100vw * .565) - 80px) / 5);
@@ -832,7 +1160,7 @@ body.theme_shade_light div.universal-float-shield {
         position: relative;
         top: 6%;
     }
-    .app-main-comp-pages ul li span.app-main-comp-page-item {
+    .app-template-2 .app-main-comp-pages ul li span.app-main-comp-page-item {
         padding: 1.5vh 15px;
         border-radius: 25px;
         font-size: 3.7vw;
@@ -865,11 +1193,6 @@ body.theme_shade_light div.universal-float-shield {
     }
     .handed-right .app-kabob-float {
         right: -190px;
-    }
-    body div.universal-float-shield {
-        display: flex;
-        width: 100%;
-        height: 100%;
     }
     .handed-left .app-main-comp-pages {
         padding-right: 15px;
@@ -942,11 +1265,11 @@ body.theme_shade_light div.universal-float-shield {
         width: 50px;
         font-size: 30px;
     }
-    .app-page-content {
+    .app-template-2 .app-page-content {
         overflow-y: auto;
         height: calc(100% - 45px);
     }
-    .management-hub .app-page-content {
+    .management-hub .app-template-2 .app-page-content {
         overflow-y: auto;
         height: calc(-webkit-fill-available - 125x);
     }

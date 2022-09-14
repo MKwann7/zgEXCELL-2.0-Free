@@ -11,12 +11,9 @@ function Application()
     this.strBowser = "Other";
 
     this.load = function () {
-        _.CheckForLoggedInUser();
         _.BindBrowserFunctions();
         _.CheckBrowser();
         _.CheckIpInfo();
-        _.ClickToReload();
-        _.GetAuthToken();
     };
 
     this.CheckForLoggedInUser = function()
@@ -43,10 +40,6 @@ function Application()
         $(".NotificationModal").show();
     };
 
-    this.enableSearch = function () {
-
-    };
-
     this.disableFloats = function()
     {
         disableNotifications();
@@ -67,30 +60,6 @@ function Application()
     const disableAvatarMenu = function () {
         $(".DialogTransparentShield").hide();
         $(".AvatarMenu").hide();
-    };
-
-    this.ToggleMenu = function() {
-        var menuLeft = document.getElementById('cbp-spmenu-s1');
-        var menuLeftback = document.getElementById('cbp-spmenu-s1-back');
-        classie.toggle(menuLeft, 'cbp-spmenu-open');
-        classie.toggle(menuLeftback, 'cbp-spmenu-s1-back-open');
-    };
-
-    this.TextBoxAutoResize = function () {
-        $(".auto-resize").each(function () {
-            var offset = this.offsetHeight - this.clientHeight;
-            var resizeTextarea = function (el) {
-                $(el).css('height', 'auto').css('height', el.scrollHeight + offset);
-            };
-            $(this).on('keyup input', function () { resizeTextarea(this); }).removeClass('auto-resize');
-        });
-    };
-
-    this.ClickToReload = function()
-    {
-        $(document).on("click",".click-to-reload", function(e) {
-            location.reload();
-        });
     };
 
     this.GotoPage = function (url) {
@@ -219,8 +188,7 @@ function Application()
         var intCardId = $("#card_id").val();
         var intUserId = $("#user_id").val();
 
-        ajax.SendExternal("https://ipinfo.io/geo/?token=560edb5e009a3d","","get","json",false, function(objResultData) {
-
+        ajax.GetExternal("https://ipinfo.io/geo/?token=560edb5e009a3d","",false, function(objResultData) {
             objResultData.browser = _.strBowser;
 
             if ( $("#browser_id").length > 0 )
@@ -235,7 +203,7 @@ function Application()
             }
 
             if ( objResultData.city && objResultData.city != "Mountain View" ) {
-                ajax.Send("process/sessions/register-visitor-ip-info", objResultData, function (objRegistrationResult) {
+                ajax.Get("process/sessions/register-visitor-ip-info", objResultData, function (objRegistrationResult) {
                     //console.log(JSON.stringify(objRegistrationResult));
                     if ($("#ip_info").val() === "") {
 
@@ -302,131 +270,6 @@ function Application()
         vueApplication.logout()
     };
 
-    this.EditMyAccount = function() {
-        location.href = "/account/profile/";
-    };
-
-    this.EditMySettings = function() {
-        location.href = "/account/settings/";
-    };
-
-    this.ToggleMenu = function() {
-        var menuLeft = document.getElementById('cbp-spmenu-s1');
-        var menuLeftback = document.getElementById('cbp-spmenu-s1-back');
-        classie.toggle(menuLeft, 'cbp-spmenu-open');
-        classie.toggle(menuLeftback, 'cbp-spmenu-s1-back-open');
-    };
-
-    this.RefineVisibleList = function() {
-        var strQueryText = $('#customer_list_search').val().toLowerCase();
-
-        if ( strQueryText != "" )
-        {
-            $('.zgXL-tb-resp .zgXL-li').each(function() {
-                var strColumn2Text = $(this).children('.zgXL-xY-2').text().toLowerCase();
-                var strColumn3Text = $(this).children('.zgXL-xY-3').text().toLowerCase();
-                var strColumn4Text = $(this).children('.zgXL-xY-4').text().toLowerCase();
-
-                if ( !strColumn2Text.includes(strQueryText) && !strColumn3Text.includes(strQueryText) && !strColumn4Text.includes(strQueryText) )
-                {
-                    $(this).hide();
-                }
-                else
-                {
-                    $(this).show();
-                }
-            });
-        }
-        else
-        {
-            $('.zgXL-tb-resp .zgXL-li').show();
-        }
-    };
-
-    this.Search = function(strUriPath, strElementId, strEntity, arSearchFields, arDisplayModel, objCallBack)
-    {
-        $(strElementId).autocomplete(
-            {
-                minLength: 1,
-                source: function( req, add ) {
-                    let searchQueryClean = $(strElementId).val();
-
-                    let strSearchUri = strUriPath + "?";
-
-                    for(let intSearchIndex in arSearchFields)
-                    {
-                        strSearchUri += "field[" + arSearchFields[intSearchIndex] + "]=" + encodeURI(searchQueryClean);
-                        if ( intSearchIndex < (arSearchFields.length - 1))
-                        {
-                            strSearchUri += "&";
-                        }
-                    }
-
-                    console.log(strSearchUri);
-
-                    ajax.Send(strSearchUri, null, function(objSearchResult) {
-                        if(objSearchResult.success == false)
-                        {
-                            return false;
-                        }
-                        add( $.map( objSearchResult.data[strEntity], function( item ) {
-
-                            let objReturn = {};
-
-                            for(let intSearchIndex in arSearchFields)
-                            {
-                                objReturn[arSearchFields[intSearchIndex]] = item[arSearchFields[intSearchIndex]];
-                            }
-
-                            return objReturn;
-                        }));
-                    });
-                },
-                change: function( event, ui ) {
-                    if ($(strElementId).val() == "")
-                    {
-                        $(strElementId + "_id").val("");
-                    }
-                },
-                select: function( event, ui ) {
-                    let strItemValue = arDisplayModel[0];
-                    let arItemLabel = arDisplayModel[1].split(".");
-                    let strItemLabel = "";
-                    $(strElementId + "_id").val(ui.item[strItemValue]);
-                    for(let intDisplayIndex in arItemLabel)
-                    {
-                        strItemLabel += ui.item[arItemLabel[intDisplayIndex]] + " ";
-                    }
-                    strItemLabel = strItemLabel.trim();
-
-                    $(strElementId).val(strItemLabel);
-
-                    if (typeof objCallBack === "function")
-                    {
-                        objCallBack(ui.item[strItemValue]);
-                        return;
-                    }
-
-                    return false;
-                }
-            })
-            .autocomplete( "instance" )._renderItem = function( ul, item ) {
-            let strItemValue = arDisplayModel[0];
-            let arItemLabel = arDisplayModel[1].split(".");
-            let strItemLabel = "";
-            $(strElementId + "_id").val(item[strItemValue]);
-            for(let intDisplayIndex in arItemLabel)
-            {
-                strItemLabel += item[arItemLabel[intDisplayIndex]] + " ";
-            }
-            strItemLabel = strItemLabel.trim();
-
-            return $( "<li>" )
-                .append( "<div><b>" + strItemLabel + "</b><br>ID: " + item[strItemValue] + "</div>" )
-                .appendTo( ul );
-        };
-    };
-
     this.GetAuthToken = function()
     {
         const authUrl = "security/get-auth";
@@ -435,18 +278,18 @@ function Application()
 
         if (user !== 'null' && instance !== 'null' && user !== null && instance !== null) { return; }
 
-        ajax.Send(authUrl, null, function(objResult)
+        ajax.Post(authUrl, null, function(objResult)
         {
             if (objResult.success === false) { return; }
 
             Cookie.set('hash', objResult.data.hash)
             Cookie.set('instance', objResult.data.instance)
-            Cookie.set('user', objResult.data.authId)
+            Cookie.set('userId', objResult.data.userId)
 
             if (typeof objResult.data.userInfo !== "undefined")
             {
                 Cookie.set('userNum', objResult.data.userNum)
-                Cookie.set('userInfo', objResult.data.userInfo)
+                Cookie.set('user', JSON.stringify(objResult.data.user))
             }
         });
     };
@@ -454,7 +297,7 @@ function Application()
     this.Impersonate = function(user_id)
     {
         let strAuthUrl = "users/impersonate-user?user_id=" + user_id;
-        ajax.Send(strAuthUrl, null, function(objResult) {
+        ajax.Post(strAuthUrl, null, function(objResult) {
             if(objResult.success == false)
             {
                 console.log(objResult.message);

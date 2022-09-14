@@ -73,9 +73,9 @@
                         modal.AddFloatDialogMessage(data, "checkbox");
 
                         Cookie.set('instance', objAccountAuthResult.data.instance);
-                        Cookie.set('user', objAccountAuthResult.data.user);
+                        Cookie.set('user', JSON.stringify(objAccountAuthResult.data.user));
                         Cookie.set('userNum', objAccountAuthResult.data.userNum);
-                        Cookie.set('userInfo', JSON.stringify(objAccountAuthResult.data.userInfo));
+                        Cookie.set('userId', objAccountAuthResult.data.userId);
 
                         <?php if (empty($blnDoNotRedirect)) { ?>
                         window.location.href = objAccountAuthResult.url;

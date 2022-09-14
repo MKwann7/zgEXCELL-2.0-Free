@@ -1,12 +1,12 @@
 <?php
 
-namespace Entities\Dashboard\Controllers\Api\V1;
+namespace Http\Dashboard\Controllers\Api\V1;
 
 use App\Utilities\Database;
 use App\Utilities\Excell\ExcellHttpModel;
 use Entities\Cards\Classes\Cards;
 use Entities\Cards\Models\CardModel;
-use Entities\Dashboard\Classes\Base\DashboardController;
+use Http\Dashboard\Controllers\Base\DashboardController;
 use Entities\Payments\Classes\ArInvoices;
 
 class ApiController extends DashboardController
@@ -68,23 +68,23 @@ class ApiController extends DashboardController
 
 //        if (userCan("manage-platforms"))
 //        {
-//            $objWhereClause = "SELECT SUM(gross_value) as total_gross FROM `ezdigital_v2_financial`.`ar_invoice` WHERE created_on > '{$beginningOfYear}'";
+//            $objWhereClause = "SELECT SUM(gross_value) as total_gross FROM `excell_financial`.`ar_invoice` WHERE created_on > '{$beginningOfYear}'";
 //            $arInvoiceResults = Database::getSimple($objWhereClause, "gross_value");
 //        }
         if (userCan("manage-system"))
         {
-            $objWhereClause = "SELECT SUM(gross_value) as total_gross, (SELECT SUM(gross_value) FROM `ezdigital_v2_financial`.`ar_invoice` WHERE company_id = " . $this->app->objCustomPlatform->getCompanyId() . " AND created_on > '{$beginningOfMonth}') as last_month FROM `ezdigital_v2_financial`.`ar_invoice` WHERE company_id = " . $this->app->objCustomPlatform->getCompanyId() . " AND created_on > '{$beginningOfYear}'";
+            $objWhereClause = "SELECT SUM(gross_value) as total_gross, (SELECT SUM(gross_value) FROM `excell_financial`.`ar_invoice` WHERE company_id = " . $this->app->objCustomPlatform->getCompanyId() . " AND created_on > '{$beginningOfMonth}') as last_month FROM `excell_financial`.`ar_invoice` WHERE company_id = " . $this->app->objCustomPlatform->getCompanyId() . " AND created_on > '{$beginningOfYear}'";
             $arInvoiceResults = Database::getSimple($objWhereClause, "gross_value");
         }
         elseif (userCan("view-card-purchases"))
         {
-            $objWhereClause = "SELECT SUM(gross_value) as total_gross FROM `ezdigital_v2_financial`.`ar_invoice` WHERE user_id = " . $this->app->getActiveLoggedInUser()->getId() . " AND created_on > '{$beginningOfYear}'";
+            $objWhereClause = "SELECT SUM(gross_value) as total_gross FROM `excell_financial`.`ar_invoice` WHERE user_id = " . $this->app->getActiveLoggedInUser()->getId() . " AND created_on > '{$beginningOfYear}'";
             $arInvoiceResults = Database::getSimple($objWhereClause, "gross_value");
         }
 
-        $widgets["gross_month"] = $arInvoiceResults->Data->First()->total_gross;
-        $widgets["last_month"] = $arInvoiceResults->Data->First()->last_month;
-        $widgets["avg_month"] = $arInvoiceResults->Data->First()->total_gross / $currentMonth;
+        $widgets["gross_month"] = $arInvoiceResults->getData()->first()->total_gross;
+        $widgets["last_month"] = $arInvoiceResults->getData()->first()->last_month;
+        $widgets["avg_month"] = $arInvoiceResults->getData()->first()->total_gross / $currentMonth;
 
         return $widgets;
     }
@@ -98,21 +98,21 @@ class ApiController extends DashboardController
 
 //        if (userCan("manage-platforms"))
 //        {
-//            $objWhereClause = "SELECT COUNT(*) as total_contacts FROM `ezdigital_v2_main`.`mobiniti_contact` mc LEFT JOIN `ezdigital_v2_main`.`mobiniti_contact_user_rel` mcur ON mcur.mobiniti_contact_id = mc.id LEFT JOIN `ezdigital_v2_main`.`user` ur ON ur.user_id = mcur.user_id";
+//            $objWhereClause = "SELECT COUNT(*) as total_contacts FROM `excell_main`.`mobiniti_contact` mc LEFT JOIN `excell_main`.`mobiniti_contact_user_rel` mcur ON mcur.mobiniti_contact_id = mc.id LEFT JOIN `excell_main`.`user` ur ON ur.user_id = mcur.user_id";
 //            $arContactsResults = Database::getSimple($objWhereClause, "gross_value");
 //        }
         if (userCan("manage-system"))
         {
-            $objWhereClause = "SELECT COUNT(*) as total_contacts FROM `ezdigital_v2_main`.`mobiniti_contact` mc LEFT JOIN `ezdigital_v2_main`.`mobiniti_contact_user_rel` mcur ON mcur.mobiniti_contact_id = mc.id LEFT JOIN `ezdigital_v2_main`.`user` ur ON ur.user_id = mcur.user_id WHERE mc.company_id = " . $this->app->objCustomPlatform->getCompanyId() . "";
+            $objWhereClause = "SELECT COUNT(*) as total_contacts FROM `excell_main`.`mobiniti_contact` mc LEFT JOIN `excell_main`.`mobiniti_contact_user_rel` mcur ON mcur.mobiniti_contact_id = mc.id LEFT JOIN `excell_main`.`user` ur ON ur.user_id = mcur.user_id WHERE mc.company_id = " . $this->app->objCustomPlatform->getCompanyId() . "";
             $arContactsResults = Database::getSimple($objWhereClause, "gross_value");
         }
         elseif (userCan("view-card-purchases"))
         {
-            $objWhereClause = "SELECT COUNT(*) as total_contacts FROM `ezdigital_v2_main`.`mobiniti_contact` mc LEFT JOIN `ezdigital_v2_main`.`mobiniti_contact_user_rel` mcur ON mcur.mobiniti_contact_id = mc.id WHERE mcur.user_id = " . $this->app->getActiveLoggedInUser()->getId() . "";
+            $objWhereClause = "SELECT COUNT(*) as total_contacts FROM `excell_main`.`mobiniti_contact` mc LEFT JOIN `excell_main`.`mobiniti_contact_user_rel` mcur ON mcur.mobiniti_contact_id = mc.id WHERE mcur.user_id = " . $this->app->getActiveLoggedInUser()->getId() . "";
             $arContactsResults = Database::getSimple($objWhereClause, "gross_value");
         }
 
-        $widgets["total_contacts"] = $arContactsResults->Data->First()->total_contacts;
+        $widgets["total_contacts"] = $arContactsResults->getData()->first()->total_contacts;
 
         return $widgets;
     }
@@ -131,12 +131,12 @@ class ApiController extends DashboardController
     {
         $cardResult = (new Cards())->getByUuid($objData->Data->Params["_"]);
 
-        if ($cardResult->Result->Count !== 1)
+        if ($cardResult->result->Count !== 1)
         {
             return false;
         }
 
-        $card = $cardResult->Data->First();
+        $card = $cardResult->getData()->first();
 
         // spin up socket
 

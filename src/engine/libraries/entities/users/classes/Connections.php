@@ -10,7 +10,7 @@ use Entities\Users\Models\ConnectionModel;
 
 class Connections extends AppEntity
 {
-    public $strEntityName       = "Users";
+    public string $strEntityName       = "Users";
     public $strDatabaseTable    = "connection";
     public $strDatabaseName     = "Main";
     public $strMainModelName    = ConnectionModel::class;
@@ -30,12 +30,12 @@ class Connections extends AppEntity
                 cn.connection_class, 
                 cnt.action AS default_action,
                 cnt.font_awesome 
-            FROM ezdigital_v2_main.connection cn 
-            LEFT JOIN  ezdigital_v2_main.connection_type cnt ON cnt.connection_type_id = cn.connection_type_id 
+            FROM excell_main.connection cn 
+            LEFT JOIN  excell_main.connection_type cnt ON cnt.connection_type_id = cn.connection_type_id 
             WHERE cn.connection_id = {$connectionId} ORDER BY cn.connection_id ASC;";
 
         $colCardConnectionsResult = Database::getSimple($strCardConnectionsQuery);
-        $colCardConnectionsResult->Data->HydrateModelData(ConnectionModel::class, true);
+        $colCardConnectionsResult->getData()->HydrateModelData(ConnectionModel::class, true);
 
         return $colCardConnectionsResult;
     }
@@ -54,15 +54,15 @@ class Connections extends AppEntity
                 cn.connection_class, 
                 cnt.action AS default_action,
                 cnt.font_awesome 
-            FROM ezdigital_v2_main.connection_rel cnr1 
-            JOIN (SELECT MAX(cnrx.connection_rel_id) AS most_recent_rel, cnrx.connection_rel_id FROM ezdigital_v2_main.connection_rel cnrx GROUP BY cnrx.connection_rel_id) cnr3
-            JOIN ezdigital_v2_main.connection_rel cnr2 ON (cnr1.connection_rel_id = cnr3.most_recent_rel && cnr2.connection_rel_id = cnr3.most_recent_rel)
-            LEFT JOIN ezdigital_v2_main.connection cn ON cn.connection_id = cnr1.connection_id 
-            LEFT JOIN  ezdigital_v2_main.connection_type cnt ON cnt.connection_type_id = cn.connection_type_id 
+            FROM excell_main.connection_rel cnr1 
+            JOIN (SELECT MAX(cnrx.connection_rel_id) AS most_recent_rel, cnrx.connection_rel_id FROM excell_main.connection_rel cnrx GROUP BY cnrx.connection_rel_id) cnr3
+            JOIN excell_main.connection_rel cnr2 ON (cnr1.connection_rel_id = cnr3.most_recent_rel && cnr2.connection_rel_id = cnr3.most_recent_rel)
+            LEFT JOIN excell_main.connection cn ON cn.connection_id = cnr1.connection_id 
+            LEFT JOIN  excell_main.connection_type cnt ON cnt.connection_type_id = cn.connection_type_id 
             WHERE cnr1.card_id = {$cardId} ORDER BY cnr1.display_order ASC;";
 
         $colCardConnectionsResult = Database::getSimple($strCardConnectionsQuery);
-        $colCardConnectionsResult->Data->HydrateModelData(ConnectionModel::class, true);
+        $colCardConnectionsResult->getData()->HydrateModelData(ConnectionModel::class, true);
 
         return $colCardConnectionsResult;
     }
@@ -81,18 +81,18 @@ class Connections extends AppEntity
                 cn.connection_class, 
                 cnt.action AS default_action,
                 cnt.font_awesome 
-            FROM ezdigital_v2_main.connection_rel cnr1 
-            JOIN (SELECT MAX(cnrx.connection_rel_id) AS most_recent_rel, cnrx.connection_rel_id FROM ezdigital_v2_main.connection_rel cnrx GROUP BY cnrx.connection_rel_id) cnr3
-            JOIN ezdigital_v2_main.connection_rel cnr2 ON (cnr1.connection_rel_id = cnr3.most_recent_rel && cnr2.connection_rel_id = cnr3.most_recent_rel)
-            LEFT JOIN ezdigital_v2_main.connection cn ON cn.connection_id = cnr1.connection_id 
-            LEFT JOIN  ezdigital_v2_main.connection_type cnt ON cnt.connection_type_id = cn.connection_type_id 
+            FROM excell_main.connection_rel cnr1 
+            JOIN (SELECT MAX(cnrx.connection_rel_id) AS most_recent_rel, cnrx.connection_rel_id FROM excell_main.connection_rel cnrx GROUP BY cnrx.connection_rel_id) cnr3
+            JOIN excell_main.connection_rel cnr2 ON (cnr1.connection_rel_id = cnr3.most_recent_rel && cnr2.connection_rel_id = cnr3.most_recent_rel)
+            LEFT JOIN excell_main.connection cn ON cn.connection_id = cnr1.connection_id 
+            LEFT JOIN  excell_main.connection_type cnt ON cnt.connection_type_id = cn.connection_type_id 
             WHERE 
                 cnr1.card_id = {$cardId} AND
                 (cnt.action IN ('phone', 'fax', 'email', 'sms') OR cnt.connection_type_id IN (2,7))
             ORDER BY cnr1.display_order ASC;";
 
         $colCardConnectionsResult = Database::getSimple($strCardConnectionsQuery);
-        $colCardConnectionsResult->Data->HydrateModelData(ConnectionModel::class, true);
+        $colCardConnectionsResult->getData()->HydrateModelData(ConnectionModel::class, true);
 
         return $colCardConnectionsResult;
     }
@@ -111,18 +111,18 @@ class Connections extends AppEntity
                 cn.connection_class, 
                 cnt.action AS default_action,
                 cnt.font_awesome 
-            FROM ezdigital_v2_main.connection_rel cnr1 
-            JOIN (SELECT MAX(cnrx.connection_rel_id) AS most_recent_rel, cnrx.connection_rel_id FROM ezdigital_v2_main.connection_rel cnrx GROUP BY cnrx.connection_rel_id) cnr3
-            JOIN ezdigital_v2_main.connection_rel cnr2 ON (cnr1.connection_rel_id = cnr3.most_recent_rel && cnr2.connection_rel_id = cnr3.most_recent_rel)
-            LEFT JOIN ezdigital_v2_main.connection cn ON cn.connection_id = cnr1.connection_id 
-            LEFT JOIN  ezdigital_v2_main.connection_type cnt ON cnt.connection_type_id = cn.connection_type_id 
+            FROM excell_main.connection_rel cnr1 
+            JOIN (SELECT MAX(cnrx.connection_rel_id) AS most_recent_rel, cnrx.connection_rel_id FROM excell_main.connection_rel cnrx GROUP BY cnrx.connection_rel_id) cnr3
+            JOIN excell_main.connection_rel cnr2 ON (cnr1.connection_rel_id = cnr3.most_recent_rel && cnr2.connection_rel_id = cnr3.most_recent_rel)
+            LEFT JOIN excell_main.connection cn ON cn.connection_id = cnr1.connection_id 
+            LEFT JOIN  excell_main.connection_type cnt ON cnt.connection_type_id = cn.connection_type_id 
             WHERE 
                 cnr1.card_id = {$cardId} AND
                 (cnt.action IN ('link') AND cnt.connection_type_id NOT IN (2,7))
             ORDER BY cnr1.display_order ASC;";
 
         $colCardConnectionsResult = Database::getSimple($strCardConnectionsQuery);
-        $colCardConnectionsResult->Data->HydrateModelData(ConnectionModel::class, true);
+        $colCardConnectionsResult->getData()->HydrateModelData(ConnectionModel::class, true);
 
         return $colCardConnectionsResult;
     }
@@ -143,9 +143,9 @@ class Connections extends AppEntity
                 cnt.font_awesome, 
                 usr.first_name, 
                 usr.last_name 
-            FROM ezdigital_v2_main.connection cn 
-            LEFT JOIN  ezdigital_v2_main.connection_type cnt ON cnt.connection_type_id = cn.connection_type_id 
-            LEFT JOIN  ezdigital_v2_main.user usr ON cn.user_id = usr.user_id 
+            FROM excell_main.connection cn 
+            LEFT JOIN  excell_main.connection_type cnt ON cnt.connection_type_id = cn.connection_type_id 
+            LEFT JOIN  excell_main.user usr ON cn.user_id = usr.user_id 
             WHERE (cn.user_id IN (" . implode(",", $userIds) . ") AND cn.company_id = {$companyId})";
 
         if ($loggedInUser !== null)
@@ -156,7 +156,7 @@ class Connections extends AppEntity
         $strCardConnectionsQuery .= " ORDER BY cn.connection_id DESC;";
 
         $colCardConnectionsResult = Database::getSimple($strCardConnectionsQuery);
-        $colCardConnectionsResult->Data->HydrateModelData(ConnectionModel::class, true);
+        $colCardConnectionsResult->getData()->HydrateModelData(ConnectionModel::class, true);
 
         return $colCardConnectionsResult;
     }
@@ -177,9 +177,9 @@ class Connections extends AppEntity
                 cnt.font_awesome, 
                 usr.first_name, 
                 usr.last_name 
-            FROM ezdigital_v2_main.connection cn 
-            LEFT JOIN  ezdigital_v2_main.connection_type cnt ON cnt.connection_type_id = cn.connection_type_id 
-            LEFT JOIN  ezdigital_v2_main.user usr ON cn.user_id = usr.user_id 
+            FROM excell_main.connection cn 
+            LEFT JOIN  excell_main.connection_type cnt ON cnt.connection_type_id = cn.connection_type_id 
+            LEFT JOIN  excell_main.user usr ON cn.user_id = usr.user_id 
             WHERE 
                 (cn.user_id IN (" . implode(",", $userIds) . ") AND  cn.company_id = {$companyId} AND (cnt.action IN ('phone', 'fax', 'email', 'sms') OR cnt.connection_type_id IN (2,7)))";
 
@@ -191,7 +191,7 @@ class Connections extends AppEntity
             $strCardConnectionsQuery .= "ORDER BY cn.connection_id DESC;";
 
         $colCardConnectionsResult = Database::getSimple($strCardConnectionsQuery);
-        $colCardConnectionsResult->Data->HydrateModelData(ConnectionModel::class, true);
+        $colCardConnectionsResult->getData()->HydrateModelData(ConnectionModel::class, true);
 
         return $colCardConnectionsResult;
     }
@@ -212,16 +212,16 @@ class Connections extends AppEntity
                 cnt.font_awesome, 
                 usr.first_name, 
                 usr.last_name 
-            FROM ezdigital_v2_main.connection cn 
-            LEFT JOIN  ezdigital_v2_main.connection_type cnt ON cnt.connection_type_id = cn.connection_type_id 
-            LEFT JOIN  ezdigital_v2_main.user usr ON cn.user_id = usr.user_id 
+            FROM excell_main.connection cn 
+            LEFT JOIN  excell_main.connection_type cnt ON cnt.connection_type_id = cn.connection_type_id 
+            LEFT JOIN  excell_main.user usr ON cn.user_id = usr.user_id 
             WHERE 
                 cn.user_id IN (" . implode(",", $userIds) . ") AND
                 (cnt.action IN ('link') AND cnt.connection_type_id NOT IN (2,7))
             ORDER BY cn.connection_id DESC;";
 
         $colCardConnectionsResult = Database::getSimple($strCardConnectionsQuery);
-        $colCardConnectionsResult->Data->HydrateModelData(ConnectionModel::class, true);
+        $colCardConnectionsResult->getData()->HydrateModelData(ConnectionModel::class, true);
 
         return $colCardConnectionsResult;
     }

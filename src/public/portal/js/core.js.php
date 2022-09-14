@@ -178,16 +178,18 @@ $(document).ready(function() {
     dash.load();
 });
 
-<?php require(PublicPortal . "js/general.js" . XT); ?>
+<?php require(PUBLIC_PORTAL . "js/general.js" . XT); ?>
 
-<?php require(PublicPortal . "js/authentication.js" . XT); ?>
+<?php require(PUBLIC_PORTAL . "js/dispatch.js" . XT); ?>
 
-<?php require(PublicPortal . "js/history.js" . XT); ?>
+<?php require(PUBLIC_PORTAL . "js/authentication.js" . XT); ?>
 
-<?php require(PublicPortal . "js/vueComponent.js" . XT); ?>
+<?php require(PUBLIC_PORTAL . "js/history.js" . XT); ?>
 
-<?php require(PublicPortal . "js/cart.js" . XT); ?>
+<?php require(PUBLIC_PORTAL . "js/vueComponent.js" . XT); ?>
 
-<?php require(PublicWebsite . "js/archmenu/arch.menu.js" . XT); ?>
+<?php require(PUBLIC_PORTAL . "js/cart.js" . XT); ?>
 
-<?php require(PublicPortal . "js/menu.js" . XT); ?>
+<?php require(PUBLIC_WEBSITE . "js/archmenu/arch.menu.js" . XT); ?>
+
+<?php require(PUBLIC_PORTAL . "js/menu.js" . XT); ?>

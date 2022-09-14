@@ -19,7 +19,6 @@ class CardTemplateModel extends AppModel
     {
         return [
             "card_template_id" => ["type" => "int","length" => 15],
-            "connection_id" => ["type" => "int","length" => 15,"fk" => ["table" => "connection","key" => "connection_id","value" => "connection_value"]],
             "company_id" => ["type" => "int","length" => 15,"fk" => ["table" => "company","key" => "company_id","value" => "company_name"]],
             "division_id" => ["type" => "int","length" => 15,"fk" => ["table" => "division","key" => "division_id","value" => "division_name"]],
             "name" => ["type" => "varchar","length" => 0],

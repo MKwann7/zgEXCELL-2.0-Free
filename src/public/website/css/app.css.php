@@ -161,7 +161,7 @@
     position: relative;
 }
 
-<?php include(PublicDefault . "css/default.css"); ?>
+<?php include(PUBLIC_DEFAULT . "css/default.css"); ?>
 
 .zgSubpage_thumb {
     padding-right: 10px;

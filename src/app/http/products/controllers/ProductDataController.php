@@ -1,10 +1,10 @@
 <?php
 
-namespace Entities\Products\Controllers;
+namespace Http\Products\Controllers;
 
 use App\Utilities\Excell\ExcellHttpModel;
 use Entities\Cards\Classes\Cards;
-use Entities\Products\Classes\Base\ProductController;
+use Http\Products\Controllers\Base\ProductController;
 
 class ProductDataController extends ProductController
 {
@@ -22,9 +22,9 @@ class ProductDataController extends ProductController
 
         $intPackageId = $objData->Data->PostData->product_id;
 
-        require AppEntities . "cards/classes/main.class" . XT;
+        require APP_ENTITIES . "cards/classes/main.class" . XT;
 
-        $colUserCards =  (new Cards())->getFks()->getWhere("product_id", "=", $intPackageId)->Data;
+        $colUserCards =  (new Cards())->getFks()->getWhere("product_id", "=", $intPackageId)->getData();
 
         $arUserDashboardInfo = array(
             "cards" => $colUserCards->CollectionToArray(),

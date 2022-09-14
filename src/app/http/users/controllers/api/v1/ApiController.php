@@ -1,6 +1,6 @@
 <?php
 
-namespace Entities\Users\Controllers\Api\V1;
+namespace Http\Users\Controllers\Api\V1;
 
 use App\Utilities\Database;
 use App\Utilities\Excell\ExcellCollection;
@@ -9,7 +9,7 @@ use App\Utilities\Transaction\ExcellTransaction;
 use Entities\Activities\Classes\UserLogs;
 use Entities\Cards\Classes\Cards;
 use Entities\Emails\Classes\Emails;
-use Entities\Users\Classes\Base\UserController;
+use Http\Users\Controllers\Base\UserController;
 use Entities\Users\Classes\Connections;
 use Entities\Users\Classes\ConnectionTypes;
 use Entities\Users\Classes\UserClass;
@@ -46,7 +46,7 @@ class ApiController extends UserController
         $userResult = (new Users())->getByUuid($objParams["uuid"]);
 
         /** @var UserModel $user */
-        $user = $userResult->Data->First();
+        $user = $userResult->getData()->first();
 
         $user->LoadUserConnections(false);
 
@@ -78,12 +78,12 @@ class ApiController extends UserController
 
         $objUserAuthentication = $objUsers->AuthenticateUserForLogin($objUser);
 
-        if ( $objUserAuthentication->Result->Success === false)
+        if ( $objUserAuthentication->result->Success === false)
         {
-            $this->renderReturnJson(false, [], $objUserAuthentication->Result->Message);
+            $this->renderReturnJson(false, [], $objUserAuthentication->result->Message);
         }
 
-        $user = $objUserAuthentication->Data->First();
+        $user = $objUserAuthentication->getData()->first();
 
         $loginId = $objUsers->setUserLoginSessionData($user, $this->app->objHttpRequest->Data->PostData->browserId, $this->app);
         $objUsers->setUserLoginCookies($user, $this->app);
@@ -125,13 +125,13 @@ class ApiController extends UserController
 
         $objUserAuthentication = (new Users())->AuthenticateUserForLogin($objUser);
 
-        if ( $objUserAuthentication->Result->Success === false)
+        if ( $objUserAuthentication->result->Success === false)
         {
-            $this->renderReturnJson(false, [], $objUserAuthentication->Result->Message);
+            $this->renderReturnJson(false, [], $objUserAuthentication->result->Message);
         }
 
         /** @var UserModel $user */
-        $user = $objUserAuthentication->Data->First();
+        $user = $objUserAuthentication->getData()->first();
         $arUser = $user->ToPublicArray(["sys_row_id", "first_name", "last_name", "user_email", "user_phone", "user_id"]);
 
         $arUser["id"] = $arUser["sys_row_id"];
@@ -173,16 +173,16 @@ class ApiController extends UserController
 
         $objUserAuthentication = (new Users())->AuthenticateUserForLogin($objUser);
 
-        if ( $objUserAuthentication->Result->Success === false)
+        if ( $objUserAuthentication->result->Success === false)
         {
             $this->renderReturnJson(false, [], "Authentication failed.");
         }
 
         /** @var UserModel $user */
-        $user = $objUserAuthentication->Data->First();
+        $user = $objUserAuthentication->getData()->first();
 
         $cards = new Cards();
-        $cardResult = $cards->getByUuid($objParams["card_id"])->Data->First();
+        $cardResult = $cards->getByUuid($objParams["card_id"])->getData()->first();
 
         if ($cardResult === null || ($cardResult->owner_id !== $user->user_id && $cardResult->card_user_id !== $user->user_id))
         {
@@ -226,14 +226,14 @@ class ApiController extends UserController
         $userId =  $objData->Data->Params["user_id"];
         $userResult = (new Users())->getById($objParams["user_id"]);
 
-        if ($userResult->Result->Count !== 1)
+        if ($userResult->result->Count !== 1)
         {
             return $this->renderReturnJson(false, ["error" => "no_user_found"], "User not found");
         }
 
         $customPlatformId = $this->app->objCustomPlatform->getCompany()->company_id;
 
-        $objUser = $userResult->Data->First();
+        $objUser = $userResult->getData()->first();
 
         $objUser->first_name = $objPost->first_name;
         $objUser->last_name = $objPost->last_name;
@@ -256,9 +256,9 @@ class ApiController extends UserController
         $blnEmailMatch = (new Users())->findMatchingUserEmail($strPrimaryEmail, $userId);
         $blnPhoneMatch = (new Users())->findMatchingUserPhone($strPrimaryPhone, $userId);
 
-        if ($blnEmailMatch->Data["match"] === true)
+        if ($blnEmailMatch->data["match"] === true)
         {
-            $objUser->user_email = $blnEmailMatch->Data["entity"]->connection_id;
+            $objUser->user_email = $blnEmailMatch->data["entity"]->connection_id;
         }
         else
         {
@@ -269,16 +269,16 @@ class ApiController extends UserController
             $objConnection->division_id = 0;
             $objConnection->company_id = $customPlatformId;
             $objConnection->connection_value = $strPrimaryEmail;
-            $objConnection->is_primary = ExcellTrue;
+            $objConnection->is_primary = EXCELL_TRUE;
             $objConnection->connection_class = 'user';
 
             $objEmailResult = (new Connections())->createNew($objConnection);
-            $objUser->user_email = $objEmailResult->Data->First()->connection_id;
+            $objUser->user_email = $objEmailResult->getData()->first()->connection_id;
         }
 
-        if ($blnPhoneMatch->Data["match"] === true)
+        if ($blnPhoneMatch->data["match"] === true)
         {
-            $objUser->user_phone = $blnPhoneMatch->Data["entity"]->connection_id;
+            $objUser->user_phone = $blnPhoneMatch->data["entity"]->connection_id;
         }
         else
         {
@@ -289,35 +289,35 @@ class ApiController extends UserController
             $objConnection->division_id = 0;
             $objConnection->company_id = $customPlatformId;
             $objConnection->connection_value = $strPrimaryPhone;
-            $objConnection->is_primary = ExcellTrue;
+            $objConnection->is_primary = EXCELL_TRUE;
             $objConnection->connection_class = 'user';
 
             $objPhoneResult = (new Connections())->createNew($objConnection);
-            $objUser->user_phone = $objPhoneResult->Data->First()->connection_id;
+            $objUser->user_phone = $objPhoneResult->getData()->first()->connection_id;
         }
 
         $userUpdateResult = (new Users())->update($objUser);
 
-        if ($userUpdateResult->Result->Success === false)
+        if ($userUpdateResult->result->Success === false)
         {
-            return $this->renderReturnJson(false, ["error" => "update_failed"], $userUpdateResult->Result->Message);
+            return $this->renderReturnJson(false, ["error" => "update_failed"], $userUpdateResult->result->Message);
         }
 
-        $this->processIntegrationsUpdate($userUpdateResult->Data->First());
+        $this->processIntegrationsUpdate($userUpdateResult->getData()->first());
 
-        $arUser = $userUpdateResult->Data->First()->ToPublicArray(["sys_row_id", "user_id", "first_name", "last_name", "user_email", "user_phone", "username"]);
+        $arUser = $userUpdateResult->getData()->first()->ToPublicArray(["sys_row_id", "user_id", "first_name", "last_name", "user_email", "user_phone", "username"]);
 
         $arUser["id"] = $arUser["sys_row_id"];
         $arUser["email"] = $strPrimaryEmail;
         $arUser["phone"] = $strPrimaryPhone;
         unset($arUser["sys_row_id"]);
 
-        return $this->renderReturnJson(true, ["user" => $arUser], $userUpdateResult->Result->Message);
+        return $this->renderReturnJson(true, ["user" => $arUser], $userUpdateResult->result->Message);
     }
 
     private function processIntegrationsUpdate(UserModel $user) : void
     {
-        $query = "UPDATE ezdigital_v2_integrations.integrations_user 
+        $query = "UPDATE excell_integrations.integrations_user 
             SET synced = 0
             WHERE user_id = {$user->user_id};";
 
@@ -331,7 +331,7 @@ class ApiController extends UserController
         $currentTimestamp  = date("Y-m-d H:i:s");
         $state  = "create";
 
-        $query = "INSERT INTO ezdigital_v2_integrations.integrations_user 
+        $query = "INSERT INTO excell_integrations.integrations_user 
             (integration_type, user_id, synced, created_on, state)
         VALUES 
             ($syncType, {$user->user_id}, 0, '$currentTimestamp', '$state');";
@@ -358,11 +358,11 @@ class ApiController extends UserController
 
         $customPlatformId = $this->app->objCustomPlatform->getCompany()->company_id;
 
-        $userQuery = "SELECT ur.* FROM ezdigital_v2_main.user ur LEFT JOIN ezdigital_v2_main.connection con ON con.connection_id = ur.user_email WHERE company_id = {$customPlatformId} (con.connection_value = '" . $objPost->email . "' OR ur.username = '" . $objPost->username . "');";
+        $userQuery = "SELECT ur.* FROM excell_main.user ur LEFT JOIN excell_main.connection con ON con.connection_id = ur.user_email WHERE company_id = {$customPlatformId} (con.connection_value = '" . $objPost->email . "' OR ur.username = '" . $objPost->username . "');";
 
         $objDirectoryResult = Database::getSimple($userQuery);
 
-        if ($objDirectoryResult->Result->Count > 0)
+        if ($objDirectoryResult->result->Count > 0)
         {
             return $this->renderReturnJson(false, ["error" => "duplicate_account"], "Duplicate user account.");
         }
@@ -373,12 +373,12 @@ class ApiController extends UserController
         $blnEmailMatch = (new Users())->findMatchingPrimaryEmail($strPrimaryEmail, $this->app->objCustomPlatform->getCompanyId());
         $blnPhoneMatch = (new Users())->findMatchingPrimaryPhone($strPrimaryPhone, $this->app->objCustomPlatform->getCompanyId());
 
-        if ($blnEmailMatch->Data["match"] === true)
+        if ($blnEmailMatch->data["match"] === true)
         {
             return $this->renderReturnJson(false, ["error" => "primary_email_exists"], "Primary E-mail already assigned to another user.");
         }
 
-        if ($blnPhoneMatch->Data["match"] === true )
+        if ($blnPhoneMatch->data["match"] === true )
         {
             return $this->renderReturnJson(false, ["error" => "primary_phone_exists"], "Primary Phone already assigned to another user..");
         }
@@ -394,50 +394,50 @@ class ApiController extends UserController
 
         $objNewUserResult = (new Users())->createNew($objUser);
 
-        if ($objNewUserResult->Result->Success === false)
+        if ($objNewUserResult->result->Success === false)
         {
-            return $this->renderReturnJson(false, ["error" => "creation_failed"], $objNewUserResult->Result->Message);
+            return $this->renderReturnJson(false, ["error" => "creation_failed"], $objNewUserResult->result->Message);
         }
 
-        $objNewUser = $objNewUserResult->Data->First();
+        $objNewUser = $objNewUserResult->getData()->first();
 
         if ($strPrimaryEmail !== null)
         {
             $objConnection = new ConnectionModel();
 
-            $objConnection->user_id = $objNewUserResult->Data->First()->user_id;
+            $objConnection->user_id = $objNewUserResult->getData()->first()->user_id;
             $objConnection->connection_type_id = 6;
             $objConnection->division_id = 0;
             $objConnection->company_id = $customPlatformId;
             $objConnection->connection_value = $strPrimaryEmail;
-            $objConnection->is_primary = ExcellTrue;
+            $objConnection->is_primary = EXCELL_TRUE;
             $objConnection->connection_class = 'user';
 
             $objEmailResult = (new Connections())->createNew($objConnection);
-            $objNewUser->user_email = $objEmailResult->Data->First()->connection_id;
+            $objNewUser->user_email = $objEmailResult->getData()->first()->connection_id;
         }
 
         if ($strPrimaryPhone !== null)
         {
             $objConnection = new ConnectionModel();
 
-            $objConnection->user_id = $objNewUserResult->Data->First()->user_id;
+            $objConnection->user_id = $objNewUserResult->getData()->first()->user_id;
             $objConnection->connection_type_id = 1;
             $objConnection->division_id = 0;
             $objConnection->company_id = $customPlatformId;
             $objConnection->connection_value = $strPrimaryPhone;
-            $objConnection->is_primary = ExcellTrue;
+            $objConnection->is_primary = EXCELL_TRUE;
             $objConnection->connection_class = 'user';
 
             $objPhoneResult = (new Connections())->createNew($objConnection);
-            $objNewUser->user_phone = $objPhoneResult->Data->First()->connection_id;
+            $objNewUser->user_phone = $objPhoneResult->getData()->first()->connection_id;
         }
 
         $objNewUserResult = (new Users())->update($objNewUser);
 
-        $this->processIntegrationsCreate($objNewUserResult->Data->First());
+        $this->processIntegrationsCreate($objNewUserResult->getData()->first());
 
-        $arUser = $objNewUserResult->Data->First()->ToPublicArray(["sys_row_id", "user_id", "first_name", "last_name", "user_email", "user_phone", "username"]);
+        $arUser = $objNewUserResult->getData()->first()->ToPublicArray(["sys_row_id", "user_id", "first_name", "last_name", "user_email", "user_phone", "username"]);
 
         $arUser["id"] = $arUser["sys_row_id"];
         $arUser["email"] = $strPrimaryEmail;
@@ -468,7 +468,7 @@ class ApiController extends UserController
 
         $objSearchResult = (new Users())->getWhere($arWhereClause);
 
-        $arSearchResult = $objSearchResult->Data->FieldsToArray(["user_id","first_name","last_name"]);
+        $arSearchResult = $objSearchResult->getData()->FieldsToArray(["user_id","first_name","last_name"]);
 
         $objUserSearchResult = [
             "users" => $arSearchResult
@@ -498,7 +498,7 @@ class ApiController extends UserController
         array_pop($arWhereClause);
 
         $objSearchResult = (new UserClass())->leftJoin([Users::class => ["module" => "Users", "source-fk" => "user_id", "target-fk" => "user_id"]])->getWhere([["user_class_type_id" => 15], "AND", [$arWhereClause]]);
-        $arSearchResult = $objSearchResult->Data->FieldsToArray(["user_id","first_name","last_name"]);
+        $arSearchResult = $objSearchResult->getData()->FieldsToArray(["user_id","first_name","last_name"]);
 
         $objUserSearchResult = [
             "users" => $arSearchResult
@@ -519,7 +519,7 @@ class ApiController extends UserController
 
         $connectionTypeResult = $connectionType->getAllRows();
 
-        return $this->renderReturnJson(true, ["list" => $connectionTypeResult->Data->ToPublicArray()], "Available connection types.");
+        return $this->renderReturnJson(true, ["list" => $connectionTypeResult->getData()->ToPublicArray()], "Available connection types.");
     }
 
     public const connectionTypeWebsite = 2;
@@ -536,7 +536,7 @@ class ApiController extends UserController
 
         $connectionTypeResult = $connectionType->getWhere([["action", "IN", ["phone", "sms", "fax", "email"]], "OR", ["connection_type_id", "IN", [static::connectionTypeWebsite, static::connectionTypeBlog]]]);
 
-        return $this->renderReturnJson(true, ["list" => $connectionTypeResult->Data->ToPublicArray()], "Available connection types.");
+        return $this->renderReturnJson(true, ["list" => $connectionTypeResult->getData()->ToPublicArray()], "Available connection types.");
     }
 
     public function getAvailableConnectionsForCard(ExcellHttpModel $objData) : bool
@@ -558,9 +558,9 @@ class ApiController extends UserController
 
         $objLoggedInUser = $this->app->getActiveLoggedInUser();
         $colCardConnectionsResult = (new Connections())->getByCardId($objParams["card_id"]);
-        $colCardConnections = $colCardConnectionsResult->Data;
+        $colCardConnections = $colCardConnectionsResult->getData();
 
-        $colUserConnections = (new Connections())->getByUserIds([$objParams["owner_id"]],$objLoggedInUser->user_id, $this->app->objCustomPlatform->getCompanyId())->Data;
+        $colUserConnections = (new Connections())->getByUserIds([$objParams["owner_id"]],$objLoggedInUser->user_id, $this->app->objCustomPlatform->getCompanyId())->getData();
         $colUserConnections->MergeWithoutDuplicates($colCardConnections, "connection_id");
 
         return $this->renderReturnJson(true, ["list" => $colUserConnections->ToPublicArray()], "Available connections.");
@@ -585,9 +585,9 @@ class ApiController extends UserController
 
         $objLoggedInUser = $this->app->getActiveLoggedInUser();
         $colCardConnectionsResult = (new Connections())->getSharesByCardId($objParams["card_id"]);
-        $colCardConnections = $colCardConnectionsResult->Data;
+        $colCardConnections = $colCardConnectionsResult->getData();
 
-        $colUserConnections = (new Connections())->getSharesByUserIds([$objParams["owner_id"]], $objLoggedInUser->user_id, $this->app->objCustomPlatform->getCompanyId())->Data;
+        $colUserConnections = (new Connections())->getSharesByUserIds([$objParams["owner_id"]], $objLoggedInUser->user_id, $this->app->objCustomPlatform->getCompanyId())->getData();
         $colUserConnections->MergeWithoutDuplicates($colCardConnections, "connection_id");
 
         return $this->renderReturnJson(true, ["list" => $colUserConnections->ToPublicArray()], "Available shares.");
@@ -612,9 +612,9 @@ class ApiController extends UserController
 
         $objLoggedInUser = $this->app->getActiveLoggedInUser();
         $colCardConnectionsResult = (new Connections())->getSocialMediaByCardId($objParams["card_id"]);
-        $colCardConnections = $colCardConnectionsResult->Data;
+        $colCardConnections = $colCardConnectionsResult->getData();
 
-        $colUserConnections = (new Connections())->getSocialMediaByUserIds([$objParams["owner_id"]], $objLoggedInUser->user_id, $this->app->objCustomPlatform->getCompanyId())->Data;
+        $colUserConnections = (new Connections())->getSocialMediaByUserIds([$objParams["owner_id"]], $objLoggedInUser->user_id, $this->app->objCustomPlatform->getCompanyId())->getData();
         $colUserConnections->MergeWithoutDuplicates($colCardConnections, "connection_id");
 
         return $this->renderReturnJson(true, ["list" => $colUserConnections->ToPublicArray()], "Available shares.");
@@ -664,7 +664,7 @@ class ApiController extends UserController
 
                 $result = (new Connections())->createNew($objConnectionModel);
 
-                $intConnectionId = $result->Data->First()->connection_id;
+                $intConnectionId = $result->getData()->first()->connection_id;
                 $objConnectionModel->connection_id = $intConnectionId;
                 (new UserLogs())->RegisterActivity($this->app->getActiveLoggedInUser()->user_id, "updated_connection", "Connection Successfully Created: #" . $intConnectionId . " with value: " . $objConnectionModel->connection_value, "connection", $intConnectionId);
             }
@@ -678,7 +678,7 @@ class ApiController extends UserController
 
             $cardResult = (new Connections())->getById($objConnectionModel->connection_id);
 
-            return $this->renderReturnJson(true, ["connection" => $cardResult->Data->First()->ToPublicArray()], "User connection updated.");
+            return $this->renderReturnJson(true, ["connection" => $cardResult->getData()->first()->ToPublicArray()], "User connection updated.");
         }
         catch (\Exception $exception)
         {
@@ -707,12 +707,12 @@ class ApiController extends UserController
 
         $objUserAuthentication = (new Users())->AuthenticateUserForLogin($objUser);
 
-        if ( $objUserAuthentication->Result->Success === false)
+        if ( $objUserAuthentication->result->Success === false)
         {
-            die('{"success":false,"message":"'.$objUserAuthentication->Result->Message.'"}');
+            die('{"success":false,"message":"'.$objUserAuthentication->result->Message.'"}');
         }
 
-        die('{"success":true,"message":"'.$objUserAuthentication->Result->Message.'"}');
+        die('{"success":true,"message":"'.$objUserAuthentication->result->Message.'"}');
     }
 
     public function registerAppUser(ExcellHttpModel $objData): void
@@ -749,18 +749,18 @@ class ApiController extends UserController
 
         $objNewUserResult = (new Users())->createNew($objCreationNewUser);
 
-        $objEmailAddressResult = $this->assignEmailAddress($objNewUserResult->Data->First()->user_id, $objNewUserData->email);
-        $objMobileNumberResult = $this->assignMobileNumber($objNewUserResult->Data->First()->user_id, $objNewUserData->phonenumber);
+        $objEmailAddressResult = $this->assignEmailAddress($objNewUserResult->getData()->first()->user_id, $objNewUserData->email);
+        $objMobileNumberResult = $this->assignMobileNumber($objNewUserResult->getData()->first()->user_id, $objNewUserData->phonenumber);
 
-        $objCreationNewUser->user_email = $objEmailAddressResult->Data->First()->connection_value;
-        $objCreationNewUser->user_phone = $objMobileNumberResult->Data->First()->connection_value;
+        $objCreationNewUser->user_email = $objEmailAddressResult->getData()->first()->connection_value;
+        $objCreationNewUser->user_phone = $objMobileNumberResult->getData()->first()->connection_value;
 
         (new Users())->update($objCreationNewUser);
 
         logText("RegisterNewAppUser.log", json_encode($objData->Data->PostData));
 
         $objUserCreationResult = [
-            "user_id" => $objNewUserResult->Data->First()->user_id
+            "user_id" => $objNewUserResult->getData()->first()->user_id
         ];
 
         $objResult = ["success" => true, "data" => $objUserCreationResult];
@@ -777,7 +777,7 @@ class ApiController extends UserController
         $objConnection->division_id = 0;
         $objConnection->company_id = 0;
         $objConnection->connection_value = $strConnectionValue;
-        $objConnection->is_primary = ExcellTrue;
+        $objConnection->is_primary = EXCELL_TRUE;
         $objConnection->connection_class = 'user';
 
         return (new Connections())->createNew($objConnection);
@@ -792,7 +792,7 @@ class ApiController extends UserController
         $objConnection->division_id = 0;
         $objConnection->company_id = 0;
         $objConnection->connection_value = $strConnectionValue;
-        $objConnection->is_primary = ExcellTrue;
+        $objConnection->is_primary = EXCELL_TRUE;
         $objConnection->connection_class = 'user';
 
         return (new Connections())->createNew($objConnection);
@@ -820,7 +820,7 @@ class ApiController extends UserController
             $objUsersResult = (new Users())->getWhere([["username", "=", $strUsername], "AND", ["user_id", "!=", $objData->Data->Params["user_id"]], "AND", ["company_id", "=", $companyId]]);
         }
 
-        if ($objUsersResult->Result === false || $objUsersResult->Result->Count === 0)
+        if ($objUsersResult->result === false || $objUsersResult->result->Count === 0)
         {
             $objResult = ["success" => true, "match" => false];
             die(json_encode($objResult));
@@ -870,7 +870,7 @@ class ApiController extends UserController
         }
 
         $users = new Users();
-        $user = $users->getWhere(["password_reset_token" => $objPost->request_token])->Data->First();
+        $user = $users->getWhere(["password_reset_token" => $objPost->request_token])->getData()->first();
 
         if ($user === null)
         {
@@ -880,7 +880,7 @@ class ApiController extends UserController
         $passwordFiltered = str_replace(["'",'"', " ", "--", "`", "/"], "", $objPost->password_for_reset);
 
         $user->password = $passwordFiltered;
-        $user->password_reset_token = ExcellNull;
+        $user->password_reset_token = EXCELL_NULL;
         $users->update($user);
 
         return $this->renderReturnJson(true, [], "Password reset for user.");
@@ -899,7 +899,7 @@ class ApiController extends UserController
 
         $blnMatch = (new Users())->findMatchingPrimaryPhone($objPost["phone"], $this->app->objCustomPlatform->getCompanyId(), $objData->Data->Params["user_id"]);
 
-        if ($blnMatch->Data["match"] === true)
+        if ($blnMatch->data["match"] === true)
         {
             return $this->renderReturnJson(true, ["match" => true], "Match Found.");
         }
@@ -920,7 +920,7 @@ class ApiController extends UserController
 
         $blnMatch = (new Users())->findMatchingPrimaryEmail($objPost["email"], $this->app->objCustomPlatform->getCompanyId(), $objData->Data->Params["user_id"]);
 
-        if ($blnMatch->Data["match"] === true)
+        if ($blnMatch->data["match"] === true)
         {
             return $this->renderReturnJson(true, ["match" => true], "Match Found.");
         }

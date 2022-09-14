@@ -7,9 +7,9 @@ use Entities\Users\Models\UserModel;
 
 class ManageUserConnectionsWidget extends VueComponent
 {
-    protected $id = "601a0504-2b37-4a20-94eb-14379c699039";
-    protected $title = "User Connection";
-    protected $modalWidth = 750;
+    protected string $id = "601a0504-2b37-4a20-94eb-14379c699039";
+    protected string $title = "User Connection";
+    protected string $modalWidth = "750";
 
     public function __construct (array $components = [])
     {
@@ -38,9 +38,9 @@ class ManageUserConnectionsWidget extends VueComponent
                 
                 let self = this;
                 const url = "/api/v1/users/get-connection-types";
-                ajax.Send(url, null, function(result)
+                ajax.Get(url, null, function(result)
                 {
-                    self.connectionTypeList = result.data.list;
+                    self.connectionTypeList = result.response.data.list;
                 }, "GET");
             },
             updateConnection: function()
@@ -53,9 +53,7 @@ class ManageUserConnectionsWidget extends VueComponent
                     connection_value: this.entityClone.connection_value, 
                     user_id: this.entityUserId, 
                 };
-                
-                console.log(connectionData);
-                
+
                 ajax.Send(url, connectionData, function(result)
                 {
                     if (result.success === false) 
@@ -70,7 +68,7 @@ class ManageUserConnectionsWidget extends VueComponent
                     
                     if (self.action === "add")
                     {
-                        self.entities.push(result.data.connection);
+                        self.entities.push(result.response.data.connection);
                     }
 
                     let vue = self.findApp(self);

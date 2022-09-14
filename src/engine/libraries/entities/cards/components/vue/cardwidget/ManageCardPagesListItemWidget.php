@@ -4,10 +4,11 @@ namespace Entities\Cards\Components\Vue\CardWidget;
 
 use App\website\vue\classes\VueComponentListTable;
 use Entities\Cards\Components\Vue\CardPageWidget\ManageCardPageWidget;
+use Entities\Cards\Components\Vue\Maxtech\Sitewidget\ManageSitePageWidget;
 
 class ManageCardPagesListItemWidget extends VueComponentListTable
 {
-    protected $id = "75b06a2e-0126-4136-a1f0-794780b3a9c5";
+    protected string $id = "75b06a2e-0126-4136-a1f0-794780b3a9c5";
 
     public function __construct(?array $props = [])
     {
@@ -56,17 +57,25 @@ class ManageCardPagesListItemWidget extends VueComponentListTable
 
     protected function renderComponentMethods() : string
     {
+        global $app;
+        $applicationType = $app->objCustomPlatform->getCompanySettings()->FindEntityByValue("label", "application_type")->value ?? "default";
         return '
         editCardPage: function(entity)
         {
             let cardPages = (typeof this.$parent.$parent.card !== "undefined" ) ? this.$parent.$parent.card.Tabs : [];
+            '.($applicationType === "default" ?
+                // This is for default applications.
+                '
             if (typeof entity.__app === "undefined" || entity.__app === null)
             {
                 '. $this->activateDynamicComponentByIdInModal(ManageCardPageWidget::getStaticId(),"", "edit", "entity", "cardPages", [], "this", true ).'
                 return;
             }
-
+            
             this.editMainEntityWithWidget(entity, cardPages);
+            ' :
+                // this is for MaxTech applications.
+                $this->activateDynamicComponentByIdInModal(ManageSitePageWidget::getStaticId(),"", "edit", "entity", "cardPages", [], "this", true ) ).'            
         },
         editMainEntityWithWidget: function(entity, cardPages)
         {
@@ -83,8 +92,7 @@ class ManageCardPagesListItemWidget extends VueComponentListTable
                 }
             }
             
-            modal.vc.setTitle("Loading...").showModal();
-            modal.vc.hideComponents();
+            modal.vc.setTitle("Loading...").hideComponents();
             modal.loadModal("edit", this, this.uuidv4(), entity.__app.app_uuid, null, "Loading...", entity, cardPages, {source:"adminCards"}, true);
         },
         loadDynamicModalComponent: function(currComponent, entity, modal, cardPages)
@@ -104,7 +112,7 @@ class ManageCardPagesListItemWidget extends VueComponentListTable
             {
                 let intEntityId = self.$parent.$parent.card.card_id;
                 let blnVisibility = page.rel_visibility;
-                ajax.Send("/cards/card-data/update-card-data?type=update-tab-rel-visibility&id=" + intEntityId + "&card_tab_id=" + page.card_tab_id + "&card_tab_rel_id=" + page.card_tab_rel_id + "&rel_visibility=" + blnVisibility, null, function (objResult) {
+                ajax.Post("/cards/card-data/update-card-data?type=update-tab-rel-visibility&id=" + intEntityId + "&card_tab_id=" + page.card_tab_id + "&card_tab_rel_id=" + page.card_tab_rel_id + "&rel_visibility=" + blnVisibility, null, function (objResult) {
                     //console.log(objResult);
                 });
             },500);

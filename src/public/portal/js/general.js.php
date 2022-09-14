@@ -1,12 +1,13 @@
 <?php
     global $app;
 ?>
-
 const touchEvent = 'ontouchstart' in window ? 'touchend' : 'click';
 
 function ezLog(obj, label)
 {
-    if (typeof label !== "undefined" && label !== null) console.log("[" + label + "]");
+    if (typeof label !== "undefined" && label !== null) {
+        console.log("[" + label + "]")
+    }
     console.log(obj);
 }
 
@@ -162,20 +163,21 @@ function createNode(type, parameters, text)
     {
         if (currParameter.substr(0,1) === ".")
         {
-            node.classList.add(currParameter.substr(1, currParameter.length));
+            node.classList.add(currParameter.substr(1, currParameter.length))
         }
         if (currParameter.substr(0,1) === "#")
         {
-            node.id = currParameter.substr(1, currParameter.length);
+            node.id = currParameter.substr(1, currParameter.length)
         }
         if (currParameter.includes("="))
         {
             const customParameter = currParameter.split("=");
-            node.setAttribute(customParameter[0], customParameter[1]);
+            node.setAttribute(customParameter[0], customParameter[1])
         }
     }
-
-    node.innerHTML = text;
+    if (typeof text !== "undefined") {
+        node.innerHTML = text
+    }
 
     return node;
 }
@@ -387,6 +389,10 @@ if (typeof getJsonSetting === "undefined")
 {
     function getJsonSetting(list, trail, def)
     {
+        if (typeof list === "undefined" || list === null)
+        {
+            return null;
+        }
         let trailList = trail.split(".");
         const trailCheck = trailList.shift();
 
@@ -523,6 +529,34 @@ function slideDown(target, duration = 250, callback)
             callback();
         }
     }, duration);
+}
+
+function slideOver(direction, target, duration = 250, callback)
+{
+    _.el.style.overflowX = "hidden";
+    newComponent.style.display = "block";
+    newComponent.style.position = "absolute";
+    newComponent.style.left = componentWidth + "px";
+    newComponent.style.top = "0px";
+    target.style.display = "block";
+    target.style.left = "0px";
+    target.style.top = "0px";
+    target.style.position = "relative";
+
+    vueWrapper.style.removeProperty("right");
+    vueWrapper.style.removeProperty("transform");
+    vueWrapper.style.removeProperty("transition");
+    vueWrapper.style.position = "relative";
+    vueWrapper.style.width = (componentWidth * 2) + "px";
+
+    vueWrapper.style.transition = "transform " + transitionTime + "ms ease-out";
+    vueWrapper.style.transform = "translateX(-" + componentWidth + "px)";
+
+    window.setTimeout( function() {
+        if (typeof callback === "function") {
+            callback();
+        }
+    }, transitionTime);
 }
 
 const slideToggle = (target, duration = 250) => {
@@ -806,16 +840,16 @@ const AutoFillSearch = function(var1, var2)
     const loadCustomers = function(callback)
     {
         const self = this;
-        const url = "' . $app->objCustomPlatform->getFullPortalDomain() . '/cart/get-all-card-users-count";
+        const url = "' . $app->objCustomPlatform->getFullPortalDomainName() . '/cart/get-all-card-users-count";
 
-        ajax.SendExternal(url, {}, "get", "json", true, function(result)
+        ajax.GetExternal(url, {}, true, function(result)
         {
             if (result.success === false)
             {
                 return;
             }
 
-            if (self.customerList.length == result.data.count)
+            if (self.customerList.length == result.response.data.count)
             {
                 const customersList = Object.entries(self.customerList);
                 customersList.forEach(function([user_id, currUser])
@@ -830,16 +864,16 @@ const AutoFillSearch = function(var1, var2)
             }
 
             self.customerList = [];
-            const url = "' . $app->objCustomPlatform->getFullPortalDomain() . '/cart/get-all-card-users";
+            const url = "' . $app->objCustomPlatform->getFullPortalDomainName() . '/cart/get-all-card-users";
 
-            ajax.SendExternal(url, {}, "get", "json", true, function(result)
+            ajax.GetExternal(url, {}, true, function(result)
             {
                 if (result.success === false)
                 {
                     return;
                 }
 
-                const users = Object.entries(result.data.list);
+                const users = Object.entries(result.response.data.list);
 
                 users.forEach(function([user_id, currUser])
                 {

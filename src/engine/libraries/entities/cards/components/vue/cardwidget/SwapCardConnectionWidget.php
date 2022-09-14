@@ -7,8 +7,8 @@ use Entities\Cards\Models\CardModel;
 
 class SwapCardConnectionWidget extends VueComponent
 {
-    protected $id = "b02738ce-20b8-4690-9704-8604f4e78251";
-    protected $modalWidth = 750;
+    protected string $id = "b02738ce-20b8-4690-9704-8604f4e78251";
+    protected string $modalWidth = "750";
 
     public function __construct (array $components = [])
     {
@@ -70,9 +70,9 @@ class SwapCardConnectionWidget extends VueComponent
                 
                 let self = this;
                 const url = "/api/v1/users/get-connection-types";
-                ajax.Send(url, null, function(result)
+                ajax.Get(url, null, function(result)
                 {
-                    self.connectionTypeList = result.data.list;
+                    self.connectionTypeList = result.response.data.list;
                 }, "GET");
             },
             showCreateNewCard: function()
@@ -92,22 +92,22 @@ class SwapCardConnectionWidget extends VueComponent
                 this.actionButton = this.ucwords(this.functionType) + " Connection";                       
                 let self = this;
                 const url = "/api/v1/users/get-available-connections-for-card?card_id=" + this.entity.card_id + "&owner_id=" + this.ownerId;
-                ajax.Send(url, null, function(result)
+                ajax.Get(url, null, function(result)
                 {   
-                    if (result.data.success === false) { return; }                                        
-                    self.userConnectionList = result.data.list;
-                }, "GET");
+                    if (result.response.data.success === false) { return; }                                        
+                    self.userConnectionList = result.response.data.list;
+                });
             },
             loadSharesForUser: function()
             {
                 this.actionButton = this.ucwords(this.functionType) + " Share Button";                           
                 let self = this;
                 const url = "/api/v1/users/get-available-shares-for-card?card_id=" + this.entity.card_id + "&owner_id=" + this.ownerId;
-                ajax.Send(url, null, function(result)
+                ajax.Get(url, null, function(result)
                 {   
-                    if (result.data.success === false) { return; }                                        
-                    self.userConnectionList = result.data.list;
-                }, "GET");
+                    if (result.response.data.success === false) { return; }                                        
+                    self.userConnectionList = result.response.data.list;
+                });
             },
             loadSocialsForUser: function()
             {       
@@ -117,11 +117,11 @@ class SwapCardConnectionWidget extends VueComponent
                
                 ezLog(url, "loadSocialsForUser.url");
                          
-                ajax.Send(url, null, function(result)
+                ajax.Get(url, null, function(result)
                 {   
-                    if (result.data.success === false) { return; }                                        
-                    self.userConnectionList = result.data.list;
-                }, "GET");
+                    if (result.response.data.success === false) { return; }                                        
+                    self.userConnectionList = result.response.data.list;
+                });
             },
             engageDynamicSearch: function(user)
             {
@@ -268,7 +268,6 @@ class SwapCardConnectionWidget extends VueComponent
                 {
                     if (currConnectionIndex == index) 
                     { 
-                        console.log(connections[currConnectionIndex]);
                         return connections[currConnectionIndex]; 
                     }
                 }
@@ -333,7 +332,7 @@ class SwapCardConnectionWidget extends VueComponent
                     connectionData.card_socialmedia_id = this.entityClone.card_socialmedia_id;
                 }
                 
-                ajax.Send(url, connectionData, function(result)
+                ajax.Post(url, connectionData, function(result)
                 {
                     if (result.success === false) 
                     {
@@ -342,7 +341,7 @@ class SwapCardConnectionWidget extends VueComponent
                     
                     if( self.swapType === "socialmedia")
                     {
-                        self.entity.card_socialmedia_id = result.data.connection.card_socialmedia_id;
+                        self.entity.card_socialmedia_id = result.response.data.connection.card_socialmedia_id;
                     }
                     else
                     {
@@ -358,11 +357,11 @@ class SwapCardConnectionWidget extends VueComponent
                     
                     if (updateAction === "new")
                     {
-                        result.data.connection.connection_type_id = self.entityClone.connection_type_id;
-                        result.data.connection.connection_type_name = self.entityClone.connection_type_name;
-                        result.data.connection.connection_value = self.entityClone.connection_value;
-                        result.data.connection.font_awesome = self.entityClone.font_awesome;
-                        self.entities.push(result.data.connection);
+                        result.response.data.connection.connection_type_id = self.entityClone.connection_type_id;
+                        result.response.data.connection.connection_type_name = self.entityClone.connection_type_name;
+                        result.response.data.connection.connection_value = self.entityClone.connection_value;
+                        result.response.data.connection.font_awesome = self.entityClone.font_awesome;
+                        self.entities.push(result.response.data.connection);
                     }
                    
                     let vue = self.findApp(self);
@@ -384,7 +383,7 @@ class SwapCardConnectionWidget extends VueComponent
                     user_id: this.ownerId, 
                 };
                 
-                ajax.Send(url, connectionData, function(result)
+                ajax.Post(url, connectionData, function(result)
                 {
                     if (result.success === false) 
                     {
@@ -397,7 +396,7 @@ class SwapCardConnectionWidget extends VueComponent
                     self.entityClone.connection_value = self.entityNew.connection_value;
                     self.connectionSearchResult = self.entityNew.connection_value;
                     
-                    self.entityClone.connection_id = result.data.connection.connection_id;
+                    self.entityClone.connection_id = result.response.data.connection.connection_id;
                     
                     self.loadConnections(self.swapType);
                     

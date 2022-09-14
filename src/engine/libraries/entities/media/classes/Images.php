@@ -11,7 +11,7 @@ use Entities\Media\Models\ImageModel;
 
 class Images extends AppEntity
 {
-    public $strEntityName       = "Media";
+    public string $strEntityName       = "Media";
     public $strDatabaseTable    = "image";
     public $strDatabaseName     = "Media";
     public $strMainModelName    = ImageModel::class;
@@ -21,16 +21,16 @@ class Images extends AppEntity
     {
         $imageResult = $this->decodeBase64ImageStringToLocalFile($base64);
 
-        if ($imageResult->Result->Success === false)
+        if ($imageResult->result->Success === false)
         {
             return $imageResult;
         }
 
         $finfo = finfo_open(FILEINFO_MIME_TYPE);
-        $mime = finfo_file($finfo, $imageResult->Data->First()->getFullFileName());
+        $mime = finfo_file($finfo, $imageResult->getData()->first()->getFullFileName());
 
         if (
-            !in_array(strtolower($imageResult->Data->First()->getFileExtension()), ["gif", "jpeg", "jpg", "png","svg"])
+            !in_array(strtolower($imageResult->getData()->first()->getFileExtension()), ["gif", "jpeg", "jpg", "png","svg"])
             && ($mime != "image/gif")
             && ($mime != "image/jpeg")
             && ($mime != "image/pjpeg")
@@ -42,7 +42,7 @@ class Images extends AppEntity
             return new ExcellTransaction(false, "You can only upload an image file: "  . $mime);
         }
 
-        $localFile = $imageResult->Data->First();
+        $localFile = $imageResult->getData()->first();
         $tempFilePathAndName = $localFile->getFullFileName();
         $userId = $this->app->getActiveLoggedInUser()->sys_row_id ?? "73a0d8b4-57e9-11ea-b088-42010a522005";
         $link = null;
@@ -119,5 +119,48 @@ class Images extends AppEntity
         $colImageData->Add($localFile);
 
         return new ExcellTransaction(true, 'base64_decode decoded', $colImageData);
+    }
+
+    public function buildImageBatchWhereClause($filterIdField = null, $filterEntity = null, int $typeId = 1) : string
+    {
+        $objWhereClause = $this->cardListPrimaryDataForDisplay($filterIdField, $filterEntity);
+
+        if ($filterEntity !== null)
+        {
+            $objWhereClause .= "AND usr.{$filterIdField} = {$filterEntity} "; // 9 = card affiliate
+        }
+
+        $objWhereClause .= " AND img.image_class = 'image' GROUP BY(img.image_id) ORDER BY img.image_id DESC";
+
+        return $objWhereClause;
+    }
+
+    public function buildLogoBatchWhereClause($filterIdField = null, $filterEntity = null, int $typeId = 1) : string
+    {
+        $objWhereClause = $this->cardListPrimaryDataForDisplay($filterIdField, $filterEntity);
+
+        if ($filterEntity !== null)
+        {
+            $objWhereClause .= "AND usr.{$filterIdField} = {$filterEntity} "; // 9 = card affiliate
+        }
+
+        $objWhereClause .= " AND img.image_class = 'logo' GROUP BY(img.image_id) ORDER BY img.image_id DESC";
+
+        return $objWhereClause;
+    }
+
+    private function cardListPrimaryDataForDisplay($filterIdField = null, $filterEntity = null)
+    {
+        $objWhereClause = "SELECT img.* FROM excell_media.image img ";
+
+        if ($filterEntity !== null)
+        {
+            $objWhereClause .= "LEFT JOIN excell_main.user usr ON usr.user_id = img.user_id ";
+        }
+
+        //$objWhereClause .= "WHERE card.company_id = {$this->app->objCustomPlatform->getCompanyId()} AND card.status != 'Deleted' ";
+        $objWhereClause .= "WHERE img.company_id = {$this->app->objCustomPlatform->getCompanyId()} ";
+
+        return $objWhereClause;
     }
 }

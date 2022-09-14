@@ -8,11 +8,17 @@ $this->objAppEntities["users"]["Routes"]["customers"]["Alias"] = "customers";
 $this->objAppEntities["users"]["Routes"]["brand-partners"]["Alias"] = "brand-partners";
 $this->objAppEntities["users"]["Routes"]["affiliates"]["Alias"] = "affiliates";
 $this->objAppEntities["users"]["Routes"]["profile"]["Alias"] = "profile";
+$this->objAppEntities["users"]["Routes"]["personas"]["Alias"] = "personas";
+$this->objAppEntities["users"]["Routes"]["my-personas"]["Alias"] = "my-personas";
+$this->objAppEntities["directories"]["Routes"]["max-directories"]["Alias"] = "max-directories";
 $this->objAppEntities["companies"]["Routes"]["platforms"]["Alias"] = "platforms";
 
 //dd($this->objAppEntities["companies"]);
 
 // New Custom Aliases for Modules
+$this->objAppEntities["personas"] = $this->objAppEntities["users"];
+$this->objAppEntities["my-personas"] = $this->objAppEntities["users"];
+$this->objAppEntities["max-directories"] = $this->objAppEntities["directories"];
 $this->objAppEntities["profile"] = $this->objAppEntities["users"];
 $this->objAppEntities["brand-partners"] = $this->objAppEntities["users"];
 $this->objAppEntities["members"] = $this->objAppEntities["users"];
@@ -32,6 +38,7 @@ $this->objAppEntities["cards"]["ControllerRouting"]["CardRelationshipTypes"]["bi
 $this->objAppEntities["cards"]["ControllerRouting"]["CardTemplates"]["binding"] = ["account/admin"];
 $this->objAppEntities["cards"]["ControllerRouting"]["CardTypes"]["binding"] = ["account/admin"];
 
+$this->objAppEntities["directories"]["ControllerRouting"]["Index"]["binding"] = $this->lstPortalBindings;;
 $this->objAppEntities["modules"]["ControllerRouting"]["Index"]["binding"] = $this->lstPortalBindings;
 $this->objAppEntities["communication"]["ControllerRouting"]["Index"]["binding"] = $this->lstPortalBindings;
 $this->objAppEntities["notes"]["ControllerRouting"]["Index"]["binding"] = $this->lstPortalBindings;
@@ -42,6 +49,9 @@ $this->objAppEntities["reports"]["ControllerRouting"]["Index"]["binding"] = ["ac
 
 $this->objAppEntities["customers"]["ControllerRouting"]["Index"]["binding"] = ["account/admin"];
 $this->objAppEntities["members"]["ControllerRouting"]["Index"]["binding"] = ["account/admin"];
+$this->objAppEntities["personas"]["ControllerRouting"]["Index"]["binding"] = ["account/admin"];
+$this->objAppEntities["my-personas"]["ControllerRouting"]["Index"]["binding"] = ["account"];
+$this->objAppEntities["max-directories"]["ControllerRouting"]["Index"]["binding"] = ["account"];
 $this->objAppEntities["profile"]["ControllerRouting"]["Index"]["binding"] = ["account"];
 $this->objAppEntities["marketplace"]["ControllerRouting"]["Index"]["binding"] = ["account"];
 $this->objAppEntities["marketplace-products"]["ControllerRouting"]["Index"]["binding"] = ["account"];

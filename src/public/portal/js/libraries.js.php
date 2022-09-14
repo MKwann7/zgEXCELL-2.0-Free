@@ -30,7 +30,7 @@ foreach($this->app->arJavaScriptLibraries->vendor as $strvendorName => $arvendor
         {
             foreach($strLibraryFileNames as $strLibraryFileName)
             {
-                $strJsFilePath = AppVendors . $strvendorName . "/" . $strLibraryPath . "/min/" . $strLibraryFileName;
+                $strJsFilePath = APP_VENDORS . $strvendorName . "/" . $strLibraryPath . "/min/" . $strLibraryFileName;
 
                 if (is_file($strJsFilePath))
                 {
@@ -46,7 +46,7 @@ foreach($this->app->arJavaScriptLibraries->vendor as $strvendorName => $arvendor
             {
                 if( !empty($arActiveJavaScriptLibraries["vendor"][$strvendorName]) && !empty($arActiveJavaScriptLibraries["vendor"][$strvendorName][$arLibraryPaths[0]]) && $arActiveJavaScriptLibraries["vendor"][$strvendorName][$arLibraryPaths[0]] === true)
                 {
-                    $strJsFilePath = AppVendors . $strvendorName . "/" . $strLibraryPath . "/min/" . $strLibraryFileName;
+                    $strJsFilePath = APP_VENDORS . $strvendorName . "/" . $strLibraryPath . "/min/" . $strLibraryFileName;
 
                     if (is_file($strJsFilePath))
                     {
@@ -75,7 +75,7 @@ foreach($objPagevendors as $arvendorLibraryName => $arvendorLibraryCollection)
             {
                 foreach($strLibraryFileNames as $strLibraryFileName)
                 {
-                    $strJsFilePath = AppVendors . $arvendorLibraryName . "/" . $strLibraryFilePath . "/min/" . $strLibraryFileName;
+                    $strJsFilePath = APP_VENDORS . $arvendorLibraryName . "/" . $strLibraryFilePath . "/min/" . $strLibraryFileName;
                     if (is_file($strJsFilePath))
                     {
                         echo "/* ".$arvendorLibraryName . " " .$strLibraryPath . " " . $strLibraryFileName . " */" . PHP_EOL . PHP_EOL;

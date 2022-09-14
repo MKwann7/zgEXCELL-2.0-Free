@@ -1,14 +1,18 @@
 <?php
 
-namespace Entities\Users\Controllers;
+namespace Http\Users\Controllers;
 
 use App\Utilities\Excell\ExcellHttpModel;
+use App\Website\Vue\Classes\VueProps;
 use Entities\Activities\Classes\UserLogs;
 use Entities\Cards\Classes\Cards;
+use Entities\Cards\Components\Vue\Maxtech\Purchase\PurchasePersonaWidget;
 use Entities\Users\Components\Vue\CustomerMainApp;
 use Entities\Media\Classes\Images;
 use Entities\Notes\Classes\Notes;
-use Entities\Users\Classes\Base\UserController;
+use Entities\Users\Components\Vue\MyPersonasApp;
+use Entities\Users\Components\Vue\PersonaWidget\ManagePersonaWidget;
+use Http\Users\Controllers\Base\UserController;
 use Entities\Users\Classes\UserClass;
 use Entities\Users\Classes\Users;
 use Entities\Users\Components\Vue\MyProfileApp;
@@ -38,6 +42,9 @@ class IndexController extends UserController
                         case "members":
                             $this->RenderAffiliatesAdminList($objData);
                             break;
+                        case "personas":
+                            $this->RenderPersonas($objData);
+                            break;
                     }
                 }
                 elseif($this->app->strActivePortalBinding === "account")
@@ -47,7 +54,12 @@ class IndexController extends UserController
                         case "profile":
                             $this->RenderProfile($objData);
                             break;
+                        case "my-personas":
+                            $this->RenderMyPersonas($objData);
+                            break;
                     }
+
+                    $this->app->redirectToLogin();
                 }
                 else
                 {
@@ -149,17 +161,17 @@ class IndexController extends UserController
     {
         $lstCustomers = $this->AppEntity->GetAllCustomers(250);
 
-        $arUserCardsIds = $lstCustomers->Data->FieldsToArray(["user_id"]);
+        $arUserCardsIds = $lstCustomers->getData()->FieldsToArray(["user_id"]);
         $lstUserAvatars = (new Images())->getWhere([["entity_name" => "user", "image_class" => "user-avatar"], "AND", ["entity_id", "IN", $arUserCardsIds]]);
-        $lstCustomers->Data->MergeFields($lstUserAvatars->Data,["url" => "main_image","thumb" => "main_thumb"],["entity_id" => "user_id"]);
+        $lstCustomers->getData()->MergeFields($lstUserAvatars->data,["url" => "main_image","thumb" => "main_thumb"],["entity_id" => "user_id"]);
 
         foreach($lstCustomers->Data as $currUserId => $currUserData)
         {
-            $lstCustomers->Data->{$currUserId}->created_on = date("m/d/Y",strtotime($currUserData->created_on));
-            $lstCustomers->Data->{$currUserId}->last_updated = date("m/d/Y",strtotime($currUserData->last_updated));
+            $lstCustomers->getData()->{$currUserId}->created_on = date("m/d/Y",strtotime($currUserData->created_on));
+            $lstCustomers->getData()->{$currUserId}->last_updated = date("m/d/Y",strtotime($currUserData->last_updated));
 
-            $lstCustomers->Data->{$currUserId}->AddUnvalidatedValue("main_image", ($currUserData->main_image ?? "/_ez/images/users/defaultAvatar.jpg"));
-            $lstCustomers->Data->{$currUserId}->AddUnvalidatedValue("main_thumb", ($currUserData->main_thumb ?? "/_ez/images/users/defaultAvatar.jpg"));
+            $lstCustomers->getData()->{$currUserId}->AddUnvalidatedValue("main_image", ($currUserData->main_image ?? "/_ez/images/users/defaultAvatar.jpg"));
+            $lstCustomers->getData()->{$currUserId}->AddUnvalidatedValue("main_thumb", ($currUserData->main_thumb ?? "/_ez/images/users/defaultAvatar.jpg"));
         }
 
         $objUser = null;
@@ -177,18 +189,18 @@ class IndexController extends UserController
 
             $objUserResult = (new Users())->getFks(["user_phone", "user_email"])->getById($intUserId);
 
-            if ($objUserResult->Result->Count > 0)
+            if ($objUserResult->result->Count > 0)
             {
                 $blnUserViewFound = true;
             }
 
-            $objUser = $objUserResult->Data->First();
+            $objUser = $objUserResult->getData()->first();
             $lstUserCards = (new Cards())->getFks()->GetByUserId($intUserId);
-            $colUserClasses = (new Users())->GetUserClassesByUserId($intUserId)->Data;
-            $colUserAddresses = (new Users())->getFks()->GetAddressesByUserId($intUserId)->Data;
-            $colUserConnections = (new Users())->getFks()->GetConnectionsByUserId($intUserId)->Data;
-            $objUserBusiness = (new Users())->GetPrimaryBusinessByUserId($intUserId)->Data->First();
-            $colUserActivities = (new UserLogs())->GetUserActivity($intUserId)->Data;
+            $colUserClasses = (new Users())->GetUserClassesByUserId($intUserId)->getData();
+            $colUserAddresses = (new Users())->getFks()->GetAddressesByUserId($intUserId)->getData();
+            $colUserConnections = (new Users())->getFks()->GetConnectionsByUserId($intUserId)->getData();
+            $objUserBusiness = (new Users())->GetPrimaryBusinessByUserId($intUserId)->getData()->first();
+            $colUserActivities = (new UserLogs())->GetUserActivity($intUserId)->getData();
             $lstUserNotes = (new Notes())->getWhere(["entity_name" => "user", "entity_id" => $intUserId]);
 
             $strCardMainImage = "/_ez/images/users/defaultAvatar.jpg";
@@ -196,20 +208,20 @@ class IndexController extends UserController
 
             $objImageResult = (new Images())->noFks()->getWhere(["entity_id" => $intUserId, "image_class" => "user-avatar", "entity_name" => "user"],"image_id.DESC");
 
-            if ($objImageResult->Result->Success === true && $objImageResult->Result->Count > 0)
+            if ($objImageResult->result->Success === true && $objImageResult->result->Count > 0)
             {
-                $strCardMainImage = $objImageResult->Data->First()->url;
-                $strCardThumbImage = $objImageResult->Data->First()->thumb;
+                $strCardMainImage = $objImageResult->getData()->first()->url;
+                $strCardThumbImage = $objImageResult->getData()->first()->thumb;
             }
 
-            $arUserCardsIds = $lstUserCards->Data->FieldsToArray(["card_id"]);
+            $arUserCardsIds = $lstUserCards->getData()->FieldsToArray(["card_id"]);
             $lstCardImages = (new Images())->getWhere([["entity_name" => "card", "image_class" =>"main-image"], "AND", ["entity_id", "IN", $arUserCardsIds]]);
-            $lstUserCards->Data->MergeFields($lstCardImages->Data,["url" => "main_image","thumb" => "main_thumb"],["entity_id" => "card_id"]);
+            $lstUserCards->getData()->MergeFields($lstCardImages->data,["url" => "main_image","thumb" => "main_thumb"],["entity_id" => "card_id"]);
 
-            foreach($lstUserCards->Data as $currCardId => $currCardData)
+            foreach($lstUserCards->data as $currCardId => $currCardData)
             {
-                $lstUserCards->Data->{$currCardId}->AddUnvalidatedValue("main_image", $currCardData->main_image ?? ("/_ez/templates/" . ($currCardData->template_id__value ?? "1")  . "/images/mainImage.jpg"));
-                $lstUserCards->Data->{$currCardId}->AddUnvalidatedValue("main_thumb", $currCardData->main_thumb ?? ("/_ez/templates/" . ($currCardData->template_id__value ?? "1") . "/images/mainImage.jpg"));
+                $lstUserCards->getData()->{$currCardId}-PurchaseSiteWidget>AddUnvalidatedValue("main_image", $currCardData->main_image ?? ("/_ez/templates/" . ($currCardData->template_id__value ?? "1")  . "/images/mainImage.jpg"));
+                $lstUserCards->getData()->{$currCardId}->AddUnvalidatedValue("main_thumb", $currCardData->main_thumb ?? ("/_ez/templates/" . ($currCardData->template_id__value ?? "1") . "/images/mainImage.jpg"));
             }
 
             if (!empty($objUser))
@@ -225,8 +237,8 @@ class IndexController extends UserController
             "objUser" => $objUser,
             "blnUserViewFound" => $blnUserViewFound,
             "objUserBusiness" => $objUserBusiness,
-            "colUserCards" => $lstUserCards->Data,
-            "colNotes" => $lstUserNotes->Data,
+            "colUserCards" => $lstUserCards->data,
+            "colNotes" => $lstUserNotes->data,
             "colUserClasses" => $colUserClasses,
             "colUserAddresses" => $colUserAddresses,
             "colUserConnections" => $colUserConnections,
@@ -238,19 +250,19 @@ class IndexController extends UserController
     {
         $objActiveAffiliates = $this->AppEntity->GetAllActiveAffiliates();
 
-        $objActiveAffiliates->Data->ConvertDatesToFormat("m/d/Y");
+        $objActiveAffiliates->getData()->ConvertDatesToFormat("m/d/Y");
 
-        $arUserCardsIds = $objActiveAffiliates->Data->FieldsToArray(["user_id"]);
+        $arUserCardsIds = $objActiveAffiliates->getData()->FieldsToArray(["user_id"]);
         $lstUserAvatars = (new Images())->getWhere([["entity_name" => "user", "image_class" => "user-avatar"], "AND", ["entity_id", "IN", $arUserCardsIds]]);
-        $objActiveAffiliates->Data->MergeFields($lstUserAvatars->Data,["url" => "main_image","thumb" => "main_thumb"],["entity_id" => "user_id"]);
+        $objActiveAffiliates->getData()->MergeFields($lstUserAvatars->data,["url" => "main_image","thumb" => "main_thumb"],["entity_id" => "user_id"]);
 
         foreach($objActiveAffiliates->Data as $currUserId => $currUserData)
         {
-            $objActiveAffiliates->Data->{$currUserId}->created_on = date("m/d/Y",strtotime($currUserData->created_on));
-            $objActiveAffiliates->Data->{$currUserId}->last_updated = date("m/d/Y",strtotime($currUserData->last_updated));
+            $objActiveAffiliates->getData()->{$currUserId}->created_on = date("m/d/Y",strtotime($currUserData->created_on));
+            $objActiveAffiliates->getData()->{$currUserId}->last_updated = date("m/d/Y",strtotime($currUserData->last_updated));
 
-            $objActiveAffiliates->Data->{$currUserId}->AddUnvalidatedValue("main_image", ($currUserData->main_image ?? "/_ez/images/users/defaultAvatar.jpg"));
-            $objActiveAffiliates->Data->{$currUserId}->AddUnvalidatedValue("main_thumb", ($currUserData->main_thumb ?? "/_ez/images/users/defaultAvatar.jpg"));
+            $objActiveAffiliates->getData()->{$currUserId}->AddUnvalidatedValue("main_image", ($currUserData->main_image ?? "/_ez/images/users/defaultAvatar.jpg"));
+            $objActiveAffiliates->getData()->{$currUserId}->AddUnvalidatedValue("main_thumb", ($currUserData->main_thumb ?? "/_ez/images/users/defaultAvatar.jpg"));
         }
 
         if ( $strApproach === "view")
@@ -258,23 +270,23 @@ class IndexController extends UserController
             $intUserId = $objData->Data->Params["id"];
             $objUserResult = (new Users())->getById($intUserId);
 
-            if ($objUserResult->Result->Count > 0)
+            if ($objUserResult->result->Count > 0)
             {
                 $blnUserViewFound = true;
             }
 
-            $objUser = $objUserResult->Data->First();
+            $objUser = $objUserResult->getData()->first();
 
             $lstUserCards = (new Cards())->GetCardsByAffiliateId($intUserId);
 
-            $arUserCardsIds = $lstUserCards->Data->FieldsToArray(["card_id"]);
+            $arUserCardsIds = $lstUserCards->getData()->FieldsToArray(["card_id"]);
             $lstCardImages = (new Images())->getWhere([["entity_name" => "card", "image_class" =>"main-image"], "AND", ["entity_id", "IN", $arUserCardsIds]]);
-            $lstUserCards->Data->MergeFields($lstCardImages->Data,["url" => "main_image","thumb" => "main_thumb"],["entity_id" => "card_id"]);
+            $lstUserCards->getData()->MergeFields($lstCardImages->data,["url" => "main_image","thumb" => "main_thumb"],["entity_id" => "card_id"]);
 
-            foreach($lstUserCards->Data as $currCardId => $currCardData)
+            foreach($lstUserCards->data as $currCardId => $currCardData)
             {
-                $lstUserCards->Data->{$currCardId}->AddUnvalidatedValue("main_image", ($currCardData->main_image ?? "/_ez/templates/" . $currCardData->template_id ?? "1"  . "/images/mainImage.jpg"));
-                $lstUserCards->Data->{$currCardId}->AddUnvalidatedValue("main_thumb", ($currCardData->main_thumb ?? "/_ez/templates/" . $currCardData->template_id ?? "1" . "/images/mainImage.jpg"));
+                $lstUserCards->getData()->{$currCardId}->AddUnvalidatedValue("main_image", ($currCardData->main_image ?? "/_ez/templates/" . $currCardData->template_id ?? "1"  . "/images/mainImage.jpg"));
+                $lstUserCards->getData()->{$currCardId}->AddUnvalidatedValue("main_thumb", ($currCardData->main_thumb ?? "/_ez/templates/" . $currCardData->template_id ?? "1" . "/images/mainImage.jpg"));
             }
         }
 
@@ -283,16 +295,58 @@ class IndexController extends UserController
             "blnUserViewFound" => $blnUserViewFound,
             "strApproach" => $strApproach,
             "objUser" => $objUser,
-            "colUserCards" => $lstUserCards->Data
+            "colUserCards" => $lstUserCards->data
         ]);
     }
 
     private function RenderProfile(ExcellHttpModel $objData) : void
     {
-        $vueApp = (new MyProfileApp("vueApp"));
+        $vueApp = (new MyProfileApp("vueApp"))
+            ->setUriBase($objData->PathControllerBase);
 
         (new Users())->renderApp(
             "admin.view_users_new",
+            $this->app->strAssignedPortalTheme,
+            $vueApp
+        );
+    }
+
+    private function RenderPersonas(ExcellHttpModel $objData) : void
+    {
+        $vueApp = (new MyPersonasApp("vueApp"))
+            ->setUriBase($objData->PathControllerBase);
+
+        (new Users())->renderApp(
+            "admin.view_users_personas",
+            $this->app->strAssignedPortalTheme,
+            $vueApp
+        );
+    }
+
+    private function RenderMyPersonas(ExcellHttpModel $objData) : void
+    {
+        switch($objData->Uri[2]) {
+            case "purchase":
+                $vueApp = (new MyPersonasApp("vueApp"))
+                    ->setDefaultComponentId(PurchasePersonaWidget::getStaticId())->setDefaultComponentAction("view")
+                    ->setDefaultComponentProps([
+                        new VueProps("productGroup", "string", "'persona'"),
+                        new VueProps("inModal", "boolean", "false"),
+                        new VueProps("loggedInUserId", "number", $this->app->getActiveLoggedInUser()->user_id),
+                    ])
+                    ->setUriBase($objData->PathControllerBase);
+                break;
+            default:
+                $vueApp = (new MyPersonasApp("vueApp"))
+                    ->setUriBase($objData->PathControllerBase)
+                    ->registerComponentAbstracts([
+                        ManagePersonaWidget::getStaticId() => ManagePersonaWidget::getStaticUriAbstract(),
+                    ]);
+                break;
+        }
+
+        (new Users())->renderApp(
+            "user.view_users_personas",
             $this->app->strAssignedPortalTheme,
             $vueApp
         );
@@ -329,7 +383,7 @@ class IndexController extends UserController
         $intUserId = $objData->Data->Params["user_id"];
         $objUserResult = (new Users())->getById($intUserId);
 
-        if ($objUserResult->Result->Count === 0 ) {
+        if ($objUserResult->result->Count === 0 ) {
             $objJsonReturn = array(
                 "success" => false,
                 "message" => "This user requested for impersonation does not exist."
@@ -338,11 +392,11 @@ class IndexController extends UserController
             die(json_encode($objJsonReturn));
         }
 
-        $objUser = $objUserResult->Data->First();
+        $objUser = $objUserResult->getData()->first();
 
         $objUserClassResult = (new UserClass())->getFks()->getWhere(["user_id" => $objUser->user_id]);
 
-        if ($objUserClassResult->Result->Success === true && $objUserClassResult->Result->Count > 0)
+        if ($objUserClassResult->result->Success === true && $objUserClassResult->result->Count > 0)
         {
             if (
                 !userIsEzDigital($userRoleClass) &&
@@ -369,7 +423,7 @@ class IndexController extends UserController
 //
 //        if ($objBrowserCookieResult->Result->Success === true)
 //        {
-//            $objBrowserCookie = $objBrowserCookieResult->Data->First();
+//            $objBrowserCookie = $objBrowserCookieResult->getData()->first();
 //            $objBrowserCookie->user_id = ($objUser->user_id);
 //            VisitorBrowserModule::Update($objBrowserCookie);
 //        }

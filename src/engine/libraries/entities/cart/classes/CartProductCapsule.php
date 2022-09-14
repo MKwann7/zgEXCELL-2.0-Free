@@ -5,7 +5,7 @@ namespace Entities\Cart\Classes;
 use Entities\Packages\Models\PackageLineModel;
 use Entities\Payments\Models\TransactionModel;
 use Entities\Products\Models\ProductModel;
-use Module\Orders\Models\OrderLineModel;
+use Entities\Orders\Models\OrderLineModel;
 
 class CartProductCapsule
 {

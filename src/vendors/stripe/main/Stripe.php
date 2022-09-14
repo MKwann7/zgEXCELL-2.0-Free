@@ -5,17 +5,21 @@ namespace Vendors\Stripe\Main;
 use Entities\Payments\Classes\UserPaymentProperty;
 use Entities\Users\Classes\UserAddress;
 use Entities\Users\Classes\Users;
+use Stripe\Customer;
+use Stripe\Exception\ApiErrorException;
+use Stripe\StripeClient;
 
 class Stripe
 {
-    protected $stripe;
-    protected $key;
-    protected $customPlatformId = null;
+    protected StripeClient $stripe;
+    protected string $key;
+    protected ?string $customPlatformId = null;
+    private bool $stripeError = false;
 
     public function __construct ()
     {
 
-        include_once AppVendors . "stripe/main/v7_47_0/init.php";
+        include_once APP_VENDORS . "stripe/main/v7_47_0/init.php";
 
         if (env("STRIPE_ENV") === "production")
         {
@@ -28,7 +32,7 @@ class Stripe
 
         $this->customPlatformId = $this->getConnectedAccountStripeId();
 
-        $this->stripe = new \Stripe\StripeClient(
+        $this->stripe = new StripeClient(
             $this->key
         );
     }
@@ -42,8 +46,8 @@ class Stripe
     {
         global $app;
         $paymentPropertyResult = (new UserPaymentProperty())->getWhere(["user_id" => $app->objCustomPlatform->getCompany()->owner_id, "company_id" => $app->objCustomPlatform->getCompanyId(), "state" => "all", "type_id" => 2]);
-        if ($paymentPropertyResult->Result->Count === 0) { return null; }
-        return $paymentPropertyResult->Data->First()->value;
+        if ($paymentPropertyResult->result->Count === 0) { return null; }
+        return $paymentPropertyResult->getData()->first()->value;
     }
 
     /**
@@ -52,7 +56,7 @@ class Stripe
      * @param $paymentMethod
      * @param bool $offSession
      * @return \Stripe\PaymentIntent
-     * @throws \Stripe\Exception\ApiErrorException
+     * @throws ApiErrorException
      */
 
     public function createPaymentIntent(StripePayment $payment, $customerId, $paymentMethod, $offSession = true) : \Stripe\PaymentIntent
@@ -85,34 +89,64 @@ class Stripe
 
     /**
      * @param StripeCustomer $customer
-     * @return \Stripe\Customer
-     * @throws \Stripe\Exception\ApiErrorException
+     * @return Customer
+     * @throws ApiErrorException
      */
 
-    public function createCustomer(StripeCustomer $customer) : \Stripe\Customer
+    public function createCustomer(StripeCustomer $customer) : ?Customer
     {
         global $app;
         $stripeAccountType = $app->objCustomPlatform->getCompanySettings()->FindEntityByValue("label", "stripe_account_type");
 
-        if (empty($stripeAccountType) || $stripeAccountType->value === "customer")
+        try
         {
-            return $this->stripe->customers->create([
+            $result = null;
+
+            if (empty($stripeAccountType) || $stripeAccountType->value === "customer")
+            {
+                $result = $this->stripe->customers->create([
+                    'name' => $customer->getFullName(),
+                    'email' => $customer->getEmail(),
+                    'phone' => $customer->getPhone(),
+                    'address' => $customer->getAddressAsArray(),
+                    'description' => $customer->getCustomPlatformDescription(),
+                ]);
+            }
+
+            $result = $this->stripe->customers->create([
                 'name' => $customer->getFullName(),
                 'email' => $customer->getEmail(),
                 'phone' => $customer->getPhone(),
                 'address' => $customer->getAddressAsArray(),
                 'description' => $customer->getCustomPlatformDescription(),
-            ]);
+            ], $this->renderCustomPlatformId());
+
+            $this->stripeError = false;
+
+            return $result;
         }
+        catch(ApiErrorException $ex)
+        {
+            $this->stripeError = true;
+            $this->processError($ex);
+            return null;
+        }
+    }
 
+    public function stripedErrored() : bool
+    {
+        return $this->stripeError;
+    }
 
-        return $this->stripe->customers->create([
-            'name' => $customer->getFullName(),
-            'email' => $customer->getEmail(),
-            'phone' => $customer->getPhone(),
-            'address' => $customer->getAddressAsArray(),
-            'description' => $customer->getCustomPlatformDescription(),
-        ], $this->renderCustomPlatformId());
+    public function processError(ApiErrorException $ex) : void
+    {
+        $this->errors[] = $ex->getMessage();
+    }
+
+    public function getFirstError() : string
+    {
+        $array = array_reverse($this->errors);
+        return array_pop($array);
     }
 
     /**
@@ -124,7 +158,7 @@ class Stripe
      * @param string $currency
      * @param StripeAddress $address
      * @return \Stripe\Token
-     * @throws \Stripe\Exception\ApiErrorException
+     * @throws ApiErrorException
      */
 
     public function createCardToken(string $name, int $number, int $expMonth, int $expYear, int $cvc, string $currency, StripeAddress $address) : \Stripe\Token
@@ -140,7 +174,7 @@ class Stripe
                     'number' => preg_replace("/[^0-9\+]/", '', $number),
                     'exp_month' => preg_replace("/[^0-9\+]/", '', $expMonth),
                     'exp_year' => preg_replace("/[^0-9\+]/", '', $expYear),
-                    'cvc' => preg_replace($cvc),
+                    'cvc' => preg_replace("/[^0-9\+]/", '', $cvc),
                     'currency' => $currency,
                     'address_line1' => $address->getLine1(),
                     'address_line2' => $address->getLine2(),
@@ -158,7 +192,7 @@ class Stripe
                 'number' => preg_replace("/[^0-9\+]/", '', $number),
                 'exp_month' => preg_replace("/[^0-9\+]/", '', $expMonth),
                 'exp_year' => preg_replace("/[^0-9\+]/", '', $expYear),
-                'cvc' => preg_replace($cvc),
+                'cvc' => preg_replace("/[^0-9\+]/", '',$cvc),
                 'currency' => $currency,
                 'address_line1' => $address->getLine1(),
                 'address_line2' => $address->getLine2(),
@@ -173,7 +207,7 @@ class Stripe
     /**
      * @param string $cardToken
      * @return \Stripe\PaymentMethod
-     * @throws \Stripe\Exception\ApiErrorException
+     * @throws ApiErrorException
      */
 
     public function createCardPaymentMethod(string $cardToken): \Stripe\PaymentMethod
@@ -201,7 +235,7 @@ class Stripe
      * @param string $customerId
      * @param string $paymentMethodId
      * @return \Stripe\SetupIntent
-     * @throws \Stripe\Exception\ApiErrorException
+     * @throws ApiErrorException
      */
 
     public function createCardSetupIntent(string $customerId, string $paymentMethodId): \Stripe\SetupIntent
@@ -231,7 +265,7 @@ class Stripe
      * @param string $setupIntentId
      * @param string $paymentMethodId
      * @return \Stripe\SetupIntent
-     * @throws \Stripe\Exception\ApiErrorException
+     * @throws ApiErrorException
      */
 
     public function confirmSetupIntent(string $setupIntentId, string $paymentMethodId): \Stripe\SetupIntent
@@ -252,10 +286,14 @@ class Stripe
             $this->renderCustomPlatformId());
     }
 
-    public function createCustomerFromUser(int $userId) : \Stripe\Customer
+    public function createCustomerFromUser(int $userId, array $address) : ?Customer
     {
-        $objUser = (new Users())->getFks()->getById($userId)->Data->First();
-        $objUserAddress = (new UserAddress())->getWhere(["user_id" => $userId])->Data->First();
+        $objUser = (new Users())->getFks()->getById($userId)->getData()->first();
+
+        if(empty($objUser->user_email) || !filter_var($objUser->user_email, FILTER_VALIDATE_EMAIL) || empty($objUser->user_phone))
+        {
+            return null;
+        }
 
         $newCustomer = new StripeCustomer(
             $objUser->first_name,
@@ -264,16 +302,16 @@ class Stripe
             $objUser->user_phone
         );
 
-        if (!empty($objUserAddress))
+        if (!empty($address["line1"]) && !empty($address["zip"]) && !empty($address["state"]) && !empty($address["country"]))
         {
             $newCustomer->addAddress(
                 new StripeAddress(
-                    $objUserAddress->address_1,
-                    $objUserAddress->address_2,
-                    $objUserAddress->city,
-                    $objUserAddress->state,
-                    $objUserAddress->zip,
-                    $objUserAddress->country
+                    $address["line1"],
+                    $address["line2"],
+                    $address["city"],
+                    $address["state"],
+                    $address["zip"],
+                    $address["country"]
                 )
             );
         }

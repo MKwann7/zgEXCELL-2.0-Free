@@ -1,12 +1,12 @@
 <?php
 
-namespace Entities\Cards\Controllers;
+namespace Http\Cards\Controllers;
 
 use App\Utilities\Database;
 use App\Utilities\Excell\ExcellHttpModel;
 use App\Utilities\Http\Http;
 use App\Utilities\Transaction\ExcellTransaction;
-use Entities\Cards\Classes\Base\CardController;
+use Http\Cards\Controllers\Base\CardController;
 use Entities\Cards\Models\AppInstancesModel;
 
 class CardPageAppController extends CardController
@@ -24,7 +24,7 @@ class CardPageAppController extends CardController
         {
             $objHttpRequest = $objHttp->newRequest(
                 $verb,
-                $this->app->objCustomPlatform->getFullPortalDomain() . $url,
+                $this->app->objCustomPlatform->getFullPortalDomainName() . $url,
                 $data
             );
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace Entities\Cards\Classes\Base;
+namespace Http\Cards\Controllers\Base;
 
 use App\Core\AppController;
 use Entities\Cards\Classes\CardTemplates;

@@ -398,7 +398,7 @@
         }
         // that "5" at the very end of this if is important to explain.
         // we do NOT render links between two captured points (in the middle of the stroke) if the distance is shorter than that number.
-        // not only do we NOT render it, we also do NOT capture (add) these intermediate points to storage.
+        // not only do we NOT render it, we also do NOT capture (add) these intermediate points to list.
         // when clustering of these is too tight, it produces noise on the line, which, because of smoothing, makes lines too curvy.
         // maybe, later, we can expose this as a configurable setting of some sort.
         this.addToStroke = function(point){
@@ -1231,7 +1231,7 @@
             // the only time you see imported image data exported is if you export as image.
 
             // we do NOT call rerendercallable here (unlike in other import plugins)
-            // because importing image does absolutely nothing to the underlying vector data storage
+            // because importing image does absolutely nothing to the underlying vector data list
             // This could be a way to "import" old signatures stored as images
             // This could also be a way to import extra decor into signature area.
 

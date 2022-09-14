@@ -1,6 +1,6 @@
 <?php
 
-namespace Entities\Companies\Classes\Base;
+namespace Http\Companies\Controllers\Base;
 
 use App\Core\AppController;
 use Entities\Companies\Classes\Companies;

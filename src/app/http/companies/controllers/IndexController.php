@@ -1,11 +1,11 @@
 <?php
 
-namespace Entities\Companies\Controllers;
+namespace Http\Companies\Controllers;
 
 use App\Utilities\Database;
 use App\Utilities\Excell\ExcellHttpModel;
 use Entities\Cards\Components\Vue\CardWidget\ManageCardWidget;
-use Entities\Companies\Classes\Base\CompanyController;
+use Http\Companies\Controllers\Base\CompanyController;
 use Entities\Companies\Classes\Companies;
 use Entities\Companies\Classes\Departments\Departments;
 use Entities\Companies\Classes\Departments\DepartmentTicketQueues;
@@ -91,26 +91,26 @@ class IndexController extends CompanyController
             platform_name AS platform,
             domain_portal AS portal_domain,
             domain_public AS public_domain,
-            (SELECT CONCAT(user.first_name, ' ', user.last_name) FROM `ezdigital_v2_main`.`user` WHERE user.user_id = company.owner_id LIMIT 1) AS owner,
-            (SELECT COUNT(*) FROM `ezdigital_v2_main`.`card` cd WHERE cd.company_id = company.company_id) AS cards
+            (SELECT CONCAT(user.first_name, ' ', user.last_name) FROM `excell_main`.`user` WHERE user.user_id = company.owner_id LIMIT 1) AS owner,
+            (SELECT COUNT(*) FROM `excell_main`.`card` cd WHERE cd.company_id = company.company_id) AS cards
             FROM `company` WHERE status != 'deleted'";
 
         $objWhereClause .= " ORDER BY company.company_id ASC LIMIT {$pageIndex}, {$batchCount}";
 
         $objCards = Database::getSimple($objWhereClause,"company_id");
 
-        if ($objCards->Data->Count() < $batchCount)
+        if ($objCards->getData()->Count() < $batchCount)
         {
             $strEnd = "true";
         }
 
-        $objCards->Data->HydrateModelData(CompanyModel::class, true);
+        $objCards->getData()->HydrateModelData(CompanyModel::class, true);
 
         $arUserDashboardInfo = array(
-            "list" => $objCards->Data->FieldsToArray($arFields),
+            "list" => $objCards->getData()->FieldsToArray($arFields),
         );
 
-        return $this->renderReturnJson(true, $arUserDashboardInfo, "We found " . $objCards->Data->Count() . " companies in this batch.", 200, "data", $strEnd);
+        return $this->renderReturnJson(true, $arUserDashboardInfo, "We found " . $objCards->getData()->Count() . " companies in this batch.", 200, "data", $strEnd);
     }
 
     public function getCompanyDataForUserManagement(ExcellHttpModel $objData) : bool
@@ -126,8 +126,8 @@ class IndexController extends CompanyController
         }
 
         $arCompanyData = array(
-            "departments" => (new Departments())->getWhere(["company_id" => $this->app->objCustomPlatform->getCompanyId()])->Data->ToPublicArray(),
-            "departmentQueues" => (new DepartmentTicketQueues())->getWhere(["company_id" => $this->app->objCustomPlatform->getCompanyId()])->Data->ToPublicArray(),
+            "departments" => (new Departments())->getWhere(["company_id" => $this->app->objCustomPlatform->getCompanyId()])->getData()->ToPublicArray(),
+            "departmentQueues" => (new DepartmentTicketQueues())->getWhere(["company_id" => $this->app->objCustomPlatform->getCompanyId()])->getData()->ToPublicArray(),
         );
 
 

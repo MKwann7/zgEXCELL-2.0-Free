@@ -6,11 +6,11 @@ use App\Website\Vue\Classes\Base\VueComponent;
 
 class VueHub extends VueComponent
 {
-    protected $id = "f0dd1eab-d55f-47c0-aeae-eb17937d8f82";
-    protected $vueType = "hub";
+    protected string $id = "f0dd1eab-d55f-47c0-aeae-eb17937d8f82";
+    protected string $vueType = "hub";
     protected $user;
-    protected $title = "My Hub";
-    protected $noMount = true;
+    protected string $title = "My Hub";
+    protected string $mountType = "no_mount";
 
     public function __construct($props = null)
     {
@@ -57,11 +57,11 @@ class VueHub extends VueComponent
     {
         return '
         <div class="formwrapper-outer">
-            <section id="vue-hub-body-' . $this->getInstanceName() . '" class="vue-app-body formwrapper-control">
+            <div id="vue-hub-body-' . $this->getInstanceName() . '" class="vue-app-body formwrapper-control">
                 <div class="vue-modal-wrapper formwrapper-control">
                     ' . $this->buildComponentList() . '
                 </div>
-            </section>
+            </div>
         </div>
         ';
     }

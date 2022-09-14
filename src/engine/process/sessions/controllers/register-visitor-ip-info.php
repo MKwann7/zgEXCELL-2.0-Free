@@ -22,8 +22,8 @@ if ( $app->blnLoggedIn === false)
         $app->objAppSession["Core"]["Session"]["IpInfo"] = $objSessionCheck;
         $app->objAppSession["Core"]["Session"]["IpInfo"]->guid = getGuid();
 
-        $strBrowserCookie = $app->objAppSession["Core"]["Session"]["Browser"];
-        $objBrowserCookie = (new VisitorBrowser())->getWhere(["browser_cookie" => $strBrowserCookie])->Data->First();
+        $strBrowserCookie = $_COOKIE['instance'];
+        $objBrowserCookie = (new VisitorBrowser())->getWhere(["browser_cookie" => $strBrowserCookie])->getData()->first();
 
         if (!empty($objBrowserCookie))
         {
@@ -79,8 +79,8 @@ if ( $app->blnLoggedIn === false)
             $app->objAppSession["Core"]["Session"]["IpInfo"]       = $objSessionCheck;
             $app->objAppSession["Core"]["Session"]["IpInfo"]->guid = getGuid();
 
-            $strBrowserCookie = $app->objAppSession["Core"]["Session"]["Browser"];
-            $objBrowserCookie = (new VisitorBrowser())->getWhere(["browser_cookie" => $strBrowserCookie])->Data->First();
+            $strBrowserCookie = $_COOKIE['instance'];
+            $objBrowserCookie = (new VisitorBrowser())->getWhere(["browser_cookie" => $strBrowserCookie])->getData()->first();
 
             if (!empty($objBrowserCookie))
             {

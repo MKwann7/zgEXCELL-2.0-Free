@@ -1,6 +1,6 @@
 <?php
 
-namespace Entities\Testimonials\Classes\Base;
+namespace Http\Testimonials\Controllers\Base;
 
 use App\Core\AppController;
 use Entities\Testimonials\Classes\Testimonials;

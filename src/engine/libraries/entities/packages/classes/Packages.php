@@ -11,7 +11,7 @@ use Entities\Products\Classes\Products;
 
 class Packages extends AppEntity
 {
-    public $strEntityName       = "packages";
+    public string $strEntityName       = "packages";
     public $strDatabaseTable    = "package";
     public $strDatabaseName     = "Main";
     public $strMainModelName    = PackageModel::class;
@@ -27,11 +27,11 @@ class Packages extends AppEntity
     {
         $packageResults = (new static)->getWhereIn($field, $arPackageIds);
         $packageLineResults = (new PackageLines())->getWhereIn("package_id", $arPackageIds);
-        $packageResults->Data->HydrateChildModelData("lines", ["package_id" => "package_id"], $packageLineResults->Data, false);
+        $packageResults->getData()->HydrateChildModelData("lines", ["package_id" => "package_id"], $packageLineResults->data, false);
 
         $productResult = Products::getProductsByPackageIds($arPackageIds);
 
-        $packageResults->Data->Foreach(function (PackageModel $currPackage) use ($productResult)
+        $packageResults->getData()->Foreach(function (PackageModel $currPackage) use ($productResult)
         {
             if (empty($currPackage->lines) || !is_a($currPackage->lines, ExcellCollection::class)) { return; }
 
@@ -39,7 +39,7 @@ class Packages extends AppEntity
             {
                 if ($currPackageLine->product_entity !== "product") { return; }
 
-                $product = $productResult->Data->FindEntityByValue("product_id", $currPackageLine->product_entity_id);
+                $product = $productResult->getData()->FindEntityByValue("product_id", $currPackageLine->product_entity_id);
 
                 if ($product === null) { return; }
 

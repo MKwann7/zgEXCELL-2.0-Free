@@ -1,8 +1,8 @@
 <?php
 
-namespace Entities\Quotes\Controllers;
+namespace Http\Quotes\Controllers;
 
-use Entities\Quotes\Classes\Base\QuoteController;
+use Http\Quotes\Controllers\Base\QuoteController;
 
 class IndexController extends QuoteController
 {

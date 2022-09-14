@@ -1,6 +1,6 @@
 <?php
 
-namespace Entities\Users\Controllers;
+namespace Http\Users\Controllers;
 
 use App\Utilities\Database;
 use App\Utilities\Excell\ExcellHttpModel;
@@ -10,7 +10,7 @@ use Entities\Cards\Classes\CardConnections;
 use Entities\Cards\Models\CardModel;
 use Entities\Media\Classes\Images;
 use Entities\Notes\Classes\Notes;
-use Entities\Users\Classes\Base\UserController;
+use Http\Users\Controllers\Base\UserController;
 use Entities\Users\Classes\Connections;
 use Entities\Users\Classes\UserAddress;
 use Entities\Users\Classes\UserClass;
@@ -39,12 +39,12 @@ class UserDataController extends UserController
 
         $objUserResult = (new Users())->getFks(["user_phone", "user_email"])->getById($intUserId);
 
-        if ($objUserResult->Result->Count > 0)
+        if ($objUserResult->result->Count > 0)
         {
             $blnUserViewFound = true;
         }
 
-        $objUser = $objUserResult->Data->First();
+        $objUser = $objUserResult->getData()->first();
         $lstUserCards = (new Cards())->getFks()->GetByUserId($intUserId);
         $colUserAddresses = (new Users())->getFks()->GetAddressesByUserId($intUserId);
         $colUserConnections = (new Users())->getFks()->GetConnectionsByUserId($intUserId);
@@ -56,20 +56,20 @@ class UserDataController extends UserController
 
         $objImageResult = (new Images())->noFks()->getWhere(["entity_id" => $intUserId, "image_class" => "user-avatar", "entity_name" => "user"],"image_id.DESC");
 
-        if ($objImageResult->Result->Success === true && $objImageResult->Result->Count > 0)
+        if ($objImageResult->result->Success === true && $objImageResult->result->Count > 0)
         {
-            $strCardMainImage = $objImageResult->Data->First()->url;
-            $strCardThumbImage = $objImageResult->Data->First()->thumb;
+            $strCardMainImage = $objImageResult->getData()->first()->url;
+            $strCardThumbImage = $objImageResult->getData()->first()->thumb;
         }
 
-        $arUserCardsIds = $lstUserCards->Data->FieldsToArray(["card_id"]);
+        $arUserCardsIds = $lstUserCards->getData()->FieldsToArray(["card_id"]);
         $lstCardImages = (new Images())->getWhere([["entity_name" => "card", "image_class" =>"main-image"], "AND", ["entity_id", "IN", $arUserCardsIds]]);
-        $lstUserCards->Data->MergeFields($lstCardImages->Data,["url" => "main_image","thumb" => "main_thumb"],["entity_id" => "card_id"]);
+        $lstUserCards->getData()->MergeFields($lstCardImages->data,["url" => "main_image","thumb" => "main_thumb"],["entity_id" => "card_id"]);
 
-        foreach($lstUserCards->Data as $currCardId => $currCardData)
+        foreach($lstUserCards->data as $currCardId => $currCardData)
         {
-            $lstUserCards->Data->{$currCardId}->AddUnvalidatedValue("main_image", $currCardData->main_image ?? ("/_ez/templates/" . ($currCardData->template_id__value ?? "1") . "/images/mainImage.jpg"));
-            $lstUserCards->Data->{$currCardId}->AddUnvalidatedValue("main_thumb", $currCardData->main_thumb ?? ("/_ez/templates/" . ($currCardData->template_id__value ?? "1") . "/images/mainImage.jpg"));
+            $lstUserCards->getData()->{$currCardId}->AddUnvalidatedValue("main_image", $currCardData->main_image ?? ("/_ez/templates/" . ($currCardData->template_id__value ?? "1") . "/images/mainImage.jpg"));
+            $lstUserCards->getData()->{$currCardId}->AddUnvalidatedValue("main_thumb", $currCardData->main_thumb ?? ("/_ez/templates/" . ($currCardData->template_id__value ?? "1") . "/images/mainImage.jpg"));
         }
 
         if (!empty($objUser))
@@ -81,11 +81,11 @@ class UserDataController extends UserController
         $arUserDashboardInfo = array(
             "user" => !empty($objUser) ? $objUser->ToArray() : "[]",
             "blnUserViewFound" => $blnUserViewFound,
-            "addresses" => $colUserAddresses->Data->CollectionToArray(),
-            "connections" => $colUserConnections->Data->CollectionToArray(),
-            "notes" => $lstUserNotes->Data->CollectionToArray(),
-            "cards" => $lstUserCards->Data->CollectionToArray(),
-            "activities" => $colUserActivities->Data->CollectionToArray(),
+            "addresses" => $colUserAddresses->getData()->CollectionToArray(),
+            "connections" => $colUserConnections->getData()->CollectionToArray(),
+            "notes" => $lstUserNotes->getData()->CollectionToArray(),
+            "cards" => $lstUserCards->getData()->CollectionToArray(),
+            "activities" => $colUserActivities->getData()->CollectionToArray(),
         );
 
         $objJsonReturn = array(
@@ -169,7 +169,7 @@ class UserDataController extends UserController
     {
         $objAffiliateId = $objData->Data->PostData->sponsor_id;
         $objAffiliateUserResult = (new Users())->getById($objAffiliateId);
-        $objAffiliateUser = $objAffiliateUserResult->Data->First();
+        $objAffiliateUser = $objAffiliateUserResult->getData()->first();
 
         $objUserClass = new UserClassModel();
         $objUserClass->user_id = $objAffiliateUser->user_id;
@@ -177,21 +177,21 @@ class UserDataController extends UserController
 
         $objNewUserResult = (new UserClass())->createNew($objUserClass);
 
-        if ($objNewUserResult->Result->Success === false)
+        if ($objNewUserResult->result->Success === false)
         {
             $objJsonReturn = array(
                 "success" => false,
-                "message" => $objNewUserResult->Result->Message,
-                "query" => $objNewUserResult->Result->Query,
+                "message" => $objNewUserResult->result->Message,
+                "query" => $objNewUserResult->result->Query,
             );
 
             die(json_encode($objJsonReturn));
         }
 
         $lstUserAvatars = (new Images())->getWhere([["entity_name" => "user", "image_class" => "user-avatar"], "AND", ["entity_id" => $objAffiliateUser->user_id]],"last_updated.DESC",1);
-        $objAffiliateUserResult->Data->MergeFields($lstUserAvatars->Data,["url" => "main_image","thumb" => "main_thumb"],["entity_id" => "user_id"]);
+        $objAffiliateUserResult->getData()->MergeFields($lstUserAvatars->data,["url" => "main_image","thumb" => "main_thumb"],["entity_id" => "user_id"]);
 
-        $arNewUserCreationResult = $objAffiliateUserResult->Data->FieldsToArray([
+        $arNewUserCreationResult = $objAffiliateUserResult->getData()->FieldsToArray([
             "main_thumb",
             "user_id",
             "username",
@@ -220,18 +220,18 @@ class UserDataController extends UserController
 
         $objNewUserResult = (new Users())->createNew($objUserCreate);
 
-        if ($objNewUserResult->Result->Success === false)
+        if ($objNewUserResult->result->Success === false)
         {
             $objJsonReturn = array(
                 "success" => false,
-                "message" => $objNewUserResult->Result->Message,
-                "query" => $objNewUserResult->Result->Query,
+                "message" => $objNewUserResult->result->Message,
+                "query" => $objNewUserResult->result->Query,
             );
 
             die(json_encode($objJsonReturn));
         }
 
-        $objNewUser = $objNewUserResult->Data->First();
+        $objNewUser = $objNewUserResult->getData()->first();
 
         $strPrimaryEmail = $objData->Data->PostData->primary_email ?? null;
         $strPrimaryPhone = $objData->Data->PostData->primary_phone ?? null;
@@ -240,38 +240,38 @@ class UserDataController extends UserController
         {
             $objConnection = new ConnectionModel();
 
-            $objConnection->user_id = $objNewUserResult->Data->First()->user_id;
+            $objConnection->user_id = $objNewUserResult->getData()->first()->user_id;
             $objConnection->connection_type_id = 6;
             $objConnection->division_id = 0;
             $objConnection->company_id = $this->app->objCustomPlatform->getCompanyId();
             $objConnection->connection_value = $strPrimaryEmail;
-            $objConnection->is_primary = ExcellTrue;
+            $objConnection->is_primary = EXCELL_TRUE;
             $objConnection->connection_class = 'user';
 
             $objEmailResult = (new Connections())->createNew($objConnection);
-            $objNewUser->user_email = $objEmailResult->Data->First()->connection_id;
+            $objNewUser->user_email = $objEmailResult->getData()->first()->connection_id;
         }
 
         if ($strPrimaryPhone !== null)
         {
             $objConnection = new ConnectionModel();
 
-            $objConnection->user_id = $objNewUserResult->Data->First()->user_id;
+            $objConnection->user_id = $objNewUserResult->getData()->first()->user_id;
             $objConnection->connection_type_id = 1;
             $objConnection->division_id = 0;
             $objConnection->company_id = $this->app->objCustomPlatform->getCompanyId();
             $objConnection->connection_value = $strPrimaryPhone     ;
-            $objConnection->is_primary = ExcellTrue;
+            $objConnection->is_primary = EXCELL_TRUE;
             $objConnection->connection_class = 'user';
 
             $objPhoneResult = (new Connections())->createNew($objConnection);
-            $objNewUser->user_phone = $objPhoneResult->Data->First()->connection_id;
+            $objNewUser->user_phone = $objPhoneResult->getData()->first()->connection_id;
         }
 
         $objNewUser->sponsor_id = $objData->Data->PostData->card_affiliate;
         $objNewUserResult = (new Users())->update($objNewUser);
 
-        $arNewUserCreationResult = $objNewUserResult->Data->FieldsToArray([
+        $arNewUserCreationResult = $objNewUserResult->getData()->FieldsToArray([
             "main_thumb",
             "user_id",
             "username",
@@ -306,7 +306,7 @@ class UserDataController extends UserController
 
         $objUser = (new Users())->getById($intUserId);
 
-        if ($objUser->Result->Success === false || $objUser->Result->Count === 0)
+        if ($objUser->result->Success === false || $objUser->result->Count === 0)
         {
             $objJsonReturn = array(
                 "success" => false,
@@ -321,7 +321,7 @@ class UserDataController extends UserController
         // Update Custom fields.
         switch($strUpdateType)
         {
-            case "profile":
+            case "profilewidget":
             case "profileAdmin":
             case "account":
 
@@ -333,7 +333,7 @@ class UserDataController extends UserController
                 {
                     $objUsersResult = (new Users())->update($objUserUpdate);
 
-                    $arObjCardPageData = $objUsersResult->Data->ConvertToArray();
+                    $arObjCardPageData = $objUsersResult->getData()->ConvertToArray();
 
                     $objUserForReturn = array_shift($arObjCardPageData);
 
@@ -356,7 +356,7 @@ class UserDataController extends UserController
             case "connection":
 
                 $intUserId = $objData->Data->Params["id"];
-                $objCurrentUser = (new Users())->getById($intUserId)->Data->First();
+                $objCurrentUser = (new Users())->getById($intUserId)->getData()->first();
                 $objConnectionId = $objData->Data->Params["connection_id"];
 
                 if ($objConnectionId !== "new")
@@ -368,17 +368,17 @@ class UserDataController extends UserController
                     {
                         $objConnectionCreationResult = (new Connections())->getFks()->update($objConnectionUpdate);
 
-                        if ($objConnectionCreationResult->Result->Success === false)
+                        if ($objConnectionCreationResult->result->Success === false)
                         {
                             $objJsonReturn = array(
                                 "success" => false,
-                                "message" => "An error occured during user update: " . $objConnectionCreationResult->Result->Message . "."
+                                "message" => "An error occured during user update: " . $objConnectionCreationResult->result->Message . "."
                             );
 
                             die(json_encode($objJsonReturn));
                         }
 
-                        $arObjCardPageData = $objConnectionCreationResult->Data->ConvertToArray();
+                        $arObjCardPageData = $objConnectionCreationResult->getData()->ConvertToArray();
 
                         $objUserForReturn = array_shift($arObjCardPageData);
 
@@ -403,25 +403,25 @@ class UserDataController extends UserController
                     $objConnectionUpdate->user_id = $objCurrentUser->user_id;
                     $objConnectionUpdate->company_id = $this->app->objCustomPlatform->getCompanyId();
                     $objConnectionUpdate->division_id = 0;
-                    $objConnectionUpdate->is_primary = ExcellFalse;
+                    $objConnectionUpdate->is_primary = EXCELL_FALSE;
                     $objConnectionUpdate->connection_class = "user";
 
                     try
                     {
                         $objConnectionCreationResult = (new Connections())->getFks()->createNew($objConnectionUpdate);
 
-                        if ($objConnectionCreationResult->Result->Success === false)
+                        if ($objConnectionCreationResult->result->Success === false)
                         {
                             $objJsonReturn = array(
                                 "success" => false,
                                 "data" => $objCurrentUser->ToArray(),
-                                "message" => "An error occured during user update: " . $objConnectionCreationResult->Result->Message . "."
+                                "message" => "An error occured during user update: " . $objConnectionCreationResult->result->Message . "."
                             );
 
                             die(json_encode($objJsonReturn));
                         }
 
-                        $arObjCardPageData = $objConnectionCreationResult->Data->ConvertToArray();
+                        $arObjCardPageData = $objConnectionCreationResult->getData()->ConvertToArray();
 
                         $objUserForReturn = array_shift($arObjCardPageData);
 
@@ -450,11 +450,11 @@ class UserDataController extends UserController
                 {
                     $objCardConnectionDeletionResult = (new CardConnections())->deleteWhere(["connection_id" => $inConnectionId]);
 
-                    if ($objCardConnectionDeletionResult->Result->Success === false)
+                    if ($objCardConnectionDeletionResult->result->Success === false)
                     {
                         $objJsonReturn = array(
                             "success" => false,
-                            "message" => "An error occured during connection rel deletion: " . $objCardConnectionDeletionResult->Result->Message . "."
+                            "message" => "An error occured during connection rel deletion: " . $objCardConnectionDeletionResult->result->Message . "."
                         );
 
                         die(json_encode($objJsonReturn));
@@ -462,11 +462,11 @@ class UserDataController extends UserController
 
                     $objConnectionDeletionResult = (new Connections())->deleteById($inConnectionId);
 
-                    if ($objConnectionDeletionResult->Result->Success === false)
+                    if ($objConnectionDeletionResult->result->Success === false)
                     {
                         $objJsonReturn = array(
                             "success" => false,
-                            "message" => "An error occured during connection deletion: " . $objConnectionDeletionResult->Result->Message . "."
+                            "message" => "An error occured during connection deletion: " . $objConnectionDeletionResult->result->Message . "."
                         );
 
                         die(json_encode($objJsonReturn));
@@ -504,11 +504,11 @@ class UserDataController extends UserController
                 {
                     $objUserAddressDeletionResult = (new UserAddress())->deleteWhere(["address_id" => $inAddressId]);
 
-                    if ($objUserAddressDeletionResult->Result->Success === false)
+                    if ($objUserAddressDeletionResult->result->Success === false)
                     {
                         $objJsonReturn = array(
                             "success" => false,
-                            "message" => "An error occured during address deletion: " . $objUserAddressDeletionResult->Result->Message . "."
+                            "message" => "An error occured during address deletion: " . $objUserAddressDeletionResult->result->Message . "."
                         );
 
                         die(json_encode($objJsonReturn));
@@ -548,7 +548,7 @@ class UserDataController extends UserController
                         $objJsonReturn = array(
                             "success" => true,
                             "message" => "Address Updated.",
-                            "address"=> $result->Data->First()->ToArray()
+                            "address"=> $result->getData()->first()->ToArray()
                         );
 
                         die(json_encode($objJsonReturn));
@@ -560,7 +560,7 @@ class UserDataController extends UserController
                         $objJsonReturn = array(
                             "success" => true,
                             "message" => "Address Created.",
-                            "address"=> $result->Data->First()->ToArray()
+                            "address"=> $result->getData()->first()->ToArray()
                         );
 
                         die(json_encode($objJsonReturn));
@@ -592,11 +592,11 @@ class UserDataController extends UserController
 
         $objWhereClause = "
             SELECT user.*,
-            (SELECT platform_name FROM `ezdigital_v2_main`.`company` WHERE company.company_id = user.company_id LIMIT 1) AS platform,
-            (SELECT url FROM `ezdigital_v2_media`.`image` WHERE image.entity_id = user.user_id AND image.entity_name = 'user' AND image_class = 'user-avatar' ORDER BY image_id DESC LIMIT 1) AS avatar,
-            (SELECT COUNT(*) FROM `ezdigital_v2_main`.`card` cd WHERE cd.owner_id = user.user_id) AS cards
-            FROM `ezdigital_v2_main`.`user` 
-            LEFT JOIN `ezdigital_v2_main`.`user_class` uc ON uc.user_id = user.user_id AND uc.user_class_type_id >= 5 AND uc.user_class_type_id <= 7 ";
+            (SELECT platform_name FROM `excell_main`.`company` WHERE company.company_id = user.company_id LIMIT 1) AS platform,
+            (SELECT url FROM `excell_media`.`image` WHERE image.entity_id = user.user_id AND image.entity_name = 'user' AND image_class = 'user-avatar' ORDER BY image_id DESC LIMIT 1) AS avatar,
+            (SELECT COUNT(*) FROM `excell_main`.`card` cd WHERE cd.owner_id = user.user_id) AS cards
+            FROM `excell_main`.`user` 
+            LEFT JOIN `excell_main`.`user_class` uc ON uc.user_id = user.user_id AND uc.user_class_type_id >= 5 AND uc.user_class_type_id <= 7 ";
 
         $objWhereClause .= "WHERE user.company_id = {$this->app->objCustomPlatform->getCompanyId()} AND uc.user_class_type_id >= 5 AND uc.user_class_type_id <= 7 ";
 
@@ -604,19 +604,57 @@ class UserDataController extends UserController
 
         $objCards = Database::getSimple($objWhereClause, "user_id");
 
-        if ($objCards->Data->Count() < $batchCount)
+        if ($objCards->getData()->Count() < $batchCount)
         {
             $strEnd = "true";
         }
 
-        $objCards->Data->HydrateModelData(UserModel::class, true);
+        $objCards->getData()->HydrateModelData(UserModel::class, true);
 
         $arUserDashboardInfo = array(
-            "list" => $objCards->Data->FieldsToArray($arFields),
-            "result" => $objCards->Result->Message,
+            "list" => $objCards->getData()->FieldsToArray($arFields),
+            "result" => $objCards->result->Message,
         );
 
-        return $this->renderReturnJson(true, $arUserDashboardInfo, "We found " . $objCards->Data->Count() . " users in this batch.", 200, "data", $strEnd);
+        return $this->renderReturnJson(true, $arUserDashboardInfo, "We found " . $objCards->getData()->Count() . " users in this batch.", 200, "data", $strEnd);
+    }
+
+    public function getPersonaBatches(ExcellHttpModel $objData) : bool
+    {
+        $pageIndex  = $objData->Data->Params["offset"] ?? 1;
+        $batchCount = $objData->Data->Params["batch"] ?? 500;
+        $filterEntity = $objData->Data->Params["filterEntity"] ?? null;
+        $pageIndex  = ($pageIndex - 1) * $batchCount;
+        $arFields   = explode(",", $objData->Data->Params["fields"]);
+        $strEnd     = "false";
+
+        $filterIdField = "user_id";
+
+        if ($filterEntity !== null && !isInteger($filterEntity))
+        {
+            $filterIdField = "sys_row_id";
+            $filterEntity = "'".$filterEntity."'";
+        }
+
+        $objWhereClause = (new Cards())->buildCardBatchWhereClause($filterIdField, $filterEntity, 2);
+
+        $objWhereClause .= " LIMIT {$pageIndex}, {$batchCount}";
+
+        $objCards = Database::getSimple($objWhereClause, "card_id");
+
+        if ($objCards->getData()->Count() < $batchCount)
+        {
+            $strEnd = "true";
+        }
+
+        $objCards->getData()->HydrateModelData(CardModel::class, true);
+
+        $arUserDashboardInfo = array(
+            "list" => $objCards->getData()->FieldsToArray($arFields),
+            "query" => $objWhereClause,
+        );
+
+        return $this->renderReturnJson(true, $arUserDashboardInfo, "We found " . $objCards->getData()->Count() . " cards in this batch.", 200, "data", $strEnd);
     }
 
     public function getCustomPlatformUserBatches(ExcellHttpModel $objData) : bool
@@ -630,30 +668,30 @@ class UserDataController extends UserController
 
         $objWhereClause = "
             SELECT user.*,
-            (SELECT platform_name FROM `ezdigital_v2_main`.`company` WHERE company.company_id = user.company_id LIMIT 1) AS platform,
-            (SELECT url FROM `ezdigital_v2_media`.`image` WHERE image.entity_id = user.user_id AND image.entity_name = 'user' AND image_class = 'user-avatar' ORDER BY image_id DESC LIMIT 1) AS avatar,
-            (SELECT COUNT(*) FROM `ezdigital_v2_main`.`card` cd WHERE cd.owner_id = user.user_id) AS cards
-            FROM `ezdigital_v2_main`.`user` 
-            LEFT JOIN `ezdigital_v2_main`.`user_class` uc ON uc.user_id = user.user_id AND uc.user_class_type_id >= 5 AND uc.user_class_type_id <= 7 ";
+            (SELECT platform_name FROM `excell_main`.`company` WHERE company.company_id = user.company_id LIMIT 1) AS platform,
+            (SELECT url FROM `excell_media`.`image` WHERE image.entity_id = user.user_id AND image.entity_name = 'user' AND image_class = 'user-avatar' ORDER BY image_id DESC LIMIT 1) AS avatar,
+            (SELECT COUNT(*) FROM `excell_main`.`card` cd WHERE cd.owner_id = user.user_id) AS cards
+            FROM `excell_main`.`user` 
+            LEFT JOIN `excell_main`.`user_class` uc ON uc.user_id = user.user_id AND uc.user_class_type_id >= 5 AND uc.user_class_type_id <= 7 ";
 
         $objWhereClause .= "WHERE user.company_id = {$filterEntity} AND uc.user_class_type_id >= 5 AND uc.user_class_type_id <= 7 ";
         $objWhereClause .= " ORDER BY user.user_id DESC LIMIT {$pageIndex}, {$batchCount}";
 
         $objCards = Database::getSimple($objWhereClause, "user_id");
 
-        if ($objCards->Data->Count() < $batchCount)
+        if ($objCards->getData()->Count() < $batchCount)
         {
             $strEnd = "true";
         }
 
-        $objCards->Data->HydrateModelData(UserModel::class, true);
+        $objCards->getData()->HydrateModelData(UserModel::class, true);
 
         $arUserDashboardInfo = array(
-            "list" => $objCards->Data->FieldsToArray($arFields),
-            "result" => $objCards->Result->Message,
+            "list" => $objCards->getData()->FieldsToArray($arFields),
+            "result" => $objCards->result->Message,
         );
 
-        return $this->renderReturnJson(true, $arUserDashboardInfo, "We found " . $objCards->Data->Count() . " users in this batch.", 200, "data", $strEnd);
+        return $this->renderReturnJson(true, $arUserDashboardInfo, "We found " . $objCards->getData()->Count() . " users in this batch.", 200, "data", $strEnd);
     }
 
     public function getCustomerNewBatches(ExcellHttpModel $objData) : bool
@@ -666,9 +704,9 @@ class UserDataController extends UserController
 
         $objWhereClause = "
             SELECT user.*,
-            (SELECT platform_name FROM `ezdigital_v2_main`.`company` WHERE company.company_id = user.company_id LIMIT 1) AS platform,
-            (SELECT url FROM `ezdigital_v2_media`.`image` WHERE image.entity_id = user.user_id AND image.entity_name = 'user' AND image_class = 'user-avatar' ORDER BY image_id DESC LIMIT 1) AS avatar,
-            (SELECT COUNT(*) FROM `ezdigital_v2_main`.`card` cd WHERE cd.owner_id = user.user_id) AS cards
+            (SELECT platform_name FROM `excell_main`.`company` WHERE company.company_id = user.company_id LIMIT 1) AS platform,
+            (SELECT url FROM `excell_media`.`image` WHERE image.entity_id = user.user_id AND image.entity_name = 'user' AND image_class = 'user-avatar' ORDER BY image_id DESC LIMIT 1) AS avatar,
+            (SELECT COUNT(*) FROM `excell_main`.`card` cd WHERE cd.owner_id = user.user_id) AS cards
             FROM `user` ";
 
         $objWhereClause .= "WHERE user.company_id = {$this->app->objCustomPlatform->getCompanyId()} AND user.status != 'Deleted'";
@@ -676,18 +714,18 @@ class UserDataController extends UserController
 
         $objCards = Database::getSimple($objWhereClause, "user_id");
 
-        if ($objCards->Data->Count() < $batchCount)
+        if ($objCards->getData()->Count() < $batchCount)
         {
             $strEnd = "true";
         }
 
-        $objCards->Data->HydrateModelData(UserModel::class, true);
+        $objCards->getData()->HydrateModelData(UserModel::class, true);
 
         $arUserDashboardInfo = array(
-            "list" => $objCards->Data->FieldsToArray($arFields),
+            "list" => $objCards->getData()->FieldsToArray($arFields),
         );
 
-        return $this->renderReturnJson(true, $arUserDashboardInfo, "We found " . $objCards->Data->Count() . " users in this batch.", 200, "data", $strEnd);
+        return $this->renderReturnJson(true, $arUserDashboardInfo, "We found " . $objCards->getData()->Count() . " users in this batch.", 200, "data", $strEnd);
     }
 
     public function getCustomPlatformCustomerBatches(ExcellHttpModel $objData) : bool
@@ -701,9 +739,9 @@ class UserDataController extends UserController
 
         $objWhereClause = "
             SELECT user.*,
-            (SELECT platform_name FROM `ezdigital_v2_main`.`company` WHERE company.company_id = user.company_id LIMIT 1) AS platform,
-            (SELECT url FROM `ezdigital_v2_media`.`image` WHERE image.entity_id = user.user_id AND image.entity_name = 'user' AND image_class = 'user-avatar' ORDER BY image_id DESC LIMIT 1) AS avatar,
-            (SELECT COUNT(*) FROM `ezdigital_v2_main`.`card` cd WHERE cd.owner_id = user.user_id) AS cards
+            (SELECT platform_name FROM `excell_main`.`company` WHERE company.company_id = user.company_id LIMIT 1) AS platform,
+            (SELECT url FROM `excell_media`.`image` WHERE image.entity_id = user.user_id AND image.entity_name = 'user' AND image_class = 'user-avatar' ORDER BY image_id DESC LIMIT 1) AS avatar,
+            (SELECT COUNT(*) FROM `excell_main`.`card` cd WHERE cd.owner_id = user.user_id) AS cards
             FROM `user` ";
 
         $objWhereClause .= "WHERE user.company_id = {$filterEntity}";
@@ -711,18 +749,18 @@ class UserDataController extends UserController
 
         $objCards = Database::getSimple($objWhereClause, "user_id");
 
-        if ($objCards->Data->Count() < $batchCount)
+        if ($objCards->getData()->Count() < $batchCount)
         {
             $strEnd = "true";
         }
 
-        $objCards->Data->HydrateModelData(UserModel::class, true);
+        $objCards->getData()->HydrateModelData(UserModel::class, true);
 
         $arUserDashboardInfo = array(
-            "list" => $objCards->Data->FieldsToArray($arFields),
+            "list" => $objCards->getData()->FieldsToArray($arFields),
         );
 
-        return $this->renderReturnJson(true, $arUserDashboardInfo, "We found " . $objCards->Data->Count() . " users in this batch.", 200, "data", $strEnd);
+        return $this->renderReturnJson(true, $arUserDashboardInfo, "We found " . $objCards->getData()->Count() . " users in this batch.", 200, "data", $strEnd);
     }
 
     public function getCustomerBatches(ExcellHttpModel $objData)
@@ -732,31 +770,31 @@ class UserDataController extends UserController
 
         $lstCustomers = (new Users())->getFks()->GetAllCustomers(1000, ($intOffset * 1000) - 750);
 
-        if ($lstCustomers->Data->Count() < 1000)
+        if ($lstCustomers->getData()->Count() < 1000)
         {
             $strEnd = "true";
         }
 
-        $arUserCardsIds = $lstCustomers->Data->FieldsToArray(["user_id"]);
+        $arUserCardsIds = $lstCustomers->getData()->FieldsToArray(["user_id"]);
         $lstUserAvatars = (new Images())->getWhere([["entity_name" => "user", "image_class" => "user-avatar"], "AND", ["entity_id", "IN", $arUserCardsIds]]);
-        $lstCustomers->Data->MergeFields($lstUserAvatars->Data,["url" => "main_image","thumb" => "main_thumb"],["entity_id" => "user_id"]);
+        $lstCustomers->getData()->MergeFields($lstUserAvatars->data,["url" => "main_image","thumb" => "main_thumb"],["entity_id" => "user_id"]);
 
-        foreach($lstCustomers->Data as $currCardId => $currCardData)
+        foreach($lstCustomers->data as $currCardId => $currCardData)
         {
-            $lstCustomers->Data->{$currCardId}->created_on = date("m/d/Y",strtotime($currCardData->created_on));
-            $lstCustomers->Data->{$currCardId}->last_updated = date("m/d/Y",strtotime($currCardData->last_updated));
+            $lstCustomers->getData()->{$currCardId}->created_on = date("m/d/Y",strtotime($currCardData->created_on));
+            $lstCustomers->getData()->{$currCardId}->last_updated = date("m/d/Y",strtotime($currCardData->last_updated));
 
-            $lstCustomers->Data->{$currCardId}->AddUnvalidatedValue("main_image", ($currCardData->main_image ?? "/_ez/images/users/defaultAvatar.jpg"));
-            $lstCustomers->Data->{$currCardId}->AddUnvalidatedValue("main_thumb", ($currCardData->main_thumb ?? "/_ez/images/users/defaultAvatar.jpg"));
+            $lstCustomers->getData()->{$currCardId}->AddUnvalidatedValue("main_image", ($currCardData->main_image ?? "/_ez/images/users/defaultAvatar.jpg"));
+            $lstCustomers->getData()->{$currCardId}->AddUnvalidatedValue("main_thumb", ($currCardData->main_thumb ?? "/_ez/images/users/defaultAvatar.jpg"));
         }
 
         $arUserDashboardInfo = array(
-            "people" => $lstCustomers->Data->CollectionToArray(),
+            "people" => $lstCustomers->getData()->CollectionToArray(),
         );
 
         $objJsonReturn = array(
             "success" => true,
-            "message" => "We found " . $lstCustomers->Data->Count() . " cards in this batch.",
+            "message" => "We found " . $lstCustomers->getData()->Count() . " cards in this batch.",
             "end" => $strEnd,
             "data" => $arUserDashboardInfo,
         );
@@ -777,12 +815,12 @@ class UserDataController extends UserController
 
         $objUserResult = (new Users())->getById($intUserId);
 
-        if ($objUserResult->Result->Count > 0)
+        if ($objUserResult->result->Count > 0)
         {
             $blnUserViewFound = true;
         }
 
-        $objUser = $objUserResult->Data->First();
+        $objUser = $objUserResult->getData()->first();
         $lstUserCards = (new Cards())->GetCardsByAffiliateId($intUserId);
 
         $strCardMainImage = "/_ez/images/users/defaultAvatar.jpg";
@@ -790,20 +828,20 @@ class UserDataController extends UserController
 
         $objImageResult = (new Images())->noFks()->getWhere(["entity_id" => $intUserId, "image_class" => "user-avatar", "entity_name" => "user"],"image_id.DESC");
 
-        if ($objImageResult->Result->Success === true && $objImageResult->Result->Count > 0)
+        if ($objImageResult->result->Success === true && $objImageResult->result->Count > 0)
         {
-            $strCardMainImage = $objImageResult->Data->First()->url;
-            $strCardThumbImage = $objImageResult->Data->First()->thumb;
+            $strCardMainImage = $objImageResult->getData()->first()->url;
+            $strCardThumbImage = $objImageResult->getData()->first()->thumb;
         }
 
-        $arUserCardsIds = $lstUserCards->Data->FieldsToArray(["card_id"]);
+        $arUserCardsIds = $lstUserCards->getData()->FieldsToArray(["card_id"]);
         $lstCardImages = (new Images())->getWhere([["entity_name" => "card", "image_class" =>"main-image"], "AND", ["entity_id", "IN", $arUserCardsIds]]);
-        $lstUserCards->Data->MergeFields($lstCardImages->Data,["url" => "main_image","thumb" => "main_thumb"],["entity_id" => "card_id"]);
+        $lstUserCards->getData()->MergeFields($lstCardImages->data,["url" => "main_image","thumb" => "main_thumb"],["entity_id" => "card_id"]);
 
-        foreach($lstUserCards->Data as $currCardId => $currCardData)
+        foreach($lstUserCards->data as $currCardId => $currCardData)
         {
-            $lstUserCards->Data->{$currCardId}->AddUnvalidatedValue("main_image", ($currCardData->main_image ?? "/_ez/templates/") . ($currCardData->template_id__value ?? "1") . "/images/mainImage.jpg");
-            $lstUserCards->Data->{$currCardId}->AddUnvalidatedValue("main_thumb", ($currCardData->main_thumb ?? "/_ez/templates/") . ($currCardData->template_id__value ?? "1") . "/images/mainImage.jpg");
+            $lstUserCards->getData()->{$currCardId}->AddUnvalidatedValue("main_image", ($currCardData->main_image ?? "/_ez/templates/") . ($currCardData->template_id__value ?? "1") . "/images/mainImage.jpg");
+            $lstUserCards->getData()->{$currCardId}->AddUnvalidatedValue("main_thumb", ($currCardData->main_thumb ?? "/_ez/templates/") . ($currCardData->template_id__value ?? "1") . "/images/mainImage.jpg");
         }
 
         if (!empty($objUser))
@@ -815,7 +853,7 @@ class UserDataController extends UserController
         $arUserDashboardInfo = array(
             "user" => !empty($objUser) ? $objUser->ToArray() : "[]",
             "blnUserViewFound" => $blnUserViewFound,
-            "cards" => $lstUserCards->Data->CollectionToArray(),
+            "cards" => $lstUserCards->getData()->CollectionToArray(),
         );
 
         $objJsonReturn = array(

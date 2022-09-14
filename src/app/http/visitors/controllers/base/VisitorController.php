@@ -1,6 +1,6 @@
 <?php
 
-namespace Entities\Visitors\Classes\Base;
+namespace Http\Visitors\Controllers\Base;
 
 use App\Core\AppController;
 use Entities\Visitors\Classes\Visitors;

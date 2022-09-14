@@ -1,17 +1,31 @@
 <?php
 
-namespace Entities\Cards\Controllers\Api\V1;
+namespace Http\Cards\Controllers\Api\V1;
 
+use App\Core\App;
 use App\Utilities\Database;
 use App\Utilities\Excell\ExcellHttpModel;
 use App\Utilities\Transaction\ExcellTransaction;
 use Entities\Activities\Classes\UserLogs;
 use Entities\Cards\Classes\Browsing\CardBrowsingHistories;
+use Entities\Cards\Classes\CardAddon;
 use Entities\Cards\Classes\CardConnections;
+use Entities\Cards\Classes\CardDomains;
 use Entities\Cards\Classes\CardPage;
+use Entities\Cards\Classes\CardPageRels;
 use Entities\Cards\Classes\Versioning\CardPageVersionings;
 use Entities\Cards\Classes\Cards;
-use Entities\Cards\Classes\Base\CardController;
+use Entities\Cards\Models\CardAddonModel;
+use Entities\Cards\Models\CardDomainModel;
+use Entities\Modules\Classes\AppInstanceRels;
+use Entities\Modules\Classes\AppInstances;
+use Entities\Modules\Models\AppInstanceRelModel;
+use Entities\Orders\Classes\OrderLines;
+use Entities\Orders\Classes\Orders;
+use Entities\Orders\Models\OrderLineModel;
+use Entities\Orders\Models\OrderModel;
+use Entities\Products\Classes\Products;
+use Http\Cards\Controllers\Base\CardController;
 use Entities\Cards\Classes\CardSocialMedia;
 use Entities\Cards\Classes\CardTemplates;
 use Entities\Cards\Classes\CardVersionings;
@@ -97,13 +111,14 @@ class ApiController extends CardController
     private function cardByUuid(string $uuid) : ?CardModel
     {
         /** @var CardModel $card */
-        $card = (new Cards())->getByUuid($uuid)->Data->First();
+        $card = (new Cards())->getByUuid($uuid)->getData()->first();
 
         if ($card === null)
         {
             return null;
         }
 
+        $card->LoadCardDomains(false);
         $card->LoadCardConnections(false);
         $card->LoadCardSocialMedia(false);
 
@@ -177,16 +192,16 @@ class ApiController extends CardController
         $objCardModule = new Cards();
         $colAllCards = $objCardModule->GetAllCardsForDisplay("all");
 
-        if ( $colAllCards->Result->Success === false)
+        if ( $colAllCards->result->Success === false)
         {
-            die('{"success":false,"message":"'.$colAllCards->Result->Message.'"}');
+            die('{"success":false,"message":"'.$colAllCards->result->Message.'"}');
         }
 
-        $arCardResult = $colAllCards->Data->ConvertToArray();
+        $arCardResult = $colAllCards->getData()->ConvertToArray();
 
         $arTransactionResult = [
             "success" => true,
-            "message" => $colAllCards->Result->Message,
+            "message" => $colAllCards->result->Message,
             "data" => $arCardResult
         ];
 
@@ -215,13 +230,47 @@ class ApiController extends CardController
         $objCardModule = new Cards();
         $objSearchResult = $objCardModule->getWhere($arWhereClause);
 
-        $arSearchResult = $objSearchResult->Data->FieldsToArray(["card_num","card_name","card_vanity_url"]);
+        $arSearchResult = $objSearchResult->getData()->FieldsToArray(["card_num","card_name","card_vanity_url"]);
 
         $objUserSearchResult = [
             "cards" => $arSearchResult
         ];
 
         $objResult = ["success" => true, "data" => $objUserSearchResult];
+        die(json_encode($objResult));
+    }
+
+    public function checkDomain(ExcellHttpModel $objData): void
+    {
+        $objVanityUrlCheckResult = new ExcellTransaction();
+
+        if (empty($objData->Data->Params["card_domain"]))
+        {
+            $objResult = ["success" => false, "match" => "NA"];
+            die(json_encode($objResult));
+        }
+
+        $cardDomain = $objData->Data->Params["card_domain"];
+
+        $objCardModule = new CardDomains();
+
+        // TODO - MAKE SURE THIS WORKS
+        if (empty($objData->Data->Params["card_id"]))
+        {
+            $objVanityUrlCheckResult = $objCardModule->getWhere(["domain_name" => $cardDomain, "company_id" => $this->app->objCustomPlatform->getCompany()->company_id]);
+        }
+        else
+        {
+            $objVanityUrlCheckResult = $objCardModule->getWhere([["domain_name", "=", $cardDomain], "AND", ["card_id", "!=", $objData->Data->Params["card_id"]], "AND", ["company_id" => $this->app->objCustomPlatform->getCompany()->company_id]]);
+        }
+
+        if ($objVanityUrlCheckResult->result === false || $objVanityUrlCheckResult->result->Count === 0)
+        {
+            $objResult = ["success" => true, "match" => false];
+            die(json_encode($objResult));
+        }
+
+        $objResult = ["success" => true, "match" => true];
         die(json_encode($objResult));
     }
 
@@ -249,7 +298,7 @@ class ApiController extends CardController
             $objVanityUrlCheckResult = $objCardModule->getWhere([["card_vanity_url", "=", $strVanityUrl], "AND", ["card_id", "!=", $objData->Data->Params["card_id"]], "AND", ["company_id" => $this->app->objCustomPlatform->getCompany()->company_id]]);
         }
 
-        if ($objVanityUrlCheckResult->Result === false || $objVanityUrlCheckResult->Result->Count === 0)
+        if ($objVanityUrlCheckResult->result === false || $objVanityUrlCheckResult->result->Count === 0)
         {
             $objResult = ["success" => true, "match" => false];
             die(json_encode($objResult));
@@ -282,7 +331,7 @@ class ApiController extends CardController
             $objKeywordResult = $objCardModule->getWhere([["card_keyword", "=", $strVanityUrl], "AND", ["card_id", "!=", $objData->Data->Params["card_id"]]]);
         }
 
-        if ($objKeywordResult->Result === false || $objKeywordResult->Result->Count === 0)
+        if ($objKeywordResult->result === false || $objKeywordResult->result->Count === 0)
         {
             $objResult = ["success" => true, "match" => false];
             die(json_encode($objResult));
@@ -304,14 +353,14 @@ class ApiController extends CardController
         $intCardNum = $objData->Data->Params["card_id"];
         $objCardResult = (new Cards())->getWhere(["card_num" => $intCardNum]);
 
-        if ($objCardResult->Result->Count === 0)
+        if ($objCardResult->result->Count === 0)
         {
             die("null");
         }
 
-        $objImageResult = (new Images())->noFks()->getWhere(["entity_id" => $objCardResult->Data->First()->card_id, "image_class" => "main-image", "entity_name" => "card"],"image_id.DESC");
+        $objImageResult = (new Images())->noFks()->getWhere(["entity_id" => $objCardResult->getData()->first()->card_id, "image_class" => "main-image", "entity_name" => "card"],"image_id.DESC");
 
-        die($objImageResult->Data->First()->url);
+        die($objImageResult->getData()->first()->url);
     }
 
     public function GetCardFaviconImage(ExcellHttpModel $objData)
@@ -358,18 +407,18 @@ class ApiController extends CardController
 
         $objNewUserResult = (new Users())->createNew($objCreationNewUser);
 
-        $objEmailAddressResult = $this->AssignEmailAddress($objNewUserResult->Data->First()->user_id, $objNewUserData->email);
-        $objMobileNumberResult = $this->AssignMobileNumber($objNewUserResult->Data->First()->user_id, $objNewUserData->phonenumber);
+        $objEmailAddressResult = $this->AssignEmailAddress($objNewUserResult->getData()->first()->user_id, $objNewUserData->email);
+        $objMobileNumberResult = $this->AssignMobileNumber($objNewUserResult->getData()->first()->user_id, $objNewUserData->phonenumber);
 
-        $objCreationNewUser->user_email = $objEmailAddressResult->Data->First()->connection_value;
-        $objCreationNewUser->user_phone = $objMobileNumberResult->Data->First()->connection_value;
+        $objCreationNewUser->user_email = $objEmailAddressResult->getData()->first()->connection_value;
+        $objCreationNewUser->user_phone = $objMobileNumberResult->getData()->first()->connection_value;
 
         (new Users())->update($objCreationNewUser);
 
         logText("RegisterNewAppUser.log", json_encode($objData->Data->PostData));
 
         $objUserCreationResult = [
-            "user_id" => $objNewUserResult->Data->First()->user_id
+            "user_id" => $objNewUserResult->getData()->first()->user_id
         ];
 
         $objResult = ["success" => true, "data" => $objUserCreationResult];
@@ -386,7 +435,7 @@ class ApiController extends CardController
         $objConnection->division_id = 0;
         $objConnection->company_id = $this->app->objCustomPlatform->getCompanyId();
         $objConnection->connection_value = $strConnectionValue;
-        $objConnection->is_primary = ExcellTrue;
+        $objConnection->is_primary = EXCELL_TRUE;
         $objConnection->connection_class = 'user';
 
         return (new Connections())->createNew($objConnection);
@@ -401,7 +450,7 @@ class ApiController extends CardController
         $objConnection->division_id = 0;
         $objConnection->company_id = $this->app->objCustomPlatform->getCompanyId();
         $objConnection->connection_value = $strConnectionValue;
-        $objConnection->is_primary = ExcellTrue;
+        $objConnection->is_primary = EXCELL_TRUE;
         $objConnection->connection_class = 'user';
 
         return (new Connections())->createNew($objConnection);
@@ -414,12 +463,12 @@ class ApiController extends CardController
         $objCardModule = new Cards();
         $objCardResult = $objCardModule->getWhere(["card_num" =>$intCardId]);
 
-        if ($objCardResult->Result->Success === false || $objCardResult->Result->Count === 0)
+        if ($objCardResult->result->Success === false || $objCardResult->result->Count === 0)
         {
             die('{"success":false}');
         }
 
-        $objCard = $objCardResult->Data->First();
+        $objCard = $objCardResult->getData()->first();
 
         $objCard->LoadFullCard();
 
@@ -447,9 +496,9 @@ class ApiController extends CardController
 //            $vcard .= "ORG:" . $businessname . "\r";
 //        }
 
-        if (!empty($objCard->Addresses->First()))
+        if (!empty($objCard->Addresses->first()))
         {
-            $vcard .= "ADR;TYPE=work:;;" . $objCard->Addresses->First()->address_1 . " " . $objCard->Addresses->First()->address_2 . ";" . $objCard->Addresses->First()->city . " ;" . $objCard->Addresses->First()->state . ";" . $objCard->Addresses->First()->zip . ";\r";
+            $vcard .= "ADR;TYPE=work:;;" . $objCard->Addresses->first()->address_1 . " " . $objCard->Addresses->first()->address_2 . ";" . $objCard->Addresses->first()->city . " ;" . $objCard->Addresses->first()->state . ";" . $objCard->Addresses->first()->zip . ";\r";
         }
 
         if (isset($objCard->Owner->user_email))
@@ -515,7 +564,7 @@ class ApiController extends CardController
 
         $arFilePath = explode(".", $strMainImagePath);
         $strFileExtension = end($arFilePath);
-        $strTempFileNameAndPath = AppCore . '/uploads/'. sha1(microtime()) . "." . $strFileExtension;
+        $strTempFileNameAndPath = APP_CORE . '/uploads/'. sha1(microtime()) . "." . $strFileExtension;
 
         file_put_contents($strTempFileNameAndPath, $objMainImage);
 
@@ -529,17 +578,17 @@ class ApiController extends CardController
 
     public function generateQrCodeForCard(ExcellHttpModel $objData) : void
     {
-        require_once AppVendors . "qrcode/main/v1.0.0/qrcode.class.php";
+        require_once APP_VENDORS . "qrcode/main/v1.0.0/qrcode.class.php";
 
         $objCardResult = (new Cards())->getWhere(["card_num" => $objData->Data->Params["id"]]);
 
-        if ($objCardResult->Result->Success === false || $objCardResult->Result->Count === 0)
+        if ($objCardResult->result->Success === false || $objCardResult->result->Count === 0)
         {
             header("HTTP/1.0 404 Not Found");
             die("Card not found.");
         }
 
-        $objCard = $objCardResult->Data->First();
+        $objCard = $objCardResult->getData()->first();
 
         // TODO - This needs to be fixed.
         if (empty($this->app->objAppSession["Core"]["Session"]["IpInfo"]->guid))
@@ -551,7 +600,7 @@ class ApiController extends CardController
         QRcode::png(getFullUrl() . "/cards/qr-code-routing?id=" . $objCard->card_num . "&guid=" . $this->app->objAppSession["Core"]["Session"]["IpInfo"]->guid, false, QR_ECLEVEL_L, 10);
     }
 
-    public function updateCardProfile(ExcellHttpModel $objData) : bool
+    public function updateSiteProfile(ExcellHttpModel $objData) : bool
     {
         if (!$this->validateRequestType('POST'))
         {
@@ -589,14 +638,14 @@ class ApiController extends CardController
                 ]
             );
 
-            if ($objVanityUrlCheckResult->Result === true && $objVanityUrlCheckResult->Result->Count > 0)
+            if ($objVanityUrlCheckResult->result === true && $objVanityUrlCheckResult->result->Count > 0)
             {
                 return $this->renderReturnJson(false, $this->validationErrors, "This Vanity URL Already Exists.");
             }
         }
         else
         {
-            $objPost->card_vanity_url = ExcellNull;
+            $objPost->card_vanity_url = EXCELL_NULL;
         }
 
         if (!empty($objPost->card_keyword))
@@ -617,14 +666,14 @@ class ApiController extends CardController
                 ]
             );
 
-            if ($objCardKeywordCheckResult->Result === true && $objCardKeywordCheckResult->Result->Count > 0)
+            if ($objCardKeywordCheckResult->result === true && $objCardKeywordCheckResult->result->Count > 0)
             {
                 return $this->renderReturnJson(false, $this->validationErrors, "This Keyword Already Exists.");
             }
         }
         else
         {
-            $objPost->card_keyword = ExcellNull;
+            $objPost->card_keyword = EXCELL_NULL;
         }
 
         $objPost->card_id = $objParams["card_id"];
@@ -642,17 +691,38 @@ class ApiController extends CardController
 
         $cardResult = $objCard->update($card);
 
-        $fullCardResult = (new Cards())->getByUuid($cardResult->Data->First()->sys_row_id);
+        $fullCardResult = (new Cards())->getByUuid($cardResult->getData()->first()->sys_row_id);
 
         /** @var CardModel $card */
-        $card = $fullCardResult->Data->First();
+        $card = $fullCardResult->getData()->first();
 
-        if ($cardResult->Result->Success === false)
+        if ($cardResult->result->Success === false)
         {
-            return $this->renderReturnJson(false, null, $cardResult->Result->Message);
+            return $this->renderReturnJson(false, null, $cardResult->result->Message);
         }
 
-        return $this->renderReturnJson(true, ["card" => $card->ToPublicArray()], $cardResult->Result->Message);
+        $cardDomains = new CardDomains();
+
+        $cardDomainResult = $cardDomains->getWhere(["card_id" => $card->card_id]);
+
+        if ($cardDomainResult->getResult()->Count > 0) {
+            if ($cardDomainResult->getData()->first()->domain_name !== $objPost->card_domain) {
+                $cardDomain = $cardDomainResult->getData()->first();
+                $cardDomain->domain_name = $objPost->card_domain;
+                $cardDomains->update($cardDomain);
+            }
+            return $this->renderReturnJson(true, ["card" => $card->ToPublicArray()], $cardResult->result->Message);
+        }
+
+        $cardDomain = new CardDomainModel();
+        $cardDomain->company_id = $card->company_id;
+        $cardDomain->domain_name = $objPost->card_domain;
+        $cardDomain->card_id = $card->card_id;
+        $cardDomain->ssl = EXCELL_FALSE;
+        $cardDomain->type = "site";
+        $result = $cardDomains->createNew($cardDomain);
+
+        return $this->renderReturnJson(true, ["card" => $card->ToPublicArray()], $cardResult->result->Message);
     }
 
     public function updateCardConnection(ExcellHttpModel $objData) : bool
@@ -704,14 +774,14 @@ class ApiController extends CardController
             $objCurrentCardConnection = (new CardConnections())->getWhere([
                     [
                         "connection_id" => $intConnectionId,
-                        "display_order" => ExcellNull
+                        "display_order" => EXCELL_NULL
                     ],
                     "OR",
                     ["connection_rel_id" => $intConnectionRelId]
                 ]
             );
 
-            if ($objCurrentCardConnection->Result->Count === 0)
+            if ($objCurrentCardConnection->result->Count === 0)
             {
                 $objCardConnectionUpdateModel = new CardConnectionModel();
 
@@ -721,12 +791,12 @@ class ApiController extends CardController
                 $objCardConnectionUpdateModel->action        = $strConnectionRelAction;
                 $objCardConnectionUpdateModel->display_order = $intDisplayOrder;
 
-                $objResult              = (new CardConnections())->createNew($objCardConnectionUpdateModel)->Data->ConvertToArray();
+                $objResult              = (new CardConnections())->createNew($objCardConnectionUpdateModel)->getData()->ConvertToArray();
                 $objConnectionForReturn = array_shift($objResult);
 
                 $objConnection                                = (new Connections())->getFks()->getById($intConnectionId);
-                $objConnectionForReturn["connection_value"]   = formatAsPhoneIfApplicable($objConnection->Data->First()->connection_value);
-                $objConnectionForReturn["connection_type_id"] = $objConnection->Data->First()->connection_type_id;
+                $objConnectionForReturn["connection_value"]   = formatAsPhoneIfApplicable($objConnection->getData()->first()->connection_value);
+                $objConnectionForReturn["connection_type_id"] = $objConnection->getData()->first()->connection_type_id;
 
                 (new UserLogs())->RegisterActivity($objLoggedInUser->user_id, "updated_connection_rel", "Card Connection Relationship Updated", "connection_rel", $objConnectionForReturn["connection_rel_id"]);
 
@@ -739,19 +809,19 @@ class ApiController extends CardController
             }
             else
             {
-                $objCurrentCardConnection->Data->First()->connection_id = $intConnectionId;
-                $objCurrentCardConnection->Data->First()->action        = $strConnectionRelAction;
-                $objCurrentCardConnection->Data->First()->display_order = $intDisplayOrder;
+                $objCurrentCardConnection->getData()->first()->connection_id = $intConnectionId;
+                $objCurrentCardConnection->getData()->first()->action        = $strConnectionRelAction;
+                $objCurrentCardConnection->getData()->first()->display_order = $intDisplayOrder;
 
-                $objResult              = (new CardConnections())->update($objCurrentCardConnection->Data->First())->Data->ConvertToArray();
+                $objResult              = (new CardConnections())->update($objCurrentCardConnection->getData()->first())->getData()->ConvertToArray();
 
                 //dd($objResult);
 
                 $objConnectionForReturn = array_shift($objResult);
 
                 $objConnection                                = (new Connections())->getFks()->getById($intConnectionId);
-                $objConnectionForReturn["connection_value"]   = $objConnection->Data->First()->connection_value;
-                $objConnectionForReturn["connection_type_id"] = $objConnection->Data->First()->connection_type_id;
+                $objConnectionForReturn["connection_value"]   = $objConnection->getData()->first()->connection_value;
+                $objConnectionForReturn["connection_type_id"] = $objConnection->getData()->first()->connection_type_id;
 
                 $arResult = [
                     "success"    => true,
@@ -796,19 +866,19 @@ class ApiController extends CardController
 
             $objResult              = (new CardSocialMedia())->createNew($objCardSocialMediaModel);
 
-            return $this->renderReturnJson(true, ["connection" => $objResult->Data->First()->ToArray()], $objResult->Result->Message);
+            return $this->renderReturnJson(true, ["connection" => $objResult->getData()->first()->ToArray()], $objResult->result->Message);
         }
 
         $intSocialMediaId = $objPost->card_socialmedia_id;
 
         $socialMediaResult = (new CardSocialMedia())->getById($intSocialMediaId);
 
-        if ($socialMediaResult->Result->Count !== 1)
+        if ($socialMediaResult->result->Count !== 1)
         {
-            return $this->renderReturnJson(false, ["error" => $socialMediaResult->Result->Errors], $socialMediaResult->Result->Message);
+            return $this->renderReturnJson(false, ["error" => $socialMediaResult->result->Errors], $socialMediaResult->result->Message);
         }
 
-        $objCardSocialMedia = $socialMediaResult->Data->First();
+        $objCardSocialMedia = $socialMediaResult->getData()->first();
         $objCardSocialMedia->connection_id = $intConnectionId;
         $objCardSocialMedia->card_id       = $intCardId;
         $objCardSocialMedia->user_id       = $intUserId;
@@ -818,7 +888,7 @@ class ApiController extends CardController
 
         $objResult              = (new CardSocialMedia())->update($objCardSocialMedia);
 
-        return $this->renderReturnJson(true, ["connection" => $objResult->Data->First()->ToArray()], $objResult->Result->Message);
+        return $this->renderReturnJson(true, ["connection" => $objResult->getData()->first()->ToArray()], $objResult->result->Message);
     }
 
     public function getAllAvailableCardTemplates(ExcellHttpModel $objData) : bool
@@ -829,41 +899,63 @@ class ApiController extends CardController
         }
 
         $cards = new Cards();
-        $cardResults = $cards->getWhere(["template_card" => ExcellTrue, "company_id" => $this->app->objCustomPlatform->getCompanyId()]);
+        $cardResults = $cards->getWhere(["template_card" => EXCELL_TRUE, "company_id" => $this->app->objCustomPlatform->getCompanyId()]);
 
-        if ($cardResults->Result->Success === false)
+        if ($cardResults->result->Success === false)
         {
-            return $this->renderReturnJson(false, null, $cardResults->Result->Message);
+            return $this->renderReturnJson(false, null, $cardResults->result->Message);
         }
 
-        return $this->renderReturnJson(true, ["list" => $cardResults->Data->ToPublicArray()], $cardResults->Result->Message);
+        return $this->renderReturnJson(true, ["list" => $cardResults->getData()->ToPublicArray()], $cardResults->result->Message);
     }
 
-    public function getCardTemplates(ExcellHttpModel $objData) : bool
+    public function getSiteTemplates(ExcellHttpModel $objData) : bool
     {
         if (!$this->validateRequestType('GET'))
         {
             return false;
         }
 
+        $objParams = $objData->Data->Params;
+
+        if (!$this->validate($objParams, [
+            "type" => "required",
+        ]))
+        {
+            return $this->renderReturnJson(false, $this->validationErrors, "Validation errors.");
+        }
+
         $cardTemplates = new CardTemplates();
-        $cardTemplateResults = null;
+        $cardTemplateResults = $cardTemplates->getByCompanyId($this->app->objCustomPlatform->getCompanyId(), $objParams["type"]);
 
-        if (in_array($this->app->getActiveLoggedInUser()->user_id, [1002, 1003, 70726, 73837, 90999, 91003, 91015, 91014]))
+        if ($cardTemplateResults->result->Success === false)
         {
-            $cardTemplateResults = $cardTemplates->getWhere([["company_id", "IS", ExcellNull], "AND", ["company_id", "!=", 4]]);
-        }
-        else
-        {
-            $cardTemplateResults = $cardTemplates->getWhere([["company_id", "IS", ExcellNull], "OR", ["company_id", "=", $this->app->objCustomPlatform->getCompanyId()]]);
+            return $this->renderReturnJson(false, null, $cardTemplateResults->result->Message);
         }
 
-        if ($cardTemplateResults->Result->Success === false)
-        {
-            return $this->renderReturnJson(false, null, $cardTemplateResults->Result->Message);
-        }
+        return $this->renderReturnJson(true, ["list" => $cardTemplateResults->getData()->ToPublicArray()], $cardTemplateResults->result->Message);
+    }
 
-        return $this->renderReturnJson(true, ["list" => $cardTemplateResults->Data->ToPublicArray()], $cardTemplateResults->Result->Message);
+    public function getSiteThemes(ExcellHttpModel $objData) : bool
+    {
+        /** @var App $app  */
+        global $app;
+        $themeData = [
+            0 => [
+                "title" => "Excell",
+                "description" => "The best theme for " .$app->objCustomPlatform->getCompany()->platform_name,
+            ],
+            1 => [
+                "title" => "Galaxybiz",
+                "description" => "Bring the wonder of creation into your " .$app->objCustomPlatform->getCompany()->platform_name . " universe."
+            ],
+            2 => [
+                "title" => "ConsultPro",
+                "description" => "Business and legal consulting collide with glorious web precision for the perfect " .$app->objCustomPlatform->getCompany()->platform_name . " experience."
+            ],
+        ];
+
+        return $this->renderReturnJson(true, ["list" => $themeData], $cardTemplateResults->result->Message);
     }
 
     public function updateCardUserProfile(ExcellHttpModel $objData) : bool
@@ -891,24 +983,24 @@ class ApiController extends CardController
         }
 
         $cardResult = (new Cards())->getById($objParams["card_id"]);
-        $card = $cardResult->Data->First();
+        $card = $cardResult->getData()->first();
 
         $card->card_user_id = $objPost->card_user_id;
         $card->card_data->card_user->title =  $objPost->card_user_title;
 
         $cardResult = (new Cards())->update($card);
 
-        $fullCardResult = (new Cards())->getByUuid($cardResult->Data->First()->sys_row_id);
+        $fullCardResult = (new Cards())->getByUuid($cardResult->getData()->first()->sys_row_id);
 
         /** @var CardModel $card */
-        $card = $fullCardResult->Data->First();
+        $card = $fullCardResult->getData()->first();
 
-        if ($cardResult->Result->Success === false)
+        if ($cardResult->result->Success === false)
         {
-            return $this->renderReturnJson(false, null, $cardResult->Result->Message);
+            return $this->renderReturnJson(false, null, $cardResult->result->Message);
         }
 
-        return $this->renderReturnJson(true, ["card" => $card->ToPublicArray()], $cardResult->Result->Message);
+        return $this->renderReturnJson(true, ["card" => $card->ToPublicArray()], $cardResult->result->Message);
     }
 
     public function autoSaveBuildFormData(ExcellHttpModel $objData) : bool
@@ -927,7 +1019,7 @@ class ApiController extends CardController
             return $this->renderReturnJson(false, $this->validationErrors, "Validation errors.");
         }
 
-        $cardData = (new Cards())->getById($objPost->card_id)->Data->First();
+        $cardData = (new Cards())->getById($objPost->card_id)->getData()->first();
 
         if ($cardData === null || $cardData->status !== "Build")
         {
@@ -941,7 +1033,7 @@ class ApiController extends CardController
         $objCardVersion = new CardVersionings();
         $versionResult = $objCardVersion->getWhere(["card_id" => $objPost->card_id, "card_version_status" => "build"]);
 
-        if ($versionResult->Result->Count === 0)
+        if ($versionResult->result->Count === 0)
         {
             $this->createCardVersioning($objPost, $cardData);
             $this->processCardVersioning($cardData, $objPost);
@@ -949,7 +1041,7 @@ class ApiController extends CardController
             return true;
         }
 
-        $this->updateCardVersioning($versionResult->Data->First(), $objPost);
+        $this->updateCardVersioning($versionResult->getData()->first(), $objPost);
         $this->processCardVersioning($cardData, $objPost);
 
         return true;
@@ -1022,9 +1114,9 @@ class ApiController extends CardController
 
         foreach($objPost->pages as $currPage)
         {
-            $cardPage = $pageResult->Data->FindEntityByValue("card_tab_id", $currPage["page_id"]);
+            $cardPage = $pageResult->getData()->FindEntityByValue("card_tab_id", $currPage["page_id"]);
 
-            $pageVersion = $versionResult->Data->FindEntityByValue("card_page_id", $currPage["page_id"]);
+            $pageVersion = $versionResult->getData()->FindEntityByValue("card_page_id", $currPage["page_id"]);
 
             if ($pageVersion === null)
             {
@@ -1101,11 +1193,11 @@ class ApiController extends CardController
         $objCardPageVersion = new CardPageVersionings();
         $versionPageResult = $objCardPageVersion->getWhere([["card_id"=> $objParams["card_id"]], "AND", ["card_page_version_status" => "build"]]);
 
-        $card = $versionResult->Data->First();
-        $card->AddUnvalidatedValue("pages", $versionPageResult->Data);
+        $card = $versionResult->getData()->first();
+        $card->AddUnvalidatedValue("pages", $versionPageResult->data);
 
 
-        return $this->renderReturnJson(true, ["card" => $card->ToArray()], $versionResult->Result->Message);
+        return $this->renderReturnJson(true, ["card" => $card->ToArray()], $versionResult->result->Message);
     }
 
     public function submitBuildFormData(ExcellHttpModel $objData) : bool
@@ -1127,28 +1219,28 @@ class ApiController extends CardController
         $objCardVersion = new CardVersionings();
         $versionResult = $objCardVersion->getWhere(["card_id" => $objPost->card_id, "card_version_status" => "build"]);
 
-        if ($versionResult->Result->Count === 0)
+        if ($versionResult->result->Count === 0)
         {
             return $this->renderReturnJson(false, ["error" => "No card build versioning for this card."], "Integrity errors.");
         }
 
-        $cardVersion = $versionResult->Data->First();
+        $cardVersion = $versionResult->getData()->first();
 
-        $cardData = (new Cards())->getById($objPost->card_id)->Data->First();
+        $cardData = (new Cards())->getById($objPost->card_id)->getData()->first();
         $cardData->card_version_id = $cardVersion->card_version_id;
         $cardData->status = "BuildComplete";
 
-        $cards = (new Cards())->update($cardData)->Data->First();
+        $cards = (new Cards())->update($cardData)->getData()->first();
 
         $objCardPageVersion = new CardPageVersionings();
         $versionPageResult = $objCardPageVersion->getWhere([["card_id"=> $objPost->card_id], "AND", ["card_page_version_status" => "build"]]);
 
         $objCardPages = new CardPage();
-        $pageResult = $objCardPages->getWhereIn("card_tab_id", $versionPageResult->Data->FieldsToArray(["card_page_id"]));
+        $pageResult = $objCardPages->getWhereIn("card_tab_id", $versionPageResult->getData()->FieldsToArray(["card_page_id"]));
 
-        $pageResult->Data->Foreach(function($currPage) use ($versionPageResult)
+        $pageResult->getData()->Foreach(function($currPage) use ($versionPageResult)
         {
-            $currPageVersion = $versionPageResult->Data->FindEntityByValue("card_page_id", $currPage->card_tab_id);
+            $currPageVersion = $versionPageResult->getData()->FindEntityByValue("card_page_id", $currPage->card_tab_id);
             if ($currPageVersion === null) { return; }
             $currPage->card_page_version = $currPageVersion->card_page_version_id;
             $currPage->title = $currPageVersion->title;
@@ -1205,11 +1297,11 @@ class ApiController extends CardController
                 cd.card_name,
                 cd.template_id,
                 cd.sys_row_id,
-            (SELECT thumb FROM `ezdigital_v2_media`.`image` WHERE image.entity_id = cd.card_id AND image.entity_name = 'card' AND image_class = 'main-image' ORDER BY image_id DESC LIMIT 1) AS banner,
-            (SELECT thumb FROM `ezdigital_v2_media`.`image` WHERE image.entity_id = cd.card_id AND image.entity_name = 'card' AND image_class = 'favicon-image' ORDER BY image_id DESC LIMIT 1) AS ico 
-            FROM ezdigital_v2_main.card cd
-            LEFT JOIN ezdigital_v2_main.user ur1 ON cd.owner_id = ur1.user_id 
-            LEFT JOIN ezdigital_v2_main.user ur2 ON cd.card_user_id = ur1.user_id ";
+            (SELECT thumb FROM `excell_media`.`image` WHERE image.entity_id = cd.card_id AND image.entity_name = 'card' AND image_class = 'main-image' ORDER BY image_id DESC LIMIT 1) AS banner,
+            (SELECT thumb FROM `excell_media`.`image` WHERE image.entity_id = cd.card_id AND image.entity_name = 'card' AND image_class = 'favicon-image' ORDER BY image_id DESC LIMIT 1) AS ico 
+            FROM excell_main.card cd
+            LEFT JOIN excell_main.user ur1 ON cd.owner_id = ur1.user_id 
+            LEFT JOIN excell_main.user ur2 ON cd.card_user_id = ur1.user_id ";
 
         $objWhereClause .= "WHERE cd.company_id = {$this->app->objCustomPlatform->getCompanyId()} AND (";
         $objWhereClause .= "cd.card_num LIKE '%{$searchText}%' OR ";
@@ -1220,16 +1312,16 @@ class ApiController extends CardController
         $objWhereClause .= " LIMIT 15";
 
         $cardResult = Database::getSimple($objWhereClause, "card_num");
-        $cardResult->Data->HydrateModelData(CardModel::class, true);
+        $cardResult->getData()->HydrateModelData(CardModel::class, true);
 
-        if ($cardResult->Result->Success === false)
+        if ($cardResult->result->Success === false)
         {
-            return $this->renderReturnJson(false, ["query" => $cardResult->Result->Query], $cardResult->Result->Message);
+            return $this->renderReturnJson(false, ["query" => $cardResult->result->Query], $cardResult->result->Message);
         }
 
-        if (!empty($cardResult->Data->First()->card_data) && isJson($cardResult->Data->First()->card_data)) { $cardResult->Data->First()->card_data = json_decode($cardResult->Data->First()->card_data); }
+        if (!empty($cardResult->getData()->first()->card_data) && isJson($cardResult->getData()->first()->card_data)) { $cardResult->getData()->first()->card_data = json_decode($cardResult->getData()->first()->card_data); }
 
-        return $this->renderReturnJson(true, ["cards" => $cardResult->Data->ToPublicArray()], "We made it.");
+        return $this->renderReturnJson(true, ["cards" => $cardResult->getData()->ToPublicArray()], "We made it.");
     }
 
     public function registerCardInHistory(ExcellHttpModel $objData) : bool
@@ -1251,14 +1343,14 @@ class ApiController extends CardController
 
         $userResult = (new Users())->getByUuid($objPost->user_id);
 
-        if ($userResult->Result->Count !== 1)
+        if ($userResult->result->Count !== 1)
         {
             return $this->renderReturnJson(false, $this->validationErrors, "User not found.");
         }
 
-        $result = (new CardBrowsingHistories())->upsertHistoryRecord($userResult->Data->First()->user_id, $objPost->card_id);
+        $result = (new CardBrowsingHistories())->upsertHistoryRecord($userResult->getData()->first()->user_id, $objPost->card_id);
 
-        return $this->renderReturnJson($result->Result->Success, [], $result->Result->Message);
+        return $this->renderReturnJson($result->result->Success, [], $result->result->Message);
     }
 
     public function loadMyHubData(ExcellHttpModel $objData) : bool
@@ -1279,19 +1371,19 @@ class ApiController extends CardController
 
         $userResult = (new Users())->getByUuid($objParams["user_id"]);
 
-        if ($userResult->Result->Count !== 1)
+        if ($userResult->result->Count !== 1)
         {
             return $this->renderReturnJson(false, $this->validationErrors, "User not found.");
         }
 
-        $historyResult = (new CardBrowsingHistories())->getWhere(["user_id" => $userResult->Data->First()->user_id], "last_updated.DESC", 25);
+        $historyResult = (new CardBrowsingHistories())->getWhere(["user_id" => $userResult->getData()->first()->user_id], "last_updated.DESC", 25);
 
-        $objWhereClause = (new Cards())->buildCardWhereClauseWithIds($historyResult->Data->FieldsToArray(["card_id"]), "user_id", $userResult->Data->First()->user_id);
+        $objWhereClause = (new Cards())->buildCardWhereClauseWithIds($historyResult->getData()->FieldsToArray(["card_id"]), "user_id", $userResult->getData()->first()->user_id);
         $objCards = Database::getSimple($objWhereClause, "card_id");
-        $objCards->Data->HydrateModelData(CardModel::class, true);
+        $objCards->getData()->HydrateModelData(CardModel::class, true);
 
-        $objCards->Data->Foreach(function($currCard) use ($historyResult) {
-            $objCard = $historyResult->Data->FindEntityByValue("card_id", $currCard->card_id);
+        $objCards->getData()->Foreach(function($currCard) use ($historyResult) {
+            $objCard = $historyResult->getData()->FindEntityByValue("card_id", $currCard->card_id);
 
             if ($objCard !== null)
             {
@@ -1303,7 +1395,249 @@ class ApiController extends CardController
 
         return $this->renderReturnJson(true, [
             "favorites" => [],
-            "history" => $objCards->Data->ToPublicArray(),
+            "history" => $objCards->getData()->ToPublicArray(),
+        ], "success");
+    }
+
+    public function updateSitePageRelProfile(ExcellHttpModel $objData) : bool
+    {
+        if (!$this->validateRequestType('POST'))
+        {
+            return false;
+        }
+
+        $objParams = $objData->Data->Params;
+        $objPost = $objData->Data->PostData;
+
+        if (!$this->validate($objParams, [
+            "site_id" => "required",
+            "site_page_id" => "required",
+            "site_page_rel_id" => "required",
+        ]))
+        {
+            return $this->renderReturnJson(false, $this->validationErrors, "Validation errors.");
+        }
+
+        $sitePages = new CardPage();
+        $sitePageRels = new CardPageRels();
+
+        $sitePageResult = $sitePages->getById($objParams["site_page_id"]);
+        $sitePageRelResult = $sitePageRels->getById($objParams["site_page_rel_id"]);
+
+        if ($sitePageResult->getResult()->Count !== 1) {
+            return $this->renderReturnJson(false, ["error" => "unable to find page for update."], "Process errors.");
+        }
+
+        $sitePage = $sitePageResult->getData()->first();
+
+        if ($sitePageRelResult->getResult()->Count !== 1) {
+            return $this->renderReturnJson(false, ["error" => "unable to find page relation for update."], "Process errors.");
+        }
+
+        $sitePageRel = $sitePageRelResult->getData()->first();
+
+        if (!empty($objPost->title)) {
+            $sitePageRel->card_tab_rel_title = $objPost->title;
+        }
+        if (!empty($objPost->menu)) {
+            $sitePageRel->card_tab_rel_menu_title = $objPost->menu;
+        }
+        if (!empty($objPost->url)) {
+            $sitePageRel->card_tab_rel_url = $objPost->url;
+        }
+
+        $sitePageRels->update($sitePageRel);
+
+        $appInstanceRels = new AppInstanceRels();
+        $appInstanceRelResult = $appInstanceRels->getWhere(["card_page_rel_id" => $objParams["site_page_rel_id"], "page_box_id" => EXCELL_NULL]);
+
+        if (str_contains($objPost->widget, "_")) {
+            $appInstanceId = explode("_", $objPost->widget)[0];
+            $appWidgetId = explode("_", $objPost->widget)[1];
+
+            $appInstances = new AppInstances();
+            $appInstanceResult = $appInstances->getById($appInstanceId);
+
+            if ($appInstanceResult->getResult()->Success === false) {
+                return $this->renderReturnJson(false, ["error" => "unable to find application instance for update."], "Process errors.");
+            }
+
+            $appInstance = $appInstanceResult->getData()->first();
+
+            $appProduct = (new Products())->getById($appInstance->product_id)->getData()->first();
+
+            if ($appInstanceRelResult->getResult()->Count !== 1) {
+                // TODO - This is potentially billable, and so it needs a card addon and order line.
+
+                // create new order and orderline, with empty values....
+                $objOrders = new Orders();
+                $order = new OrderModel();
+
+                $order->company_id = $sitePage->company_id;
+                $order->division_id = 0;
+                $order->user_id = $sitePageRel->user_id;
+                $order->total_price = 0;
+                $order->title = "Page Widget Purchase on " . date("Y-m-d") . " at " . date("H:i:s");
+                $order->status = "completed"; // TODO - Question for Cheryl
+
+                $orderResult = $objOrders->createNew($order);
+
+                $objOrderLines = new OrderLines();
+                $orderLine = new OrderLineModel();
+
+                $orderLine->order_id = $orderResult->getData()->first()->order_id;
+                $orderLine->product_id = $appInstance->product_id;
+                $orderLine->company_id = $sitePage->company_id;
+                $orderLine->user_id = $sitePageRel->user_id;
+                // TODO - Get Default billing account....
+                // $orderLine->payment_account_id = $this->paymentAccountId;
+
+                // TODO - This needs to come from the Custom Platform package data
+                $orderLine->title = $appProduct->title;
+                $orderLine->status = "started";
+                $orderLine->billing_date = date("Y-m-d H:i:s");
+                $orderLine->promo_price = 0;
+                $orderLine->promo_fee = 0;
+                $orderLine->price = 0;
+                $orderLine->price_fee = 0;
+
+                $orderLine->promo_duration = $appProduct->promo_cycle_duration;
+                $orderLine->price_duration = $appProduct->value_duration;
+                $orderLine->cycle_type = $appProduct->cycle_type;
+                $orderLine->created_by = $sitePageRel->user_id;
+                $orderLine->updated_by = $sitePageRel->user_id;
+
+                $orderLineResult = $objOrderLines->createNew($orderLine);
+
+                // create Page Addon....
+                $objCardAddon = new CardAddon();
+
+                $cardAddon = new CardAddonModel();
+                $cardAddon->company_id = $sitePage->company_id;
+                $cardAddon->division_id = 0;
+                $cardAddon->user_id = $sitePageRel->user_id;
+                $cardAddon->card_id = $sitePageRel->card_id;
+                $cardAddon->order_line_id = $orderLineResult->getData()->first()->order_line_id;
+                $cardAddon->order_id = $orderResult->getData()->first()->order_id;
+                $cardAddon->product_type_id = $appProduct->product_type_id;
+                $cardAddon->product_id = $appProduct->product_id;
+                $cardAddon->status = "active";
+
+                $cardAddonResult = $objCardAddon->createNew($cardAddon);
+
+                $appInstanceRelModel = new AppInstanceRelModel();
+
+                $appInstanceRelModel->app_instance_id = $appInstanceId;
+                $appInstanceRelModel->company_id = $sitePage->company_id;
+                $appInstanceRelModel->division_id = $sitePage->division_id;
+                $appInstanceRelModel->user_id = $sitePageRel->user_id;
+                $appInstanceRelModel->module_app_widget_id = $appWidgetId;
+                $appInstanceRelModel->card_id = $sitePageRel->card_id;
+                $appInstanceRelModel->card_page_id = $sitePageRel->card_tab_id;
+                $appInstanceRelModel->card_page_rel_id = $sitePageRel->card_tab_rel_id;
+                $appInstanceRelModel->card_addon_id = $cardAddonResult->getData()->first()->card_addon_id;
+                $appInstanceRelModel->order_line_id = $orderLineResult->getData()->first()->order_line_id;
+
+                $appInstanceRelResult = $appInstanceRels->createNew($appInstanceRelModel);
+
+                // TODO - this should reflect an existing widget value that comes from the custom platform
+            } else {
+                $appInstanceRel = $appInstanceRelResult->getData()->first();
+
+                if ($appInstanceRel->module_app_widget_id != $appWidgetId) {
+
+                    // create new order and orderline, with empty values....
+                    $objOrders = new Orders();
+                    $order = new OrderModel();
+
+                    $order->company_id = $sitePage->company_id;
+                    $order->division_id = 0;
+                    $order->user_id = $sitePageRel->user_id;
+                    $order->total_price = 0;
+                    $order->title = "Page Widget Purchase on " . date("Y-m-d") . " at " . date("H:i:s");
+                    $order->status = "completed"; // TODO - Question for Cheryl
+
+                    $orderResult = $objOrders->createNew($order);
+
+                    $objOrderLines = new OrderLines();
+                    $orderLine = new OrderLineModel();
+
+                    $orderLine->order_id = $orderResult->getData()->first()->order_id;
+                    $orderLine->product_id = $appInstance->product_id;
+                    $orderLine->company_id = $sitePage->company_id;
+                    $orderLine->user_id = $sitePageRel->user_id;
+                    // TODO - Get Default billing account....
+                    // $orderLine->payment_account_id = $this->paymentAccountId;
+
+                    // TODO - This needs to come from the Custom Platform package data
+                    $orderLine->title = $appProduct->title;
+                    $orderLine->status = "started";
+                    $orderLine->billing_date = date("Y-m-d H:i:s");
+                    $orderLine->promo_price = 0;
+                    $orderLine->promo_fee = 0;
+                    $orderLine->price = 0;
+                    $orderLine->price_fee = 0;
+
+                    $orderLine->promo_duration = $appProduct->promo_cycle_duration;
+                    $orderLine->price_duration = $appProduct->value_duration;
+                    $orderLine->cycle_type = $appProduct->cycle_type;
+                    $orderLine->created_by = $sitePageRel->user_id;
+                    $orderLine->updated_by = $sitePageRel->user_id;
+
+                    $orderLineResult = $objOrderLines->createNew($orderLine);
+
+                    // create Page Addon....
+                    $objCardAddon = new CardAddon();
+
+                    $cardAddon = new CardAddonModel();
+                    $cardAddon->company_id = $sitePage->company_id;
+                    $cardAddon->division_id = 0;
+                    $cardAddon->user_id = $sitePageRel->user_id;
+                    $cardAddon->card_id = $sitePageRel->card_id;
+                    $cardAddon->order_line_id = $orderLineResult->getData()->first()->order_line_id;
+                    $cardAddon->order_id = $orderResult->getData()->first()->order_id;
+                    $cardAddon->product_type_id = $appProduct->product_type_id;
+                    $cardAddon->product_id = $appProduct->product_id;
+                    $cardAddon->status = "active";
+
+                    $cardAddonResult = $objCardAddon->createNew($cardAddon);
+
+                    // Close out original card addon
+                    $cardAddonForClose = (new CardAddon())->getById($appInstanceRel->card_addon_id)->getData()->first();
+                    $cardAddonForClose->status = "closed";
+                    (new CardAddon())->update($cardAddonForClose);
+
+                    // Close out original order line
+                    $orderLineForClose = (new OrderLines())->getById($appInstanceRel->order_line_id)->getData()->first();
+                    $orderLineForClose->status = "closed";
+                    (new OrderLines())->update($orderLineForClose);
+
+                    $appInstanceRel->app_instance_id = $appInstanceId;
+                    $appInstanceRel->module_app_widget_id = $appWidgetId;
+                    $appInstanceRel->card_page_id = $sitePageRel->card_tab_id;
+                    $appInstanceRel->card_page_rel_id = $sitePageRel->card_tab_rel_id;
+                    $appInstanceRel->user_id = $sitePageRel->user_id;
+                    $appInstanceRel->card_addon_id = $cardAddonResult->getData()->first()->card_addon_id;
+                    $appInstanceRel->order_line_id = $orderLineResult->getData()->first()->order_line_id;
+                    $appInstanceRel->status = "active";
+
+                    $appInstanceRelResult = $appInstanceRels->update($appInstanceRel);
+                }
+
+                // get Page Addon and then close out the order line and create a new one....
+                // TODO - this should reflect an existing widget value that comes from the custom platform
+            }
+
+        } else {
+            if ($appInstanceRelResult->getResult()->Success === true) {
+                $appInstanceRel = $appInstanceRelResult->getData()->first();
+                $appInstanceRels->deleteById($appInstanceRel->app_instance_rel_id);
+            }
+        }
+
+
+        return $this->renderReturnJson(true, [
+            "result" => $objPost,
         ], "success");
     }
 }

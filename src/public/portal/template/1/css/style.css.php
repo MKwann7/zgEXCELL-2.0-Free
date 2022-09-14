@@ -86,6 +86,34 @@ ul li {
     font-family: 'Montserrat', sans-serif;
     font-size:12px;
     margin-top:35px;
+    position: relative;
+}
+.nav-box-card > h5.pinnedMenuItemOuter .fa-caret-right:before {
+    content: "\f0d7";
+}
+.nav-box-card > h5 .pin-item {
+    position:absolute;
+    top:1px;
+    right:5px;
+    visibility: hidden;
+}
+.nav-box-card > h5:hover .pin-item {
+    font-family: "Font Awesome 5 Free";
+    content: "\f08d";
+    visibility: visible;
+    color:#cacaca;
+}
+.nav-box-card > h5:hover .pin-item {
+    font-family: "Font Awesome 5 Free";
+    content: "\f08d";
+    visibility: visible;
+    color:#cacaca;
+}
+.nav-box-card > h5 .pin-item.pinnedMenuItem {
+    font-family: "Font Awesome 5 Free";
+    content: "\f08d";
+    visibility: visible;
+    color:#<?php echo $portalThemeMainColor; ?>;
 }
 .theme_shade_dark .nav-box-card > h5 {
     color:#fff;
@@ -236,14 +264,14 @@ header.portal-header {
 
 .theme_shade_dark .appCartWrapper .empty-cart-text .cart-icon-large,
 .theme_shade_dark .shoppingCartIcon {
-    background: url(<?php echo $this->app->objCustomPlatform->getFullPortalDomain(); ?>/_ez/images/financials/cart-icon-white.svg) no-repeat center center / 100% auto;
+    background: url(<?php echo $this->app->objCustomPlatform->getFullPortalDomainName(); ?>/_ez/images/financials/cart-icon-white.svg) no-repeat center center / 100% auto;
 }
 .theme_shade_light .appCartWrapper .empty-cart-text .cart-icon-large,
 .theme_shade_light .shoppingCartIcon {
-    background: url(<?php echo $this->app->objCustomPlatform->getFullPortalDomain(); ?>/_ez/images/financials/cart-icon-black.svg) no-repeat center center / 100% auto;
+    background: url(<?php echo $this->app->objCustomPlatform->getFullPortalDomainName(); ?>/_ez/images/financials/cart-icon-black.svg) no-repeat center center / 100% auto;
 }
 
-section.portal-section {
+div.portal-section {
     margin-top:68px;
     height: calc(100vh - 100px);
     overflow-y: auto;
@@ -567,10 +595,10 @@ td.page-count-display button.btn {
     display:inline-block;
 }
 .theme_shade_dark .breadCrumbHomeImage {
-    background: url(<?php echo $this->app->objCustomPlatform->getFullPortalDomain(); ?>/media/images/home-icon-01_white.png) no-repeat center center / 100% auto;
+    background: url(<?php echo $this->app->objCustomPlatform->getFullPortalDomainName(); ?>/media/images/home-icon-01_white.png) no-repeat center center / 100% auto;
 }
 .theme_shade_light .breadCrumbHomeImage {
-    background: url(<?php echo $this->app->objCustomPlatform->getFullPortalDomain(); ?>/media/images/home-icon-01_black.png) no-repeat center center / 100% auto;
+    background: url(<?php echo $this->app->objCustomPlatform->getFullPortalDomainName(); ?>/media/images/home-icon-01_black.png) no-repeat center center / 100% auto;
 }
 .theme_shade_light .slim-btn,
 .theme_shade_dark .vue-modal-wrapper div *,
@@ -776,7 +804,7 @@ body .activeStatusInline {
 .vueAppWrapper .pointer { cursor: pointer; }
 .theme_shade_light .vueAppWrapper .active span,
 .theme_shade_light .vueAppWrapper .active {
-    color: #<?php echo $portalThemeMainColorLight; ?> !important;
+    color: #<?php echo $portalThemeMainColorLight; ?>;
 }
 .theme_shade_dark .vueAppWrapper .active span,
 .theme_shade_dark .vueAppWrapper .active {
@@ -966,30 +994,28 @@ body.theme_shade_light div.universal-float-shield {
 body.theme_shade_dark div.universal-float-shield {
     background: url(/website/images/LoadingIcon2.gif) no-repeat left 50% center / auto 35px,rgba(0,0,0,.4) ;
 }
-
 body div.universal-float-shield {
     position: fixed;
     top: 0px;
     left: 0px;
     right: 0px;
     bottom: 0px;
-    width: 100vw;
-    height: 100vh;
-    height: -webkit-fill-available;
+    background: url(/website/images/LoadingIcon2.gif) no-repeat left 50% center / auto 35px,rgba(255,255,255,.4) ;
     z-index:5;
     overflow-y: auto;
     justify-content: center;
     align-items: center;
-    display: flex;
+    display:flex;
 }
-
+body div.closedModal.universal-float-shield {
+    display:none !important;
+}
 .vue-float-shield-inner {
     display: flex;
     flex-direction: column;
     max-height: 100vh;
     max-height: -webkit-fill-available;
 }
-
 .theme_shade_light .zgpopup-dialog-box {
     background: #ffffff;
     background: linear-gradient(to bottom, #fff 0%, #eaeaea 100%);
@@ -1716,7 +1742,7 @@ body .slickDraggingItem td.text-right {
     header.portal-header .divCell {
         display:flex !important;
     }
-    section.portal-section {
+    div.portal-section {
         margin-top: 0;
         padding:56px 10px 0 10px;
     }

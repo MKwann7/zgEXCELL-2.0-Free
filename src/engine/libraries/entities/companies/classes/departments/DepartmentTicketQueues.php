@@ -10,7 +10,7 @@ use Entities\Companies\Models\Departments\DepartmentTicketQueueModel;
 
 class DepartmentTicketQueues extends AppEntity
 {
-    public $strEntityName       = "Companies";
+    public string $strEntityName       = "Companies";
     public $strDatabaseTable    = "ticket_queue";
     public $strDatabaseName     = "Crm";
     public $strMainModelName    = DepartmentTicketQueueModel::class;
@@ -20,20 +20,20 @@ class DepartmentTicketQueues extends AppEntity
     {
         $objWhereClause = "
             SELECT tq.*,
-                (SELECT dur.department_user_role_id FROM ezdigital_v2_main.company_department_user_role dur WHERE dur.department_user_role_id = utr.department_user_role) AS role_id,
-                (SELECT dur.label FROM ezdigital_v2_main.company_department_user_role dur WHERE dur.department_user_role_id = utr.department_user_role) AS user_role_label,
-                (SELECT dur.abbreviation FROM ezdigital_v2_main.company_department_user_role dur WHERE dur.department_user_role_id = utr.department_user_role) AS user_role_abbr
-            FROM ezdigital_v2_crm.ticket_queue tq
-            LEFT JOIN ezdigital_v2_main.company_department_user_ticketqueue_role utr ON utr.ticket_queue_id = tq.ticket_queue_id ";
+                (SELECT dur.department_user_role_id FROM excell_main.company_department_user_role dur WHERE dur.department_user_role_id = utr.department_user_role) AS role_id,
+                (SELECT dur.label FROM excell_main.company_department_user_role dur WHERE dur.department_user_role_id = utr.department_user_role) AS user_role_label,
+                (SELECT dur.abbreviation FROM excell_main.company_department_user_role dur WHERE dur.department_user_role_id = utr.department_user_role) AS user_role_abbr
+            FROM excell_crm.ticket_queue tq
+            LEFT JOIN excell_main.company_department_user_ticketqueue_role utr ON utr.ticket_queue_id = tq.ticket_queue_id ";
 
         $objWhereClause .= "WHERE utr.user_id = '" . $userId . "' AND tq.company_department_id IN (".implode(",", $departmentIds).")";
 
         $departmentResult = Database::getSimple($objWhereClause, "ticket_queue_id");
-        $departmentResult->Data->HydrateModelData(DepartmentTicketQueueModel::class, true);
+        $departmentResult->getData()->HydrateModelData(DepartmentTicketQueueModel::class, true);
 
-        if ($departmentResult->Result->Count !== 1)
+        if ($departmentResult->result->Count !== 1)
         {
-            return new ExcellTransaction(false, $departmentResult->Result->Message, ["errors" => [$departmentResult->Result->Message]]);
+            return new ExcellTransaction(false, $departmentResult->result->Message, ["errors" => [$departmentResult->result->Message]]);
         }
 
         return $departmentResult;

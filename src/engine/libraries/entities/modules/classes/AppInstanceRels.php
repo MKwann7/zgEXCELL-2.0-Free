@@ -10,7 +10,7 @@ use Entities\Modules\Models\AppInstanceRelModel;
 
 class AppInstanceRels extends AppEntity
 {
-    public $strEntityName       = "Modules";
+    public string $strEntityName       = "Modules";
     public $strDatabaseTable    = "app_instance_rel";
     public $strDatabaseName     = "Main";
     public $strMainModelName    = AppInstanceRelModel::class;
@@ -40,19 +40,22 @@ class AppInstanceRels extends AppEntity
                 maw2.module_app_widget_id AS widget_page_id,
                 maw2.endpoint AS widget_page_endpoint
             FROM 
-                ezdigital_v2_main.app_instance_rel air 
+                excell_main.app_instance_rel air 
             LEFT JOIN 
-                ezdigital_v2_main.app_instance ai ON ai.app_instance_id = air.app_instance_id 
+                excell_main.app_instance ai ON ai.app_instance_id = air.app_instance_id 
             LEFT JOIN 
-                ezdigital_v2_modules.module_apps ma ON ai.module_app_id = ma.module_app_id 
+                excell_modules.module_apps ma ON ai.module_app_id = ma.module_app_id 
             LEFT JOIN 
-                ezdigital_v2_modules.module_app_widgets maw1 ON maw1.module_app_id = ma.module_app_id AND maw1.widget_class = 1002
+                excell_modules.module_app_widgets maw1 ON maw1.module_app_id = ma.module_app_id AND maw1.widget_class = 1002
             LEFT JOIN 
-                ezdigital_v2_modules.module_app_widgets maw2 ON maw2.module_app_id = ma.module_app_id AND maw2.module_app_widget_id = ai.module_app_widget_id
+                excell_modules.module_app_widgets maw2 ON maw2.module_app_id = ma.module_app_id AND maw2.module_app_widget_id = air.module_app_widget_id
             WHERE 
                 air.card_page_rel_id = " . $cardPageRelId . ";";
 
-        return Database::getSimple($strCardWidgetQuery,"card_page_rel_id");
+        $appInstanceRelResult = Database::getSimple($strCardWidgetQuery,"card_page_rel_id");
+        $appInstanceRelResult->getData()->HydrateModelData(AppInstanceRelModel::class, true);
+
+        return $appInstanceRelResult;
     }
 
     public function getByPageIds(array $cardPageIds) : ExcellTransaction
@@ -79,19 +82,22 @@ class AppInstanceRels extends AppEntity
                 maw2.module_app_widget_id AS widget_page_id,
                 maw2.endpoint AS widget_page_endpoint
             FROM 
-                ezdigital_v2_main.app_instance_rel air 
+                excell_main.app_instance_rel air 
             LEFT JOIN 
-                ezdigital_v2_main.app_instance ai ON ai.app_instance_id = air.app_instance_id 
+                excell_main.app_instance ai ON ai.app_instance_id = air.app_instance_id 
             LEFT JOIN 
-                ezdigital_v2_modules.module_apps ma ON ai.module_app_id = ma.module_app_id 
+                excell_modules.module_apps ma ON ai.module_app_id = ma.module_app_id 
             LEFT JOIN 
-                ezdigital_v2_modules.module_app_widgets maw1 ON maw1.module_app_id = ma.module_app_id AND maw1.widget_class = 1002
+                excell_modules.module_app_widgets maw1 ON maw1.module_app_id = ma.module_app_id AND maw1.widget_class = 1002
             LEFT JOIN 
-                ezdigital_v2_modules.module_app_widgets maw2 ON maw2.module_app_id = ma.module_app_id AND maw2.module_app_widget_id = ai.module_app_widget_id
+                excell_modules.module_app_widgets maw2 ON maw2.module_app_id = ma.module_app_id AND maw2.module_app_widget_id = air.module_app_widget_id
             WHERE 
                 air.card_page_id IN (" . implode(",", $cardPageIds) . ");";
 
-        return Database::getSimple($strCardWidgetQuery,"card_page_rel_id");
+        $appInstanceRelResult = Database::getSimple($strCardWidgetQuery,"card_page_rel_id");
+        $appInstanceRelResult->getData()->HydrateModelData(AppInstanceRelModel::class, true);
+
+        return $appInstanceRelResult;
     }
 
     public function getByCardId($cardId, array $classIds) : ExcellTransaction
@@ -118,18 +124,21 @@ class AppInstanceRels extends AppEntity
                 maw2.module_app_widget_id AS widget_page_id,
                 maw2.endpoint AS widget_page_endpoint
             FROM 
-                ezdigital_v2_main.app_instance_rel air 
+                excell_main.app_instance_rel air 
             LEFT JOIN 
-                ezdigital_v2_main.app_instance ai ON ai.app_instance_id = air.app_instance_id 
+                excell_main.app_instance ai ON ai.app_instance_id = air.app_instance_id 
             LEFT JOIN 
-                ezdigital_v2_modules.module_apps ma ON ai.module_app_id = ma.module_app_id 
+                excell_modules.module_apps ma ON ai.module_app_id = ma.module_app_id 
             LEFT JOIN 
-                ezdigital_v2_modules.module_app_widgets maw1 ON maw1.module_app_id = ma.module_app_id AND maw1.widget_class IN (" . implode(",", $classIds) . ")
+                excell_modules.module_app_widgets maw1 ON maw1.module_app_id = ma.module_app_id AND maw1.widget_class IN (" . implode(",", $classIds) . ")
             LEFT JOIN 
-                ezdigital_v2_modules.module_app_widgets maw2 ON maw2.module_app_id = ma.module_app_id AND maw2.module_app_widget_id = ai.module_app_widget_id
+                excell_modules.module_app_widgets maw2 ON maw2.module_app_id = ma.module_app_id AND maw2.module_app_widget_id = air.module_app_widget_id
             WHERE 
                 air.card_id = " . $cardId . ";";
 
-        return Database::getSimple($strCardWidgetQuery,"app_instance_rel_id");
+        $appInstanceRelResult = Database::getSimple($strCardWidgetQuery,"card_page_rel_id");
+        $appInstanceRelResult->getData()->HydrateModelData(AppInstanceRelModel::class, true);
+
+        return $appInstanceRelResult;
     }
 }

@@ -1,8 +1,8 @@
 <?php
 
-namespace Entities\Media\Controllers;
+namespace Http\Media\Controllers;
 
-use Entities\Media\Classes\Base\MediaController;
+use Http\Media\Controllers\Base\MediaController;
 
 class IndexController extends MediaController
 {

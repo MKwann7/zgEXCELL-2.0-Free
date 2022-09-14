@@ -40,9 +40,9 @@ class CartTicketProcess
         $objJourney = new Journeys();
         $journeyResult = $objJourney->getFullJourneyById($packageLine->journey_id);
 
-        if ($journeyResult->Result->Count !== 1) { return; }
+        if ($journeyResult->result->Count !== 1) { return; }
 
         $objTickets = new Tickets();
-        $objTickets->createTicketsByFullJourney($journeyResult->Data->First());
+        $objTickets->createTicketsByFullJourney($journeyResult->getData()->first());
     }
 }

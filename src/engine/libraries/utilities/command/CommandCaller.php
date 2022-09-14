@@ -33,7 +33,7 @@ class CommandCaller
         $this->commandId = rand(10000,99999);
         $this->startTime = date("Y-m-d H:i:s");
         $this->startUnixTimestamp = strtotime("now");
-        $this->strFileInstancePath = AppStorage . "commands/{$this->name}.json";
+        $this->strFileInstancePath = APP_STORAGE . "commands/{$this->name}.json";
         $this->objCommand = $objCommand;
         $this->intTries = $objCommand->tries ?? 5;
 

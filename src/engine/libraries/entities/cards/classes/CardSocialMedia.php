@@ -10,7 +10,7 @@ use Entities\Users\Models\ConnectionModel;
 
 class CardSocialMedia extends AppEntity
 {
-    public $strEntityName       = "Cards";
+    public string $strEntityName       = "Cards";
     public $strDatabaseTable    = "card_socialmedia";
     public $strDatabaseName     = "Main";
     public $strMainModelName    = CardSocialMediaModel::class;
@@ -30,15 +30,15 @@ class CardSocialMedia extends AppEntity
                 cn.connection_class, 
                 cnt.action AS default_action,
                 cnt.font_awesome 
-            FROM ezdigital_v2_main.card_socialmedia cnr1 
-            JOIN (SELECT MAX(cnrx.card_socialmedia_id) AS most_recent_rel, cnrx.card_socialmedia_id FROM ezdigital_v2_main.card_socialmedia cnrx GROUP BY cnrx.card_socialmedia_id) cnr3
-            JOIN ezdigital_v2_main.card_socialmedia cnr2 ON (cnr1.card_socialmedia_id = cnr3.most_recent_rel && cnr2.card_socialmedia_id = cnr3.most_recent_rel)
-            LEFT JOIN ezdigital_v2_main.connection cn ON cn.connection_id = cnr1.connection_id 
-            LEFT JOIN  ezdigital_v2_main.connection_type cnt ON cnt.connection_type_id = cn.connection_type_id 
+            FROM excell_main.card_socialmedia cnr1 
+            JOIN (SELECT MAX(cnrx.card_socialmedia_id) AS most_recent_rel, cnrx.card_socialmedia_id FROM excell_main.card_socialmedia cnrx GROUP BY cnrx.card_socialmedia_id) cnr3
+            JOIN excell_main.card_socialmedia cnr2 ON (cnr1.card_socialmedia_id = cnr3.most_recent_rel && cnr2.card_socialmedia_id = cnr3.most_recent_rel)
+            LEFT JOIN excell_main.connection cn ON cn.connection_id = cnr1.connection_id 
+            LEFT JOIN  excell_main.connection_type cnt ON cnt.connection_type_id = cn.connection_type_id 
             WHERE cnr1.card_id = {$cardId} ORDER BY cnr1.display_order ASC;";
 
         $colCardConnectionsResult = Database::getSimple($strCardConnectionsQuery);
-        $colCardConnectionsResult->Data->HydrateModelData(ConnectionModel::class, true);
+        $colCardConnectionsResult->getData()->HydrateModelData(ConnectionModel::class, true);
 
         return $colCardConnectionsResult;
     }

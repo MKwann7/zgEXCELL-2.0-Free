@@ -1,6 +1,6 @@
 <?php
 
-namespace Entities\Security\Classes\Base;
+namespace Http\Security\Controllers\Base;
 
 use App\Core\AppController;
 use Entities\Security\Classes\Security;

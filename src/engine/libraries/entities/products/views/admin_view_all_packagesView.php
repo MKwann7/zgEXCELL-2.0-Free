@@ -504,7 +504,7 @@ $this->CurrentPage->Columns           = 0;
 
                 this.cards = [];
 
-                ajax.Send("packages/package-data/get-package-dashboard-info", packageIdParameter, function(objUserResult)
+                ajax.Post("packages/package-data/get-package-dashboard-info", packageIdParameter, function(objUserResult)
                 {
                     if (objUserResult.success == false)
                     {
@@ -630,7 +630,7 @@ $this->CurrentPage->Columns           = 0;
                 pageIndex: 1,
                 cardIndex: 1,
 
-                packages: <?php echo $objActivePackages->Data->ConvertToJavaScriptArray([
+                packages: <?php echo $objActivePackages->getData()->ConvertToJavaScriptArray([
                         "product_id",
                         "package_class_id",
                         "package_type_id",

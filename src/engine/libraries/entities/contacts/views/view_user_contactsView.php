@@ -8,7 +8,7 @@
 
 $this->CurrentPage->BodyId            = "view-my-contacts-page";
 $this->CurrentPage->BodyClasses       = ["admin-page", "view-my-contacts-page", "two-columns", "left-side-column"];
-$this->CurrentPage->Meta->Title       = "My Contacts | " . $this->app->objCustomPlatform->getPortalDomain();
+$this->CurrentPage->Meta->Title       = "My Contacts | " . $this->app->objCustomPlatform->getPortalDomainName();
 $this->CurrentPage->Meta->Description = "Welcome to the NEW AMAZING WORLD of EZ Digital Cards, where you can create and manage your own cards!";
 $this->CurrentPage->Meta->Keywords    = "";
 $this->CurrentPage->SnipIt->Title     = "My Contacts";
@@ -293,7 +293,7 @@ $this->CurrentPage->Columns           = 2;
 
                 console.log(userIdParameter);
 
-                ajax.Send("customers/user-data/get-customer-dashboard-info", userIdParameter, function(objUserResult)
+                ajax.Post("customers/user-data/get-customer-dashboard-info", userIdParameter, function(objUserResult)
                 {
                     if (objUserResult.success == false)
                     {
@@ -351,7 +351,7 @@ $this->CurrentPage->Columns           = 2;
 
                     modal.CloseFloatShield();
 
-                },"POST");
+                });
             },
 
             deleteColumn: function(person)

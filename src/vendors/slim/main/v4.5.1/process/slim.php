@@ -141,7 +141,7 @@ class Slim {
         // Let's put a unique id in front of the filename so we don't accidentally overwrite older files
         $arFilePath = explode(".", $name);
         $strFileExtension = end($arFilePath);
-        $strTempFileNameAndPath = AppStorage . 'uploads/'. sha1(microtime()) . "." . $strFileExtension;
+        $strTempFileNameAndPath = APP_STORAGE . 'uploads/'. sha1(microtime()) . "." . $strFileExtension;
 
         // Save Tempfile
         file_put_contents($strTempFileNameAndPath, $data);

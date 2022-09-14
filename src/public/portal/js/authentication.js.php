@@ -1,5 +1,6 @@
 <?php
 ?>
+
 const ExcellAuthentication = function(vue)
 {
     const self = this;
@@ -17,9 +18,9 @@ const ExcellAuthentication = function(vue)
     this.registerAuth = function(auth)
     {
         Cookie.set('instance', auth.instance);
-        Cookie.set('user', auth.user);
+        Cookie.set('user', JSON.stringify(auth.user));
         Cookie.set('userNum', auth.userNum);
-        Cookie.set('userInfo', JSON.stringify(auth.userInfo));
+        Cookie.set('userId', auth.userId);
     }
 
     this.clearAuth = function()
@@ -29,15 +30,15 @@ const ExcellAuthentication = function(vue)
         vueApp.isLoggedIn = "inactive"
         vueApp.authUserId = null
         if (typeof vueApp.updateAllChildrenAuth === "function") {
-            vueApp.updateAllChildrenAuth(vueApp.isLoggedIn, vueApp.authUserId)
+            vueApp.updateAllChildrenAuth(vueApp.isLoggedIn, vueApp.authUserId, null, null, null)
         }
 
-        ajax.Send(autoUrl, null,function(objLogoutRequest) {
+        ajax.Post(autoUrl, null,function(objLogoutRequest) {
 
             Cookie.set('instance', null);
             Cookie.set('user', null);
             Cookie.set('userNum', null);
-            Cookie.set('userInfo', null);
+            Cookie.set('userId', null);
 
             if (typeof objLogoutRequest.redirect === "undefined")
             {
@@ -59,33 +60,35 @@ const ExcellAuthentication = function(vue)
             }, 100);
             return;
         }
-  
+
         if (Cookie.get('user') === null) Cookie.set('user', "visitor")
 
-        if (typeof Cookie.get('user') !== "undefined" && Cookie.get('user') !== "visitor" && (typeof Cookie.get('userNum') === "undefined" || Cookie.get('userNum') === "undefined"))
+        if (typeof Cookie.get('user') !== "undefined" && Cookie.get('user') !== "visitor" && (typeof Cookie.get('userNum') === "undefined" || Cookie.get('userNum') === "undefined" || Cookie.get('user') === "[object Object]"))
         {
-            preAuthenticate();
+            preAuthenticate(this.authenticate);
+            return;
         }
 
-        userId = Cookie.get('user')
+        this.authenticate()
+    }
+
+    this.authenticate = function()
+    {
+        userId = Cookie.get('userId')
         userNum = Cookie.get('userNum')
-        user = Cookie.get('userInfo')
+        user = Cookie.get('user')
 
         vueApp.isLoggedIn = (userId !== "visitor") ? "active" : "inactive"
-        vueApp.authUserId = Cookie.get("user")
+        vueApp.authUserId = Cookie.get("userId")
 
         propagateAuthentication(vueApp, this.userId, this.userNum, this.user);
 
-        if (typeof vueApp.updateAllChildrenAuth === "function")
-        {
-            setTimeout( function()
-            {
-                vueApp.updateAllChildrenAuth(vueApp.isLoggedIn, vueApp.authUserId)
-            }, 250)
+        if (typeof vueApp.updateAllChildrenAuth === "function") {
+            vueApp.updateAllChildrenAuth(vueApp.isLoggedIn, vueApp.authUserId, userId, userNum, JSON.parse(user))
         }
     }
 
-    const preAuthenticate = function()
+    const preAuthenticate = function(callback)
     {
         const authUrl = "security/get-auth"
 
@@ -96,32 +99,34 @@ const ExcellAuthentication = function(vue)
 
             Cookie.set("hash", objResult.data.hash)
             Cookie.set("instance", objResult.data.instance)
-            Cookie.set("user", objResult.data.authId)
+            Cookie.set("userId", objResult.data.userId)
 
-            if (typeof objResult.data.userInfo !== "undefined")
+            if (typeof objResult.data.user !== "undefined")
             {
                 Cookie.set("userNum", objResult.data.userNum)
-                Cookie.set("userInfo", objResult.data.userInfo)
+
+                try {
+                    Cookie.set("user", JSON.stringify(objResult.data.user))
+                } catch(e) {
+                    console.log(e);
+                }
             }
+
+            callback();
         });
     }
 
     const propagateAuthentication = function(vue)
     {
-        if (vue === null || typeof vue.$children === "undefined" || vue.$children.length === 0) return;
-
-        if (typeof vue.vc !== "undefined") { vue.vc.setUserId(userId) }
-
-        for (let componentIndex in vue.$children)
-        {
-            vue.$children[componentIndex].userId = userId
-            vue.$children[componentIndex].userNum = userNum
-            vue.$children[componentIndex].user = user
-            vue.$children[componentIndex].isLoggedIn = "active";
-            vue.$children[componentIndex].authUserId = Cookie.get("user")
-
-            propagateAuthentication(vue.$children[componentIndex]);
+        const userData = {
+            userId: userId,
+            userNum: userNum,
+            user: typeof user === "string" ? user : JSON.stringify(user),
+            isLoggedIn: "active",
+            authUserId: Cookie.get("userId")
         }
+
+        dispatch.broadcast("user_auth", userData)
     }
 
     this.clear = function()

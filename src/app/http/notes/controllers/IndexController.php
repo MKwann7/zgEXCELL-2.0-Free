@@ -1,10 +1,10 @@
 <?php
 
-namespace Entities\Notes\Controllers;
+namespace Http\Notes\Controllers;
 
 use App\Utilities\Excell\ExcellHttpModel;
 use Entities\Modules\Components\Vue\AppsWidget\ManageModuleAppsWidget;
-use Entities\Notes\Classes\Base\NotesController;
+use Http\Notes\Controllers\Base\NotesController;
 use Entities\Notes\Classes\Notes;
 use Entities\Notes\Components\Vue\NotesAdminApp;
 use Entities\Notes\Components\Vue\NotesMainApp;

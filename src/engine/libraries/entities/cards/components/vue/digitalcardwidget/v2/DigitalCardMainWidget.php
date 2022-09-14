@@ -7,10 +7,10 @@ use App\Website\Vue\Classes\Base\VueComponent;
 
 class DigitalCardMainWidget extends VueComponent
 {
-    protected $id = "4185dd32-d268-40cd-886d-47fe9f80075f";
-    protected $title = "Digital Card";
-    protected $endpointUriAbstract = "{card_num}";
-    protected $noMount = false;
+    protected string $id = "4185dd32-d268-40cd-886d-47fe9f80075f";
+    protected string $title = "Digital Card";
+    protected string $endpointUriAbstract = "{card_num}";
+    protected string $mountType = "no_mount";
 
     public function __construct (?AppModel $entity = null)
     {
@@ -141,6 +141,8 @@ class DigitalCardMainWidget extends VueComponent
             {
                 let self = this;
                 const url = "modules/widget/card-widget?id=" + self.entity.card_id + "&modules=" + this.buildModuleIds();
+                
+                return;
             
                 ajax.Get(url, null, function(result) 
                 {
@@ -240,11 +242,11 @@ class DigitalCardMainWidget extends VueComponent
             },
             loadCardIntoContacts: function()
             {
-                window.open("'.$app->objCustomPlatform->getFullPublicDomain().'/api/v1/cards/download-vcard?card_id=" + this.entity.card_num, "_blank");
+                window.open("'.$app->objCustomPlatform->getFullPublicDomainName().'/api/v1/cards/download-vcard?card_id=" + this.entity.card_num, "_blank");
             },
             sendSms: function()
             {
-                window.location = "sms:?body='.$app->objCustomPlatform->getFullPublicDomain().'/" + this.entity.card_num + "%20Let\'s%20connect%20with%20" + this.entity.card_owner_name + "!";
+                window.location = "sms:?body='.$app->objCustomPlatform->getFullPublicDomainName().'/" + this.entity.card_num + "%20Let\'s%20connect%20with%20" + this.entity.card_owner_name + "!";
             },
             sendShare: function()
             {
@@ -335,8 +337,7 @@ class DigitalCardMainWidget extends VueComponent
                 if(!this.validateUsername(this.loginUsername)) return;
                 if(!this.validatePassword(this.loginPassword)) return;
                 
-                const url = "'.$app->objCustomPlatform->getFullPortalDomain().'/process/login/authenticate-login-request";
-                console.log(url);
+                const url = "'.$app->objCustomPlatform->getFullPortalDomainName().'/process/login/authenticate-login-request";
                 
                 let self = this;
                 this.loginCardUser(
@@ -366,11 +367,11 @@ class DigitalCardMainWidget extends VueComponent
                         
                         if (self.loggedInUser.id === self.entity.card_user_uuid || self.loggedInUser.id === self.entity.card_owner_uuid)
                         {
-                            urlRedirect = "'.$app->objCustomPlatform->getFullPortalDomain().'/account/cards/card-dashboard/" + self.entity.sys_row_id;
+                            urlRedirect = "'.$app->objCustomPlatform->getFullPortalDomainName().'/account/cards/card-dashboard/" + self.entity.sys_row_id;
                         }
                         else
                         {
-                            urlRedirect = "'.$app->objCustomPlatform->getFullPortalDomain().'/account/";
+                            urlRedirect = "'.$app->objCustomPlatform->getFullPortalDomainName().'/account/";
                         }
                         
                         console.log(urlRedirect); return;
@@ -390,7 +391,7 @@ class DigitalCardMainWidget extends VueComponent
                 
                 let self = this;
                 this.loginCardUser(
-                    "'.$app->objCustomPlatform->getFullPortalDomain().'/api/v1/users/validate-existing-user-credentials",
+                    "'.$app->objCustomPlatform->getFullPortalDomainName().'/api/v1/users/validate-existing-user-credentials",
                     this.loginUsername, 
                     this.loginPassword, 
                     function(result) 
@@ -484,7 +485,7 @@ class DigitalCardMainWidget extends VueComponent
             {
                 if (typeof this.entity.user_avatar === "undefined")
                 {
-                    return "'.$app->objCustomPlatform->getFullPortalDomain().'/_ez/images/users/no-user.jpg";
+                    return "'.$app->objCustomPlatform->getFullPortalDomainName().'/_ez/images/users/no-user.jpg";
                 }
                 return this.entity.user_avatar;
             },

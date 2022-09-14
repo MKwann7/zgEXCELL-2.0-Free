@@ -3,7 +3,6 @@
 namespace Entities\Cart\Classes;
 
 use App\Core\App;
-use App\Core\AppModel;
 use App\Utilities\Excell\ExcellCollection;
 use Entities\Cart\Classes\Helpers\CartMinimumValue;
 use Entities\Cart\Classes\Helpers\CartStripeCheckout;
@@ -19,24 +18,23 @@ use Entities\Payments\Classes\Transactions;
 use Entities\Payments\Classes\UserPaymentProperty;
 use Entities\Payments\Models\ArInvoiceModel;
 use Entities\Payments\Models\TransactionModel;
-use Module\Orders\Models\OrderLineModel;
-use Module\Orders\Models\OrderModel;
-use Vendors\Stripe\Main\Stripe;
-use Vendors\Stripe\Main\StripePayment;
+use Entities\Orders\Models\OrderLineModel;
+use Entities\Orders\Models\OrderModel;
 
 class CartProcess
 {
-    protected $userId;
+    protected int $userId;
     protected $paymentAccountId;
     protected $packages;
-    protected $companyId;
+    protected int $companyId;
     protected $defaultUserId;
     protected $stripeAccountType;
     protected $stripeAccountId;
     protected $grossCartValue;
     protected $grossProductsValue;
-    protected $totalCartValue;
-    protected $totalProductsValue;
+    protected float $processingFee;
+    protected float $totalCartValue;
+    protected float $totalProductsValue;
     protected $netToGrossPercentage = 0;
     protected $promoToTotalPercentage = 1;
     protected $promoCode = null;
@@ -64,22 +62,36 @@ class CartProcess
         $this->app = $app;
         $this->env = env("APP_ENV") === "production" ? "prod" : "test";
         $this->companyId = $this->app->objCustomPlatform->getCompanyId();
-        $this->defaultUserId = $this->app->objCustomPlatform->getCompany()->default_sponsor_id;
+        $this->defaultUserId = $this->app->objCustomPlatform->getCompany()->default_sponsor_id ?? 1000;
 
         $stripeAccountType = $this->app->objCustomPlatform->getCompanySettings()->FindEntityByValue("label", "stripe_account_type");
         $this->stripeAccountType = $stripeAccountType->value ?? "customer";
         $this->stripeAccountId = $this->getCustomerStripeAccountId(1);
-        $this->paymentMethodId = PaymentAccounts::getToken($this->paymentAccountId);
+
+        if ($this->paymentAccountId !== 0) {
+            $this->paymentMethodId = PaymentAccounts::getToken($this->paymentAccountId);
+        }
     }
 
     public function processCheckout() : CartProcessTransaction
     {
         $this->processPackageLinesAndCreateTransactions();
         $this->processPromoCodeIfApplicable();
+        $this->processProcessingFee();
+
+        if ($this->totalCartValue <= 0) {
+            $this->disableProcessing = true;
+        }
+
+        if ($this->disableProcessing !== true && $this->paymentAccountId === 0) {
+            $this->errors->Add("A payment account is required for this purchase.");
+            return $this->processTransactionReturn();
+        }
 
         $stripeCheckout = new CartStripeCheckout(
             $this->totalCartValue,
             $this->totalProductsValue,
+            $this->processingFee,
             $this->stripeAccountId,
             $this->paymentMethodId,
             $this->transactionResult
@@ -87,6 +99,7 @@ class CartProcess
 
         if($this->disableProcessing === false && !$stripeCheckout->process())
         {
+            $this->errors->Merge($stripeCheckout->getErrors());
             return $this->processTransactionReturn();
         }
 
@@ -105,8 +118,8 @@ class CartProcess
             return $this->processTransactionReturn();
         }
 
-        $this->transactionResult->getTransaction()->Result->Success = true;
-        $this->transactionResult->getTransaction()->Result->Message = "Order processed successfully";
+        $this->transactionResult->getTransaction()->result->Success = true;
+        $this->transactionResult->getTransaction()->result->Message = "Order processed successfully";
 
         return $this->processTransactionReturn();
     }
@@ -121,7 +134,7 @@ class CartProcess
             $packageQuantities[$currPackage["id"]] = (float) $currPackage["quantity"];
         }
 
-        $packages = Packages::getFullPackagesByIds("package_id", $arPackageIds)->Data;
+        $packages = Packages::getFullPackagesByIds("package_id", $arPackageIds)->getData();
 
         $CartMinValue = new CartMinimumValue();
         $CartMinValue->process($packages, $packageQuantities);
@@ -134,9 +147,9 @@ class CartProcess
         $objPromoCodes   = new PromoCodes();
         $promoCodeResult = $objPromoCodes->getById($promoCode);
 
-        if ($promoCodeResult->Result->Count === 1)
+        if ($promoCodeResult->result->Count === 1)
         {
-            $this->promoCode = $promoCodeResult->Data->First();
+            $this->promoCode = $promoCodeResult->getData()->first();
             $this->transactionResult->promoCode = $this->promoCode;
         }
     }
@@ -149,7 +162,7 @@ class CartProcess
         $arInvoice->company_id = $this->companyId;
         $arInvoice->division_id = 0;
         $arInvoice->user_id = $this->userId;
-        $arInvoice->gross_value = $this->totalCartValue;
+        $arInvoice->gross_value = $this->totalProcessingValue();
         //$arInvoice->net_value = $purchasePrice;
         $arInvoice->tax = 0;
         $arInvoice->payment_account_id = $this->paymentAccountId;
@@ -158,13 +171,13 @@ class CartProcess
 
         $arInvoiceResult = $objArInvoices->createNew($arInvoice);
 
-        if ($arInvoiceResult->Result->Success === false)
+        if ($arInvoiceResult->result->Success === false)
         {
-            $this->errors->Add("ArInvoice unable to be processed: " . $arInvoiceResult->Result->Message);
+            $this->errors->Add("ArInvoice unable to be processed: " . $arInvoiceResult->result->Message);
             return false;
         }
 
-        $this->arInvoice = $arInvoiceResult->Data->First();
+        $this->arInvoice = $arInvoiceResult->getData()->first();
 
         return true;
     }
@@ -183,13 +196,13 @@ class CartProcess
 
         $orderResult = $objOrders->createNew($order);
 
-        if ($orderResult->Result->Success === false)
+        if ($orderResult->result->Success === false)
         {
-            $this->errors->Add("Order unable to be processed: " . $orderResult->Result->Message);
+            $this->errors->Add("Order unable to be processed: " . $orderResult->result->Message);
             return false;
         }
 
-        $this->order = $orderResult->Data->First();
+        $this->order = $orderResult->getData()->first();
 
         return $this->createOrderLinesForCart();
     }
@@ -244,14 +257,14 @@ class CartProcess
 
                 $orderLineResult = $objOrderLines->createNew($orderLine);
 
-                if ($orderLineResult->Result->Success === false)
+                if ($orderLineResult->result->Success === false)
                 {
-                    $this->errors->Add("Order line unable to be processed: " . $orderLineResult->Result->Message);
+                    $this->errors->Add("Order line unable to be processed: " . $orderLineResult->result->Message);
                     $noErrors = false;
                     return;
                 }
 
-                $cartProductCapsule->setOrderLine($orderLineResult->Data->First());
+                $cartProductCapsule->setOrderLine($orderLineResult->getData()->first());
 
                 return $cartProductCapsule;
             });
@@ -277,7 +290,7 @@ class CartProcess
                 $transaction->order_line_id = $orderLine->order_line_id;
 
                 $transactionResult          = $transactions->createNew($transaction);
-                $transaction                = $transactionResult->Data->First();
+                $transaction                = $transactionResult->getData()->first();
 
                 $cartProductCapsule->setTransaction($transaction);
 
@@ -288,6 +301,11 @@ class CartProcess
         });
 
         return true;
+    }
+
+    private function processProcessingFee() : void
+    {
+        $this->processingFee = sprintf ("%.2f", (($this->totalCartValue) *  0.0298662) + .3);
     }
 
     private function processPromoCodeIfApplicable() : void
@@ -316,11 +334,6 @@ class CartProcess
 
         $this->totalCartValue = round($this->totalCartValue, 2);
         $this->totalProductsValue = round($this->totalProductsValue, 2);
-
-        if ($this->totalCartValue <= 0)
-        {
-            $this->disableProcessing = true;
-        }
     }
 
     private function loopThroughPackageLines($callback) : void
@@ -423,8 +436,8 @@ class CartProcess
     {
         $intBillingUserAccountId = $this->getBillingAccountId($this->userId);
         $paymentPropertyResult = (new UserPaymentProperty())->getWhere(["user_id" => $intBillingUserAccountId, "company_id" => $this->companyId, "state" => $this->env, "type_id" => $typeId]);
-        if ($paymentPropertyResult->Result->Count === 0) { return null; }
-        return $paymentPropertyResult->Data->First()->value;
+        if ($paymentPropertyResult->result->Count === 0) { return null; }
+        return $paymentPropertyResult->getData()->first()->value;
     }
 
     private function processTransactionReturn() : CartProcessTransaction
@@ -447,5 +460,10 @@ class CartProcess
         }
 
         return $this->transactionResult;
+    }
+
+    protected function totalProcessingValue() : float
+    {
+        return $this->totalCartValue + $this->processingFee;
     }
 }

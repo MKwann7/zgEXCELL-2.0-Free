@@ -1,9 +1,9 @@
 <?php
 
-namespace Entities\Companies\Controllers\Api\V1;
+namespace Http\Companies\Controllers\Api\V1;
 
 use App\Utilities\Excell\ExcellHttpModel;
-use Entities\Cards\Classes\Base\CardController;
+use Http\Cards\Controllers\Base\CardController;
 use Entities\Companies\Classes\Companies;
 use Entities\Companies\Models\CompanyModel;
 
@@ -27,13 +27,13 @@ class ApiController extends CardController
 
         $customPlatformResult = (new Companies())->getByUuid($objParams["uuid"]);
 
-        if ($customPlatformResult->Result->Count !== 1)
+        if ($customPlatformResult->result->Count !== 1)
         {
-            return $this->renderReturnJson(false, $customPlatformResult->Data["errors"], "No custom platform found.");
+            return $this->renderReturnJson(false, $customPlatformResult->data["errors"], "No custom platform found.");
         }
 
         /** @var CompanyModel $customPlatform */
-        $customPlatform = $customPlatformResult->Data->First();
+        $customPlatform = $customPlatformResult->getData()->first();
 
         if (isset($objParams["addons"]))
         {

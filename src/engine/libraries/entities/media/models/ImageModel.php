@@ -19,6 +19,7 @@ class ImageModel extends AppModel
     {
         return [
             "image_id" => ["type" => "int","length" => 15],
+            "company_id" => ["type" => "int","length" => 15],
             "user_id" => ["type" => "int","length" => 15,"fk" => ["table" => "user","key" => "user_id","value" => "username"]],
             "entity_id" => ["type" => "int","length" => 15],
             "entity_name" => ["type" => "varchar","length" => 45],

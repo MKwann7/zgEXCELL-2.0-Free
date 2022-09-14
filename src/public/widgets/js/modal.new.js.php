@@ -18,7 +18,7 @@ function ModalApp()
 
         fadeNodeTo(floatShield, 150, 1, function(node) {
             if (typeof objCallback === 'function') {
-                objCallback();
+                objCallback(floatShield);
             }
         });
     }
@@ -52,7 +52,7 @@ function ModalApp()
         }, intTimeOutLength);
     }
 
-    this.EngagePopUpDialog = function (objDialogData, width, height, close, method)
+    this.EngagePopUpDialog = function (objDialogData, width, height, close, method, active, widget, callback)
     {
         if (!method) {
             method = "default";
@@ -72,10 +72,36 @@ function ModalApp()
         let floatShield = _.getLastFloatShield();
         let floatShieldInner = getChildOfNode(floatShield, ".vue-float-shield-inner");
 
-        let dialogBox = createNode("div", [".zgpopup-dialog-box", ("#zgpopup-dialog-box_" + intRandDomId), ("data-popupid=" + method), ("data-width=" + width)], '<div id="zgpopup-dialog-box-inner_' + intRandDomId + '" class="zgpopup-dialog-box-inner" data-popupid="' + method + '_inner" ><div class="zgpopup-dialog-header" data-popupid="' + method + '_header" ><h2 class="offset-slidedown-box pop-up-dialog-main-title"><span class="pop-up-dialog-main-title-text">' + objDialogData.title + '</span>' + closeAction + '</h2></div><div id="zgpopup-dialog-body" class="zgpopup-dialog-body" data-popupid="' + method + '_body"><div class="zgpopup-dialog-body-inner">' + objDialogData.html + '</div></div></div>');
+        let dialogBox = createNode("div", [".zgpopup-dialog-box", ("#zgpopup-dialog-box_" + intRandDomId), ("data-popupid=" + method), ("data-width=" + width)], '<div id="zgpopup-dialog-box-inner_' + intRandDomId + '" class="zgpopup-dialog-box-inner" data-popupid="' + method + '_inner" ><div class="zgpopup-dialog-header" data-popupid="' + method + '_header" ><h2 class="offset-slidedown-box pop-up-dialog-main-title"><span class="pop-up-dialog-main-title-text">' + objDialogData.title + '</span>' + closeAction + '</h2></div><div id="zgpopup-dialog-body" class="zgpopup-dialog-body" data-popupid="' + method + '_body"><div class="zgpopup-dialog-body-inner">' + objDialogData.html + '</div><div class="zgpopup-dialog-body-widget"><component ref="refDialogWidgetComponent" :is="dialogWidgetComponent"></component></div></div></div>');
         dialogBox.style.width = width + "px";
         dialogBox.style.position = "relative";
         appendToNode(floatShieldInner, dialogBox)
+        if (active) {
+            setTimeout(function() {
+                floatShield.classList.add("activeModal");
+            },200);
+        }
+        if (typeof widget !== "undefined") {
+            const bodyWidget = getChildOfNode(dialogBox, ".zgpopup-dialog-body-widget")
+            const bodyWidgetId = "widget_" + intRandDomId;
+            bodyWidget.id = bodyWidgetId;
+            let vueModalWidget = new Vue({
+                el: '#' + bodyWidgetId,
+                data() {
+                    return {
+                        dialogWidgetComponent: null
+                    }
+                }
+            });
+            vueModalWidget.dialogWidgetComponent = widget.rawInstance;
+            if (typeof callback === "function") {
+                callback(dialogBox, widget, vueModalWidget);
+            }
+        } else {
+            if (typeof callback === "function") {
+                callback(dialogBox, widget);
+            }
+        }
     }
 
     this.EngagePopUpConfirmation = function(objDialogData, fnConfirm, width, height,  method)

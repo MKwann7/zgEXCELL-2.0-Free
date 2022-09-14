@@ -1,13 +1,15 @@
 <?php
 
-namespace Entities\Modules\Controllers;
+namespace Http\Modules\Controllers;
 
 use App\Utilities\Caret\ExcellCarets;
 use App\Utilities\Excell\ExcellCollection;
 use App\Utilities\Excell\ExcellHttpModel;
 use App\Utilities\Transaction\ExcellTransaction;
 use Entities\Modules\Classes\AppInstanceRels;
-use Entities\Modules\Classes\Base\ModulesController;
+use Entities\Modules\Classes\AppInstanceRelSettings;
+use Entities\Modules\Models\AppInstanceRelSettingModel;
+use Http\Modules\Controllers\Base\ModulesController;
 use Entities\Modules\Classes\LocalModuleWidgets;
 use Entities\Modules\Classes\ModuleApps;
 
@@ -32,11 +34,15 @@ class WidgetController extends ModulesController
         $objParams = $this->app->objHttpRequest->Data->Params;
 
         if (!$this->validate($objParams, [
-            "widget_id" => "required|uuid",
-            "user_id" => "required|uuid",
+            "widget_id" => "required",
+            "user_id" => "required",
         ]))
         {
             return $this->renderReturnJson(false, $this->validationErrors, "Validation errors.");
+        }
+
+        if (!isGuid($objParams["user_id"]) && $objParams["user_id"] !== "visitor") {
+            return $this->renderReturnJson(false, ["user_id" => "user_id is invalid"], "Validation errors.");
         }
 
         $props = $this->setProps($objParams, $objData);
@@ -51,7 +57,13 @@ class WidgetController extends ModulesController
                 $configType = self::CardConfigType; break;
         }
 
-        return $this->getModuleWidgetConfiguration($objParams["widget_id"], $configType, $objParams["user_id"], $props);
+        $widgetId = $objParams["widget_id"];
+        if (str_contains($widgetId, "_")) {
+            $widgetId = explode("_", $objParams["widget_id"])[0];
+            $configType = explode("_", $objParams["widget_id"])[1];
+        }
+
+        return $this->getModuleWidgetConfiguration($widgetId, $configType, $objParams["user_id"], $props);
     }
 
     protected function setProps($objParams, $objData) : ?\stdClass
@@ -60,6 +72,13 @@ class WidgetController extends ModulesController
 
         if (!empty($objParams["props"])) {
             $props = json_decode(base64_decode(str_replace("_","=", $objParams["props"])));
+        }
+
+        if (!empty($objParams["site_id"])) {
+            if ($props === null) {
+                $props = new \stdClass();
+            }
+            $props->site_id = $objParams["site_id"];
         }
 
         return $props;
@@ -91,35 +110,35 @@ class WidgetController extends ModulesController
     {
         if (env("MODULE_WIDGET_CASH") === 'true' || env("MODULE_WIDGET_CASH") === 'refresh')
         {
-            $storageLocation = AppStorage . "modules/company/" . $companyId . "/user/" . $userId ."/" . $moduleWidgetId . ".widget";
+            $storageLocation = APP_STORAGE . "modules/company/" . $companyId . "/user/" . $userId ."/" . $moduleWidgetId . ".widget";
 
             $fileStorageErrors = [];
 
-            if (!mkdir($concurrentDirectory = AppStorage . "modules") && !is_dir($concurrentDirectory))
+            if (!mkdir($concurrentDirectory = APP_STORAGE . "modules") && !is_dir($concurrentDirectory))
             {
                 logText("LocalWidgetRetrieval.log", "Unable to create Modules folder.");
                 $fileStorageErrors[] = "Unable to create Modules folder.";
             }
 
-            if (!mkdir($concurrentDirectory = AppStorage . "modules/company") && !is_dir($concurrentDirectory))
+            if (!mkdir($concurrentDirectory = APP_STORAGE . "modules/company") && !is_dir($concurrentDirectory))
             {
                 logText("LocalWidgetRetrieval.log", "Unable to create Modules/User folder.");
                 $fileStorageErrors[] = "Unable to create Modules/Company folder.";
             }
 
-            if (!mkdir($concurrentDirectory = AppStorage . "modules/company/". $companyId) && !is_dir($concurrentDirectory))
+            if (!mkdir($concurrentDirectory = APP_STORAGE . "modules/company/". $companyId) && !is_dir($concurrentDirectory))
             {
                 logText("LocalWidgetRetrieval.log", "Unable to create Modules/User folder.");
                 $fileStorageErrors[] = "Unable to create Modules/Company/Id folder.";
             }
 
-            if (!mkdir($concurrentDirectory = AppStorage . "modules/company/". $companyId ."/user") && !is_dir($concurrentDirectory))
+            if (!mkdir($concurrentDirectory = APP_STORAGE . "modules/company/". $companyId ."/user") && !is_dir($concurrentDirectory))
             {
                 logText("LocalWidgetRetrieval.log", "Unable to create Modules/User folder.");
                 $fileStorageErrors[] = "Unable to create Modules/Company/Id/User folder.";
             }
 
-            if (!mkdir($concurrentDirectory = AppStorage . "modules/company/". $companyId ."/user/" . $userId) && !is_dir($concurrentDirectory))
+            if (!mkdir($concurrentDirectory = APP_STORAGE . "modules/company/". $companyId ."/user/" . $userId) && !is_dir($concurrentDirectory))
             {
                 logText("LocalWidgetRetrieval.log", "Unable to create Modules/User/UserId folder.");
                 $fileStorageErrors[] = "Unable to create Modules/Company/Id/User/UserId folder.";
@@ -136,7 +155,7 @@ class WidgetController extends ModulesController
     {
         if (env("MODULE_WIDGET_CASH") === 'true')
         {
-            $storageLocation = AppStorage . "modules/company/" . $companyId . "/user/" . $userId ."/" . $moduleWidgetId . ".widget";
+            $storageLocation = APP_STORAGE . "modules/company/" . $companyId . "/user/" . $userId ."/" . $moduleWidgetId . ".widget";
 
             if (is_file($storageLocation))
             {
@@ -151,31 +170,31 @@ class WidgetController extends ModulesController
         return false;
     }
 
-    protected function getRemoteWidgetConfiguration($moduleWidgetId, $type, $userId, $props) : bool
+    protected function getRemoteWidgetConfiguration($moduleWidgetId, $type, $userId, $props = null) : bool
     {
-        $objConfigurationResults = $this->getConfigurationResults($moduleWidgetId, $type);
+        $objConfigurationResults = $this->getConfigurationResults($moduleWidgetId, $type, $props);
 
-        if ($objConfigurationResults->Result->Success === false)
+        if ($objConfigurationResults->getResult()->Success === false)
         {
-            $this->renderReturnJson(false, $objConfigurationResults->Result->Message);
+            $this->renderReturnJson(false, $objConfigurationResults->result->Message);
         }
 
-        $this->renderReturnJson($objConfigurationResults->Data->success, $objConfigurationResults->Data->widget, $objConfigurationResults->Data->message, 200, "widget");
+        return $this->renderReturnJson($objConfigurationResults->getResult()->Success ?? false, $objConfigurationResults->getData()->first()->widget, $objConfigurationResults->getResult()->Message ?? "Error", 200, "widget");
     }
 
-    protected function getConfigurationResults($moduleWidgetId, $type) : ExcellTransaction
+    protected function getConfigurationResults($moduleWidgetId, $type, $props = null) : ExcellTransaction
     {
         $objModuleApps = new ModuleApps();
-        $objModuleWidgetResults = $objModuleApps->getLatestModuleWidgetsByUuid($moduleWidgetId);
+        $objModuleWidgetResults = $objModuleApps->getLatestModuleAppsByUuid($moduleWidgetId);
 
-        if ($objModuleWidgetResults->Result->Count === 0)
+        if ($objModuleWidgetResults->result->Count === 0)
         {
             return new ExcellTransaction(false, "Module Widget Not Found: " . $moduleWidgetId);
         }
 
-        $objModuleWidget = $objModuleWidgetResults->Data->First();
+        $objModuleWidget = $objModuleWidgetResults->getData()->first();
 
-        return $objModuleApps->getLatestConfiguration($objModuleWidget, $type);
+        return $objModuleApps->getLatestConfiguration($objModuleWidget, $type, $props);
     }
 
     protected function getLocalWidgetConfiguration($vueComponent) : bool
@@ -209,11 +228,11 @@ class WidgetController extends ModulesController
         $objModuleApp = new AppInstanceRels();
         $objCardWidgets = $objModuleApp->getByCardId($objParams["id"],[1003]);
 
-        dd($objCardWidgets);
+        //dd($objCardWidgets);
 
         $moduleIds = explode("|", $objParams["modules"]);
 
-        foreach($objCardWidgets->Data as $moduleWidget)
+        foreach($objCardWidgets->data as $moduleWidget)
         {
             if (!in_array($moduleWidget->widget_instance_uuid, $moduleIds, true))
             {
@@ -223,30 +242,30 @@ class WidgetController extends ModulesController
 
         $modulesForCard = new ExcellCollection();
 
-        foreach($objCardWidgets->Data as $moduleWidget)
+        foreach($objCardWidgets->data as $moduleWidget)
         {
             $objModuleApps        = new ModuleApps();
             $objModuleWidgetResults = $objModuleApps->getLatestWidgetContentForCard($objParams["id"], $moduleWidget);
 
-            if ($objModuleWidgetResults->Result->Success === false)
+            if ($objModuleWidgetResults->result->Success === false)
             {
                 $response = new \stdClass();
-                $response->type = vue;
+                $response->type = "vue";
                 $response->content = "";
                 $response->error = true;
-                $response->message = "Drat. There was an error loading this module: " . $objModuleWidgetResults->Result->Message;
+                $response->message = "Drat. There was an error loading this module: " . $objModuleWidgetResults->result->Message;
 
                 $modulesForCard->Add($moduleWidget->widget_instance_uuid, $response);
 
                 continue;
             }
 
-            $response = $objModuleWidgetResults->Data;
+            $response = $objModuleWidgetResults->getData()->first();
 
-            if (empty($response->data) || empty($response->data->type) || empty($response->data->content))
+            if (empty($response->data) || empty($response->data->type) || empty($response->getData()->content))
             {
                 $response = new \stdClass();
-                $response->type = vue;
+                $response->type = "vue";
                 $response->content = "";
                 $response->error = true;
                 $response->message = "Oops! This module has no content to render!";
@@ -259,6 +278,41 @@ class WidgetController extends ModulesController
             $modulesForCard->Add($moduleWidget->widget_instance_uuid, $response->data);
         }
 
-        $this->renderReturnJson(true, $modulesForCard->ToPublicArray(null, true), "We did it!", 200);
+        return $this->renderReturnJson(true, $modulesForCard->ToPublicArray(null, true), "We did it!", 200);
+    }
+
+    public function updateSetting(ExcellHttpModel $objData) : bool
+    {
+        if (!$this->validateRequestType('POST'))
+        {
+            return false;
+        }
+
+        $objParams = $objData->Data->Params;
+        $objPost = $objData->Data->PostData;
+
+        if (!$this->validate($objParams, [
+            "id" => "required|number"
+        ]))
+        {
+            return $this->renderReturnJson(false, $this->validationErrors, "Validation errors.");
+        }
+
+        $settings = json_decode(json_encode($objPost), true);
+        $appInstanceRelSettings = new AppInstanceRelSettings();
+        $appInstanceRelResult = $appInstanceRelSettings->getWhere(["app_instance_rel_id" => $objParams["id"]]);
+
+        foreach ($settings as $currLabel => $currValue) {
+            $appInstanceRelModel = $appInstanceRelResult->getData()->FindEntityByValue("label", $currLabel);
+            if (empty($appInstanceRelModel)) {
+                $appInstanceRelModel = new AppInstanceRelSettingModel(["app_instance_rel_id" => $objParams["id"], "label" => $currLabel, "value" => $currValue]);
+                $appInstanceRelSettings->createNew($appInstanceRelModel);
+                continue;
+            }
+            $appInstanceRelModel->value = $currValue;
+            $appInstanceRelSettings->update($appInstanceRelModel);
+        }
+
+        return $this->renderReturnJson(true, ["batch" => $objPost->desk_max_row_count]);
     }
 }

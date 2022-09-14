@@ -36,6 +36,11 @@ const AppHistory = function()
 
     const processStateChange = function(state)
     {
+        if (state === null)
+        {
+            return;
+        }
+
         const uriFullPath = getCurrentPath();
         const intHistryId = state.index ?? 1;
         const objHistory = getHistoryById(intHistryId);

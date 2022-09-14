@@ -1,10 +1,10 @@
 <?php
 
-namespace Entities\Media\Controllers\Api\V1;
+namespace Http\Media\Controllers\Api\V1;
 
 use App\Utilities\Database;
 use App\Utilities\Excell\ExcellHttpModel;
-use Entities\Media\Classes\Base\MediaController;
+use Http\Media\Controllers\Base\MediaController;
 use Entities\Media\Classes\Images;
 use Entities\Media\Models\ImageModel;
 use Entities\Users\Classes\Users;
@@ -18,6 +18,82 @@ use Entities\Users\Classes\Users;
 
 class ApiController extends MediaController
 {
+    public function getImageBatches(ExcellHttpModel $objData) : bool
+    {
+        $pageIndex  = $objData->Data->Params["offset"] ?? 1;
+        $batchCount = $objData->Data->Params["batch"] ?? 500;
+        $filterEntity = $objData->Data->Params["filterEntity"] ?? null;
+        $pageIndex  = ($pageIndex - 1) * $batchCount;
+        $arFields   = explode(",", $objData->Data->Params["fields"]);
+        $strEnd     = "false";
+
+        $filterIdField = "user_id";
+
+        if ($filterEntity !== null && !isInteger($filterEntity))
+        {
+            $filterIdField = "sys_row_id";
+            $filterEntity = "'".$filterEntity."'";
+        }
+
+        $objWhereClause = (new Images())->buildImageBatchWhereClause($filterIdField, $filterEntity);
+
+        $objWhereClause .= " LIMIT {$pageIndex}, {$batchCount}";
+
+        $objImages = Database::getSimple($objWhereClause, "image_id");
+
+        if ($objImages->getData()->Count() < $batchCount)
+        {
+            $strEnd = "true";
+        }
+
+        $objImages->getData()->HydrateModelData(ImageModel::class, true);
+
+        $arUserDashboardInfo = array(
+            "list" => $objImages->getData()->FieldsToArray($arFields),
+            "query" => $objWhereClause,
+        );
+
+        return $this->renderReturnJson(true, $arUserDashboardInfo, "We found " . $objImages->getData()->Count() . " images in this batch.", 200, "data", $strEnd);
+    }
+
+    public function getLogoBatches(ExcellHttpModel $objData) : bool
+    {
+        $pageIndex  = $objData->Data->Params["offset"] ?? 1;
+        $batchCount = $objData->Data->Params["batch"] ?? 500;
+        $filterEntity = $objData->Data->Params["filterEntity"] ?? null;
+        $pageIndex  = ($pageIndex - 1) * $batchCount;
+        $arFields   = explode(",", $objData->Data->Params["fields"]);
+        $strEnd     = "false";
+
+        $filterIdField = "user_id";
+
+        if ($filterEntity !== null && !isInteger($filterEntity))
+        {
+            $filterIdField = "sys_row_id";
+            $filterEntity = "'".$filterEntity."'";
+        }
+
+        $objWhereClause = (new Images())->buildLogoBatchWhereClause($filterIdField, $filterEntity);
+
+        $objWhereClause .= " LIMIT {$pageIndex}, {$batchCount}";
+
+        $objImages = Database::getSimple($objWhereClause, "image_id");
+
+        if ($objImages->getData()->Count() < $batchCount)
+        {
+            $strEnd = "true";
+        }
+
+        $objImages->getData()->HydrateModelData(ImageModel::class, true);
+
+        $arUserDashboardInfo = array(
+            "list" => $objImages->getData()->FieldsToArray($arFields),
+            "query" => $objWhereClause,
+        );
+
+        return $this->renderReturnJson(true, $arUserDashboardInfo, "We found " . $objImages->getData()->Count() . " images in this batch.", 200, "data", $strEnd);
+    }
+
     public function insertImage(ExcellHttpModel $objData): void
     {
         if(empty($objData->Data->PostData->image))
@@ -32,11 +108,11 @@ class ApiController extends MediaController
             $objUsers = new Users();
             $objUserResult = $objUsers->GetWhere(["sys_row_id" => $objNewImageData->user_id]);
 
-            if ($objUserResult->Result->Count === 0) {
-                $this->RenderReturnJson(false, $objUserResult->Result->Errors, $objUserResult->Result->Query, "errors");
+            if ($objUserResult->result->Count === 0) {
+                $this->RenderReturnJson(false, $objUserResult->result->Errors, $objUserResult->result->Query, "errors");
             }
 
-            $objNewImageData->user_id = $objUserResult->Data->First()->user_id;
+            $objNewImageData->user_id = $objUserResult->getData()->first()->user_id;
         }
 
         $objNewImageData->created_by = $objNewImageData->user_id ?? 70726;
@@ -46,13 +122,13 @@ class ApiController extends MediaController
 
         $objNewImageResult = (new Images())->CreateNew($objNewImage);
 
-        if ($objNewImageResult->Result->Success === false)
+        if ($objNewImageResult->result->Success === false)
         {
-            logText("InsertImage.Process.log","objNewImage creation Error: " . $objNewImageResult->Result->Message);
-            logText("InsertImage.Process.log","objNewImage creation QUERY: " . $objNewImageResult->Result->Query);
+            logText("InsertImage.Process.log","objNewImage creation Error: " . $objNewImageResult->result->Message);
+            logText("InsertImage.Process.log","objNewImage creation QUERY: " . $objNewImageResult->result->Query);
         }
 
-        $this->RenderReturnJson($objNewImageResult->Result->Success, null, $objNewImageResult->Result->Message);
+        $this->RenderReturnJson($objNewImageResult->result->Success, null, $objNewImageResult->result->Message);
     }
 
     public function getUserImages(ExcellHttpModel $objData): bool
@@ -68,19 +144,19 @@ class ApiController extends MediaController
         $intUserId = $params["user_id"];
 
         $whereClause = "SELECT img.*
-            FROM ezdigital_v2_media.image img 
-            LEFT JOIN ezdigital_v2_main.user usr ON usr.user_id = img.user_id  
+            FROM excell_media.image img 
+            LEFT JOIN excell_main.user usr ON usr.user_id = img.user_id  
             WHERE usr.sys_row_id = '" . $intUserId . "'";
 
         $lstUserImagesResult = Database::getSimple($whereClause,"image_id");
-        $lstUserImagesResult->Data->HydrateModelData(ImageModel::class, true);
+        $lstUserImagesResult->getData()->HydrateModelData(ImageModel::class, true);
 
-        if ( $lstUserImagesResult->Result->Success === false || $lstUserImagesResult->Result->Count === 0)
+        if ( $lstUserImagesResult->result->Success === false || $lstUserImagesResult->result->Count === 0)
         {
-            return $this->renderReturnJson(false, [], $lstUserImagesResult->Result->Message);
+            return $this->renderReturnJson(false, [], $lstUserImagesResult->result->Message);
         }
 
-        $arUserImages = $lstUserImagesResult->Data->ConvertToArray();
+        $arUserImages = $lstUserImagesResult->getData()->ConvertToArray();
 
         return $this->renderReturnJson(true, $arUserImages, "","images");
     }
@@ -95,17 +171,17 @@ class ApiController extends MediaController
 
         $objImageResult = (new Images())->getById($intImageId);
 
-        if( $objImageResult->Result->Success === false)
+        if( $objImageResult->result->Success === false)
         {
             $this->renderReturnJson(false);
         }
 
-        $objImage = $objImageResult->Data->First();
+        $objImage = $objImageResult->getData()->first();
 
         $objImageDeletionResult = (new Images())->deleteById($intImageId);
 
         logText("DeleteImage.Process.log",json_encode($objImageDeletionResult));
 
-        $this->renderReturnJson($objImageDeletionResult->Result->Success,$objImage->url, $objImageDeletionResult->Result->Message,"url");
+        $this->renderReturnJson($objImageDeletionResult->result->Success,$objImage->url, $objImageDeletionResult->result->Message,"url");
     }
 }

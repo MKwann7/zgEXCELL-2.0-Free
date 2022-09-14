@@ -1,6 +1,6 @@
 <?php
 
-namespace Entities\Dashboard\Classes\Base;
+namespace Http\Dashboard\Controllers\Base;
 
 use App\Core\AppController;
 use Entities\Dashboard\Classes\Dashboard;

@@ -6,15 +6,21 @@ use App\Utilities\Excell\ExcellCollection;
 use Entities\Companies\Classes\Companies;
 use Entities\Companies\Classes\CompanySettings;
 use Entities\Companies\Models\CompanyModel;
+use Entities\Companies\Models\CompanySettingModel;
 
 class AppCustomPlatform
 {
-    protected $company;
-    protected $company_settings;
-    protected $company_id;
-    protected $parent_id;
-    protected $active_domain;
-    protected $same_domain = true;
+    protected AppCustomDomain $publicDomain;
+    protected AppCustomDomain $portalDomain;
+    protected CompanyModel $company;
+    protected ExcellCollection $listCompanySettings;
+
+    protected Companies $companies;
+    protected CompanySettings $companySettings;
+
+    protected int $company_id;
+    protected int $parent_id;
+    protected bool $sameDomain = true;
     protected $public_domain;
     protected $public_domain_full;
     protected $public_domain_ssl;
@@ -24,39 +30,72 @@ class AppCustomPlatform
     protected $portal_domain_ssl;
     protected $portal_domain_name;
 
-    protected $websiteName;
-    protected $websiteDomain;
-    protected $websiteDomainFull;
 
-    public function __construct ($companyId = 0, $parentId = 0, $activeDomain = "", bool $sameDomain = true, $whiteLabel = null, $website = null)
+
+    public function __construct (
+        Companies $companies,
+        CompanySettings $companySettings,
+        $companyId = 0,
+        $parentId = 0,
+        AppCustomDomain $publicDomain,
+        AppCustomDomain $portalDomain,
+        CompanyModel $company = null
+    )
     {
+        $this->companies = $companies;
+        $this->companySettings = $companySettings;
+
         $this->company_id = $companyId;
         $this->parent_id = $parentId;
-        $this->active_domain = $activeDomain;
-        $this->same_domain = $sameDomain;
-        $this->public_domain = $whiteLabel["Web"] ?? env("WEBSITE_URL");
-        $this->public_domain_full = $whiteLabel["WebFull"] ?? "http://" . env("WEBSITE_URL");
-        $this->public_domain_name = $whiteLabel["WebTitle"] ?? env("WEBSITE_TITLE");
-        $this->public_domain_ssl = $whiteLabel["WebSSL"] ?? false;
-        $this->portal_domain = $whiteLabel["Portal"] ?? env("WEBSITE_URL");
-        $this->portal_domain_full = $whiteLabel["PortalFull"] ?? "http://" . env("WEBSITE_URL");
-        $this->portal_domain_name = $whiteLabel["PortalTitle"] ?? env("WEBSITE_TITLE");
-        $this->portal_domain_ssl = $whiteLabel["PortalSSL"] ?? false;
+        $this->sameDomain = $publicDomain->getDomain() === $portalDomain->getDomain();
+        $this->publicDomain = $publicDomain;
+        $this->portalDomain = $portalDomain;
 
-        $this->websiteName = $website["MetaTitleName"] ?? env("WEBSITE_TITLE");;
-        $this->websiteDomain = $website["DomainName"] ?? env("WEBSITE_URL");;
-        $this->websiteDomainFull = $website["FullUrl"] ?? "http://" . env("WEBSITE_URL");;
+        if ($company !== null) {
+            $this->company = $company;
+        }
     }
 
     public function addCompany(CompanyModel $company) : self
     {
         $this->company = $company;
-        $objCompanySettings = new CompanySettings();
-        $companySettingResult = $objCompanySettings->getByCompanyId($company->company_id);
+        $this->loadCompanySettings((int) $company->company_id);
+        return $this;
+    }
 
-        $this->company_settings = $companySettingResult->Data;
+    public function loadCompanySettings(int $companyId) : self
+    {
+        $companySettingResult = $this->companySettings->getByCompanyId($companyId);
+        $this->listCompanySettings = $companySettingResult->getData();
 
         return $this;
+    }
+
+    public function hydrateCompanyFromCache(array $company, array $companySettings) : self
+    {
+        $this->company = new CompanyModel($company);
+        $this->loadCompanySettingsFromCache($companySettings);
+        return $this;
+    }
+
+    public function loadCompanySettingsFromCache(array $settings) : self
+    {
+        $collection = new ExcellCollection();
+
+        foreach($settings as $currSetting) {
+            $collection->Add(new CompanySettingModel($currSetting));
+        }
+        $this->listCompanySettings = $collection;
+        return $this;
+    }
+
+    public function getApplicationType() : string
+    {
+        if (empty($this->listCompanySettings)) {
+            $this->loadCompanySettings($this->getCompanyId());
+        }
+
+        return $this->getCompanySettings()->FindEntityByValue("label", "application_type")->value ?? "default";
     }
 
     public function getCompany() : ?CompanyModel
@@ -68,15 +107,14 @@ class AppCustomPlatform
 
         if (empty($this->company))
         {
-            $companies = new Companies();
-            $companyResult = $companies->getById($this->company_id);
+            $companyResult = $this->companies->getById($this->company_id);
 
-            if ($companyResult->Result->Count !== 1)
+            if ($companyResult->result->Count !== 1)
             {
                 return null;
             }
 
-            $this->company = $companyResult->Data->First();
+            $this->company = $companyResult->getData()->first();
         }
 
 
@@ -85,21 +123,20 @@ class AppCustomPlatform
 
     public function refreshCompany() : self
     {
-        $companies = new Companies();
-        $companyResult = $companies->getById($this->company_id);
+        $companyResult = $this->companies->getById($this->company_id);
 
-        if ($companyResult->Result->Count === 0)
+        if ($companyResult->result->Count === 0)
         {
             $this->blnNoDomain = true;
             return $this;
         }
 
-        return $this->addCompany($companyResult->Data->First());
+        return $this->addCompany($companyResult->getData()->first());
     }
 
     public function getCompanySettings() : ExcellCollection
     {
-        return $this->company_settings ?? new ExcellCollection();
+        return $this->listCompanySettings ?? new ExcellCollection();
     }
 
     public function getCompanyId() : int
@@ -112,53 +149,48 @@ class AppCustomPlatform
         return floatval($this->parent_id ?? $this->company_id ?? 0);
     }
 
-    public function getPublicDomain() : string
+    public function getPublicDomainName() : string
     {
-        return $this->public_domain;
+        return $this->publicDomain->getDomain();
     }
 
-    public function getFullPublicDomain() : string
+    public function getFullPublicDomainName() : string
     {
-        return $this->public_domain_full;
+        return $this->publicDomain->getDomainFull();
     }
 
-    public function getPortalDomain() : string
+    public function getPortalDomainName() : string
     {
-        return $this->portal_domain;
+        return $this->portalDomain->getDomain();
     }
 
-    public function getFullPortalDomain() : string
+    public function getFullPortalDomainName() : string
     {
-        return $this->portal_domain_full;
+        return $this->portalDomain->getDomainFull();
     }
 
     public function isSameDomain() : bool
     {
-        return $this->same_domain;
+        return $this->sameDomain;
     }
 
-    public function getActiveDomain() : string
+    public function getPublicDomain() : AppCustomDomain
     {
         return $this->websiteDomain;
     }
 
-    public function getActiveWebTitle() : string
+    public function getPortalDomain() : AppCustomDomain
     {
-        return $this->websiteName;
-    }
-
-    public function getActiveDomainFull() : string
-    {
-        return $this->websiteDomainFull;
+        return $this->portalDomain;
     }
 
     public function getPortalName() : string
     {
-        return $this->portal_domain_name;
+        return $this->getPortalDomain()->getName();
     }
 
     public function getPublicName() : string
     {
-        return $this->public_domain_name;
+        return $this->getPublicDomain()->getName();
     }
 }

@@ -1,9 +1,9 @@
 <?php
 
-namespace Entities\Emails\Controllers\Api\V1;
+namespace Http\Emails\Controllers\Api\V1;
 
 use App\Utilities\Excell\ExcellHttpModel;
-use Entities\Emails\Classes\Base\EmailController;
+use Http\Emails\Controllers\Base\EmailController;
 use Entities\Emails\Classes\Emails;
 use Entities\Users\Classes\Users;
 
@@ -30,12 +30,12 @@ class ApiController extends EmailController
         $objUser = new Users();
         $userResult = $objUser->getByEmail($email);
 
-        if ($userResult->Result->Count === 0)
+        if ($userResult->result->Count === 0)
         {
             return $this->renderReturnJson(false, [], "Completed!");
         }
 
-        $user = $userResult->Data->First();
+        $user = $userResult->getData()->first();
         $user->password_reset_token = $objUser->generatePasswordResetToken();
         $objUser->update($user);
 
@@ -43,7 +43,7 @@ class ApiController extends EmailController
         // Generate Token and Save it somewhere.
         // Send password reset to email.
         $customPlatformName = $this->app->objCustomPlatform->getPortalName();
-        $customPlatformUrl = $this->app->objCustomPlatform->getFullPortalDomain();
+        $customPlatformUrl = $this->app->objCustomPlatform->getFullPortalDomainName();
 
         (new Emails())->SendEmail(
             $customPlatformName . " Support <noreply@".getPortalUrl().">",
@@ -65,9 +65,9 @@ class ApiController extends EmailController
         $objUser = new Users();
         $userResult = $objUser->getWhere(["email " => $email]);
 
-        if ($userResult->Result->Count === 1)
+        if ($userResult->result->Count === 1)
         {
-            $user = $userResult->Data->First();
+            $user = $userResult->getData()->first();
             $user->password_reset_token = $objUser->generatePasswordResetToken();
             $objUser->update($user);
 

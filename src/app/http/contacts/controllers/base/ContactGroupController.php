@@ -1,6 +1,6 @@
 <?php
 
-namespace Entities\Contacts\Classes\Base;
+namespace Http\Contacts\Controllers\Base;
 
 use App\Core\AppController;
 use Entities\Contacts\Classes\ContactGroups;

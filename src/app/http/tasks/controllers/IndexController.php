@@ -1,6 +1,6 @@
 <?php
 
-namespace Entities\Tasks\Controllers;
+namespace Http\Tasks\Controllers;
 
 use App\Utilities\Database;
 use App\Utilities\Excell\ExcellDatabaseModel;
@@ -18,7 +18,7 @@ use Entities\Cards\Models\CardPageModel;
 use Entities\Cards\Models\CardPageRelModel;
 use Entities\Media\Classes\Images;
 use Entities\Mobiniti\Models\MobinitiContactModel;
-use Entities\Tasks\Classes\Base\TaskController;
+use Http\Tasks\Controllers\Base\TaskController;
 use Entities\Users\Classes\Connections;
 use Entities\Users\Classes\UserAddress;
 use Entities\Users\Classes\UserClass;
@@ -56,15 +56,15 @@ class IndexController extends TaskController
 
         $objCardPageRelDataResult = (new CardPageRels())->getWhere(["card_tab_id" => 193854]);
 
-        if ($objCardPageRelDataResult->Result->Count === 0)
+        if ($objCardPageRelDataResult->result->Count === 0)
         {
             dd("No card_tab_id's of 193854 where found.");
         }
 
-        $arShareSaveTabsCardIds = $objCardPageRelDataResult->Data->FieldsToArray(["card_id"]);
+        $arShareSaveTabsCardIds = $objCardPageRelDataResult->getData()->FieldsToArray(["card_id"]);
         $colCardsWithoutShareSaveTabs = (new Cards())->getWhere(["card_id", "NOT IN", $arShareSaveTabsCardIds]);
 
-        foreach($colCardsWithoutShareSaveTabs->Data as $currCard)
+        foreach($colCardsWithoutShareSaveTabs->data as $currCard)
         {
             echo $currCard->card_id . PHP_EOL;
             continue;
@@ -93,16 +93,16 @@ class IndexController extends TaskController
 
         $objCardPageRelDataResult = (new CardPageRels())->getWhere(["card_tab_id" => 193854, "rel_visibility" => false]);
 
-        dump($objCardPageRelDataResult->Result);
+        dump($objCardPageRelDataResult->result);
 
         $arCardsHiddenSaveShareTabs = [];
         $arRevisedCardsWithDuplicateSaveShareTabs = [];
 
-        foreach($objCardPageRelDataResult->Data as $currCardPageRel)
+        foreach($objCardPageRelDataResult->data as $currCardPageRel)
         {
             if ($currCardPageRel->rel_visibility == false)
             {
-                $currCardPageRel->rel_visibility = ExcellTrue;
+                $currCardPageRel->rel_visibility = EXCELL_TRUE;
                 (new CardPageRels())->update($currCardPageRel);
             }
 
@@ -129,7 +129,7 @@ class IndexController extends TaskController
         $arCardsHiddenSaveShareTabs = [];
         $arRevisedCardsWithDuplicateSaveShareTabs = [];
 
-        foreach($objCardPageRelDataResult->Data as $currCardPageRel)
+        foreach($objCardPageRelDataResult->data as $currCardPageRel)
         {
             $arCardsHiddenSaveShareTabs[$currCardPageRel->rel_sort_order]++;
         }
@@ -154,7 +154,7 @@ class IndexController extends TaskController
         $arCardsHiddenSaveShareTabs = [];
         $arRevisedCardsWithDuplicateSaveShareTabs = [];
 
-        foreach($objCardPageRelDataResult->Data as $currCardPageRel)
+        foreach($objCardPageRelDataResult->data as $currCardPageRel)
         {
             if ($currCardPageRel->rel_visibility == 0)
             {
@@ -180,7 +180,7 @@ class IndexController extends TaskController
         $arCardsWithDuplicateSaveShareTabs = [];
         $arRevisedCardsWithDuplicateSaveShareTabs = [];
 
-        foreach($objCardPageRelDataResult->Data as $currCardPageRel)
+        foreach($objCardPageRelDataResult->data as $currCardPageRel)
         {
             $arCardsWithDuplicateSaveShareTabs[$currCardPageRel->card_id][] = $currCardPageRel->card_tab_rel_id;
         }
@@ -214,7 +214,7 @@ class IndexController extends TaskController
         $arCardsWithDuplicateSaveShareTabs = [];
 
 
-        foreach($objCardDataResult->Data as $currCard)
+        foreach($objCardDataResult->data as $currCard)
         {
             /** @var CardModel $currCard */
             $currCard->LoadCardPages();
@@ -266,7 +266,7 @@ class IndexController extends TaskController
         $objCards = new Cards();
         $objSourceCardResult = $objCards->getWhere(["card_num" => $intSourceCardId]);
 
-        if($objSourceCardResult->Result->Count === 0)
+        if($objSourceCardResult->result->Count === 0)
         {
             return $this->renderReturnJson(false, null, "Source card {$intSourceCardId} was not found for cloning.");
         }
@@ -280,16 +280,16 @@ class IndexController extends TaskController
 
             $objDestinationCardResult = $objCards->getWhere(["card_num" => $currDestinationCardId]);
 
-            if($objDestinationCardResult->Result->Count === 0)
+            if($objDestinationCardResult->result->Count === 0)
             {
                 return $this->renderReturnJson(false, null, "Destination card {$currDestinationCardId} was not found for cloning.");
             }
 
-            $result = $objCards->CloneCardConnections($objSourceCardResult->Data->First()->card_id, $objDestinationCardResult->Data->First()->card_id);
+            $result = $objCards->CloneCardConnections($objSourceCardResult->getData()->first()->card_id, $objDestinationCardResult->getData()->first()->card_id);
 
-            if ($result->Result->Success === false)
+            if ($result->result->Success === false)
             {
-                return $this->renderReturnJson(false, null, $result->Result->Message);
+                return $this->renderReturnJson(false, null, $result->result->Message);
 
             }
         }
@@ -318,7 +318,7 @@ class IndexController extends TaskController
         $objCards = new Cards();
         $objSourceCardResult = $objCards->getWhere(["card_num" => $intSourceCardId]);
 
-        if($objSourceCardResult->Result->Count === 0)
+        if($objSourceCardResult->result->Count === 0)
         {
             return $this->renderReturnJson(false, null, "Source card {$intSourceCardId} was not found for cloning.");
         }
@@ -332,13 +332,13 @@ class IndexController extends TaskController
 
             $objDestinationCardResult = $objCards->getWhere(["card_num" => $currDestinationCardId]);
 
-            if($objDestinationCardResult->Result->Count === 0)
+            if($objDestinationCardResult->result->Count === 0)
             {
                 return $this->renderReturnJson(false, null, "Destination card {$currDestinationCardId} was not found for cloning.");
             }
 
-            $result1 = $objCards->CloneCardPrimaryImage($objSourceCardResult->Data->First()->card_id, $objDestinationCardResult->Data->First()->card_id);
-            $result2 = $objCards->CloneCardSettings($objSourceCardResult->Data->First()->card_id, $objDestinationCardResult->Data->First()->card_id);
+            $result1 = $objCards->CloneCardPrimaryImage($objSourceCardResult->getData()->first()->card_id, $objDestinationCardResult->getData()->first()->card_id);
+            $result2 = $objCards->CloneCardSettings($objSourceCardResult->getData()->first()->card_id, $objDestinationCardResult->getData()->first()->card_id);
 
             if ($result->Result->Success === false)
             {
@@ -374,7 +374,7 @@ class IndexController extends TaskController
         $objCards = new Cards();
         $objSourceCardResult = $objCards->getWhere(["card_num" => $intSourceCardId]);
 
-        if($objSourceCardResult->Result->Count === 0)
+        if($objSourceCardResult->result->Count === 0)
         {
             return $this->renderReturnJson(false, null, "Source card {$intSourceCardId} was not found for cloning.");
         }
@@ -388,17 +388,17 @@ class IndexController extends TaskController
 
             $objDestinationCardResult = $objCards->getWhere(["card_num" => $currDestinationCardId]);
 
-            if($objDestinationCardResult->Result->Count === 0)
+            if($objDestinationCardResult->result->Count === 0)
             {
                 return $this->renderReturnJson(false, null, "Destination card {$currDestinationCardId} was not found for cloning.");
             }
 
             $objCards = new Cards();
-            $result = $objCards->CloneCardPages($objSourceCardResult->Data->First()->card_id, $objDestinationCardResult->Data->First()->card_id, true, true);
+            $result = $objCards->CloneCardPages($objSourceCardResult->getData()->first()->card_id, $objDestinationCardResult->getData()->first()->card_id, true, true);
 
-            if ($result->Result->Success === false)
+            if ($result->result->Success === false)
             {
-                return $this->renderReturnJson(false, null, $result->Result->Message);
+                return $this->renderReturnJson(false, null, $result->result->Message);
 
             }
         }
@@ -424,23 +424,23 @@ class IndexController extends TaskController
 
         $objCardResult = (new Cards())->getWhere(["card_id", ">", "29421"],"card_id.DESC");
 
-        foreach($objCardResult->Data as $currCard)
+        foreach($objCardResult->data as $currCard)
         {
             $strGetCardPageQuery = "SELECT * FROM `tabs` WHERE customerId = {$currCard->card_num};";
 
             Database::setDbConnection($objOldDatabase);
             $lstV1CardPageResult = Database::getSimple($strGetCardPageQuery);
 
-            if ($lstV1CardPageResult->Result->Count === 0)
+            if ($lstV1CardPageResult->result->Count === 0)
             {
                 continue;
             }
 
-            foreach ($lstV1CardPageResult->Data as $currCardKey => $currCardPageData)
+            foreach ($lstV1CardPageResult->data as $currCardKey => $currCardPageData)
             {
                 $objV2CardPageResult = (new CardPage())->getWhere(["old_card_tab_id" => $currCardPageData->id], 1);
 
-                if ( $objV2CardPageResult->Result->Count > 0)
+                if ( $objV2CardPageResult->result->Count > 0)
                 {
                     continue;
                 }
@@ -463,18 +463,18 @@ class IndexController extends TaskController
 
                 $objNewCardPageResult = (new CardPage())->getFks()->createNew($objCardPage);
 
-                if ($objNewCardPageResult->Result->Success === false)
+                if ($objNewCardPageResult->result->Success === false)
                 {
                     $objJsonReturn = array(
                         "success" => false,
-                        "message" => "We were unable to save this card tab: " .$objNewCardPageResult->Result->Message
+                        "message" => "We were unable to save this card tab: " .$objNewCardPageResult->result->Message
                     );
 
                     die(json_encode($objJsonReturn));
                 }
 
                 $objCardPageRel = new CardPageRelModel();
-                $objCardPageRel->card_tab_id = $objNewCardPageResult->Data->First()->card_tab_id;
+                $objCardPageRel->card_tab_id = $objNewCardPageResult->getData()->first()->card_tab_id;
                 $objCardPageRel->card_id = $currCard->card_id;
                 $objCardPageRel->user_id = $currCard->owner_id;
                 $objCardPageRel->rel_sort_order = $currCardPageData->orderNumber;
@@ -483,11 +483,11 @@ class IndexController extends TaskController
 
                 $objNewCardPageRelResult = (new CardPageRels())->getFks()->createNew($objCardPageRel);
 
-                if ($objNewCardPageRelResult->Result->Success === false)
+                if ($objNewCardPageRelResult->result->Success === false)
                 {
                     $objJsonReturn = array(
                         "success" => false,
-                        "message" => "We were unable to save this card tab rel: " .$objNewCardPageRelResult->Result->Message
+                        "message" => "We were unable to save this card tab rel: " .$objNewCardPageRelResult->result->Message
                     );
 
                     die(json_encode($objJsonReturn));
@@ -505,7 +505,7 @@ class IndexController extends TaskController
 
         $objCardDataResult = (new Cards())->getAllRows();
 
-        foreach ($objCardDataResult->Data as $currCard)
+        foreach ($objCardDataResult->data as $currCard)
         {
             $this->AddOldCardIntoCardPagesRoutine($currCard);
         }
@@ -540,9 +540,9 @@ class IndexController extends TaskController
 
         $objCardDataResult = (new Cards())->getWhere(["card_num" =>$intV1CardId]);
 
-        foreach($objCardDataResult->Data as $currCard)
+        foreach($objCardDataResult->data as $currCard)
         {
-            $objV2Card = $objCardDataResult->Data->First();
+            $objV2Card = $objCardDataResult->getData()->first();
             /** @var CardModel $currCard */
             $currCard->LoadCardPages();
 
@@ -567,9 +567,9 @@ class IndexController extends TaskController
 
                 $intTotalTabs = 0;
 
-                if ($lstV1CardPagesResult->Result->Count > 0)
+                if ($lstV1CardPagesResult->result->Count > 0)
                 {
-                    foreach($lstV1CardPagesResult->Data as $currV1CardPage)
+                    foreach($lstV1CardPagesResult->data as $currV1CardPage)
                     {
                         //echo strtolower($currV1CardPage->title) . " != " . strtolower($currCardPage->title) . PHP_EOL;
                         if (strtolower($currV1CardPage->title) == strtolower($currCardPage->title))
@@ -635,19 +635,19 @@ class IndexController extends TaskController
         Database::setDbConnection($objOldDatabase);
         $lstConnection = Database::getSimple($strGetCardConnectionQuery);
 
-        if ($lstConnection->Result->Count === 0)
+        if ($lstConnection->result->Count === 0)
         {
             return;
         }
 
         $objCardResult = (new Cards())->getWhere(["card_num" => $intV1CardId],1);
 
-        $objCard = $objCardResult->Data->First();
+        $objCard = $objCardResult->getData()->first();
 
-        foreach ($lstConnection->Data as $currConnectionKey => $currConnectionData)
+        foreach ($lstConnection->data as $currConnectionKey => $currConnectionData)
         {
 
-            if ($objCardResult->Result->Count === 0)
+            if ($objCardResult->result->Count === 0)
             {
                 //echo "Can't find card for : {$currConnectionData->customerId}".PHP_EOL;
                 continue;
@@ -655,7 +655,7 @@ class IndexController extends TaskController
 
             $objConnectionValueCheck = (new Connections())->getWhere(["connection_value" => strtolower($currConnectionData->value), "user_id" => $objCard->owner_id]);
 
-            if ( $objConnectionValueCheck->Result->Count === 0)
+            if ( $objConnectionValueCheck->result->Count === 0)
             {
                 if (empty($currConnectionData->value) || $currConnectionData->value ===  null)
                 {
@@ -676,7 +676,7 @@ class IndexController extends TaskController
 
                 $objConnectionCreationResult = (new Connections())->createNew($objNewConnectionValue);
 
-                if ($objConnectionCreationResult->Result->Success === false)
+                if ($objConnectionCreationResult->result->Success === false)
                 {
                     //dd($objConnectionCreationResult->Result);
                 }
@@ -688,12 +688,12 @@ class IndexController extends TaskController
         Database::setDbConnection($objOldDatabase);
         $lstV1Cards = Database::getSimple($strGetCardConnectionQuery);
 
-        if ($lstV1Cards->Result->Count === 0)
+        if ($lstV1Cards->result->Count === 0)
         {
             return;
         }
 
-        foreach ($lstV1Cards->Data as $currV1CardKey => $currV1CardData)
+        foreach ($lstV1Cards->data as $currV1CardKey => $currV1CardData)
         {
             $objCardResult = (new Cards())->getWhere(["card_num" => $currV1CardData->id]);
             $objConnection[1] = $this->getV2ConnectionData($currV1CardData->iconOneId);
@@ -703,33 +703,33 @@ class IndexController extends TaskController
 
             foreach($objConnection as $intConnectionIndex => $objConnectionData)
             {
-                $objV2Connection = (new Connections())->getWhere(["connection_type_id" => $objConnectionData["NewConnectionTypeId"], "user_id" => $objCardResult->Data->First()->owner_id]);
+                $objV2Connection = (new Connections())->getWhere(["connection_type_id" => $objConnectionData["NewConnectionTypeId"], "user_id" => $objCardResult->getData()->first()->owner_id]);
 
-                if ( $objV2Connection->Result->Count === 0)
+                if ( $objV2Connection->result->Count === 0)
                 {
                     continue;
                 }
 
-                $objCardConnectionCheck = (new CardConnections())->getWhere(["card_id" => $objCard->card_id, "connection_id" => $objV2Connection->Data->First()->connection_id, "display_order" => $intConnectionIndex],1);
+                $objCardConnectionCheck = (new CardConnections())->getWhere(["card_id" => $objCard->card_id, "connection_id" => $objV2Connection->getData()->first()->connection_id, "display_order" => $intConnectionIndex],1);
 
-                if ($objCardConnectionCheck->Result->Count > 0)
+                if ($objCardConnectionCheck->result->Count > 0)
                 {
-                    (new CardConnections())->deleteWhere(["card_id" => $objCard->card_id, "connection_id" => $objV2Connection->Data->First()->connection_id, "display_order" => $intConnectionIndex]);
+                    (new CardConnections())->deleteWhere(["card_id" => $objCard->card_id, "connection_id" => $objV2Connection->getData()->first()->connection_id, "display_order" => $intConnectionIndex]);
                 }
 
                 $objNewCardConnection = new CardConnectionModel();
 
-                $objNewCardConnection->connection_id = $objV2Connection->Data->First()->connection_id;
-                $objNewCardConnection->card_id = $objCardResult->Data->First()->card_id;
+                $objNewCardConnection->connection_id = $objV2Connection->getData()->first()->connection_id;
+                $objNewCardConnection->card_id = $objCardResult->getData()->first()->card_id;
                 $objNewCardConnection->status = "Active";
                 $objNewCardConnection->action = $objConnectionData["CustomAction"];
                 $objNewCardConnection->display_order = $intConnectionIndex;
 
                 $objCardUpdateResult = (new CardConnections())->createNew($objNewCardConnection);
 
-                if ($objCardUpdateResult->Result->Success === false)
+                if ($objCardUpdateResult->result->Success === false)
                 {
-                    dd($objCardUpdateResult->Result);
+                    dd($objCardUpdateResult->result);
                 }
             }
         }
@@ -742,14 +742,14 @@ class IndexController extends TaskController
 
         $lstV2CardsResult = (new Cards())->getAllRows();
 
-        if ($lstV2CardsResult->Result->Count === 0)
+        if ($lstV2CardsResult->result->Count === 0)
         {
             die('{"success":false,"message":"No V2 Cards Found."}');
         }
 
         $intCardCount = 0;
 
-        foreach($lstV2CardsResult->Data as $objV2Card)
+        foreach($lstV2CardsResult->data as $objV2Card)
         {
             /** @var CardModel $objV2Card */
             $objV2Card->LoadCardPages();
@@ -781,14 +781,14 @@ class IndexController extends TaskController
 
         $lstV2CardsResult = (new Cards())->getAllRows();
 
-        if ($lstV2CardsResult->Result->Count === 0)
+        if ($lstV2CardsResult->result->Count === 0)
         {
             die('{"success":false,"message":"No V2 Cards Found."}');
         }
 
         $intCardCount = 0;
 
-        foreach($lstV2CardsResult->Data as $objV2Card)
+        foreach($lstV2CardsResult->data as $objV2Card)
         {
             $this->UpdateV2ConnectionValuesFromV1Card($objV2Card->card_num);
             $intCardCount++;
@@ -805,14 +805,14 @@ class IndexController extends TaskController
 
         $lstCardsResult = (new Cards())->GetCardsByAffiliateId($intAffiliateId);
 
-        if ($lstCardsResult->Result->Count === 0)
+        if ($lstCardsResult->result->Count === 0)
         {
             die("No cards for this affiliate.");
         }
 
-        dd($lstCardsResult->Result);
+        dd($lstCardsResult->result);
 
-        foreach($lstCardsResult->Data as $currCard)
+        foreach($lstCardsResult->data as $currCard)
         {
             $this->CopyOldTabsToNewCardPages($currCard->card_id);
         }
@@ -839,21 +839,21 @@ class IndexController extends TaskController
         Database::setDbConnection($objOldDatabase);
         $lstV1CardsResult = Database::getSimple($strGetCardConnectionQuery);
 
-        if ($lstV1CardsResult->Result->Count === 0)
+        if ($lstV1CardsResult->result->Count === 0)
         {
             die("No v1 card!");
         }
 
-        $lstV1Card = $lstV1CardsResult->Data->First();
+        $lstV1Card = $lstV1CardsResult->getData()->first();
 
         $objV2CardResult = (new Cards())->getWhere(["card_num" => $lstV1Card->id],1);
 
-        if ($objV2CardResult->Result->Count === 0)
+        if ($objV2CardResult->result->Count === 0)
         {
             die("No v2 card!");
         }
 
-        $objV2Card = $objV2CardResult->Data->First();
+        $objV2Card = $objV2CardResult->getData()->first();
 
         $objV2Card->LoadFullCard();
 
@@ -862,14 +862,14 @@ class IndexController extends TaskController
         Database::setDbConnection($objOldDatabase);
         $lstV1CardPagesResult = Database::getSimple($strGetCardPageQuery);
 
-        if ($lstV1CardPagesResult->Result->Count === 0)
+        if ($lstV1CardPagesResult->result->Count === 0)
         {
             die("No v1 card tab for :" . $objV2Card->card_num. PHP_EOL);
         }
 
         $intTotalTabs = 0;
 
-        foreach($lstV1CardPagesResult->Data as $currV1CardPage)
+        foreach($lstV1CardPagesResult->data as $currV1CardPage)
         {
             if ($intCardPageCount == 0)
             {
@@ -880,7 +880,7 @@ class IndexController extends TaskController
 
             $objV2CardPageResult = (new CardPage())->getWhere(["old_card_tab_id" => $intV1CardPageId],1);
 
-            if ($objV2CardPageResult->Result->Count === 0)
+            if ($objV2CardPageResult->result->Count === 0)
             {
                 // Create a new card tab.
 
@@ -904,18 +904,18 @@ class IndexController extends TaskController
 
                 $objNewCardPageResult = (new CardPage())->getFks()->createNew($objCardPage);
 
-                if ($objNewCardPageResult->Result->Success === false)
+                if ($objNewCardPageResult->result->Success === false)
                 {
                     $objJsonReturn = array(
                         "success" => false,
-                        "message" => "We were unable to save this card tab: " .$objNewCardPageResult->Result->Message
+                        "message" => "We were unable to save this card tab: " .$objNewCardPageResult->result->Message
                     );
 
                     die(json_encode($objJsonReturn));
                 }
 
                 $objCardPageRel = new CardPageRelModel();
-                $objCardPageRel->card_tab_id = $objNewCardPageResult->Data->First()->card_tab_id;
+                $objCardPageRel->card_tab_id = $objNewCardPageResult->getData()->first()->card_tab_id;
                 $objCardPageRel->card_id = $objV2Card->card_id;
                 $objCardPageRel->user_id = $objV2Card->owner_id;
                 $objCardPageRel->rel_sort_order = $currV1CardPage->orderNumber;
@@ -924,17 +924,17 @@ class IndexController extends TaskController
 
                 $objNewCardPageRelResult = (new CardPageRels())->getFks()->createNew($objCardPageRel);
 
-                if ($objNewCardPageRelResult->Result->Success === false)
+                if ($objNewCardPageRelResult->result->Success === false)
                 {
                     $objJsonReturn = array(
                         "success" => false,
-                        "message" => "We were unable to save this card tab rel: " .$objNewCardPageRelResult->Result->Message
+                        "message" => "We were unable to save this card tab rel: " .$objNewCardPageRelResult->result->Message
                     );
 
                     die(json_encode($objJsonReturn));
                 }
 
-                echo("Created: " . $objNewCardPageResult->Data->First()->card_tab_id . " for card: " . $objV2Card->card_id . PHP_EOL);
+                echo("Created: " . $objNewCardPageResult->getData()->first()->card_tab_id . " for card: " . $objV2Card->card_id . PHP_EOL);
 
                 $this->ParseAndManageTabImage($objCardPage, $objV2Card);
 
@@ -943,7 +943,7 @@ class IndexController extends TaskController
                 continue;
             }
 
-            $objV2CardPage = $objV2CardPageResult->Data->First();
+            $objV2CardPage = $objV2CardPageResult->getData()->first();
 
             $objV2CardPage->user_id = $objV2Card->owner_id;
             $objV2CardPage->company_id = $objV2Card->company_id;
@@ -960,7 +960,7 @@ class IndexController extends TaskController
 
             $objNewCardPageResult = (new CardPage())->update($objV2CardPage);
 
-            if ($objNewCardPageResult->Result->Count === 0)
+            if ($objNewCardPageResult->result->Count === 0)
             {
                 die("Unable to Update Card :" . $intV1CardPageId. PHP_EOL);
             }
@@ -1070,7 +1070,7 @@ class IndexController extends TaskController
 
         $lstV2CardPages = (new CardPage())->getWhere(null,[$pageOffset, $pageLimit]);
 
-        if ($lstV2CardPages->Result->Count === 0)
+        if ($lstV2CardPages->result->Count === 0)
         {
             dd($lstV2CardPages);
         }
@@ -1081,7 +1081,7 @@ class IndexController extends TaskController
         $arAllFileTypes = [];
         $arFileTypeCounts = [];
 
-        foreach($lstV2CardPages->Data as $intV2CardsIndex => $objCardPage)
+        foreach($lstV2CardPages->data as $intV2CardsIndex => $objCardPage)
         {
             $intUserId = $objCardPage->user_id;
 
@@ -1174,7 +1174,7 @@ class IndexController extends TaskController
 
     public function AssignMirrorTabs($intV1CardId) : bool
     {
-        $objV2Card = (new Cards())->getWhere(["card_num" => $intV1CardId],1)->Data->First();
+        $objV2Card = (new Cards())->getWhere(["card_num" => $intV1CardId],1)->getData()->first();
 
         $objV2CardId = $objV2Card->card_id;
 
@@ -1214,7 +1214,7 @@ class IndexController extends TaskController
         if ($intHowToSaveThisCardCount === 1 && $intHowToSaveThisCardPageId !== 0)
         {
             $objCardPageRelResult = (new CardPageRels())->getWhere(["card_tab_id" => $intHowToSaveThisCardPageId], 1);
-            $objCardPageRel = $objCardPageRelResult->Data->First();
+            $objCardPageRel = $objCardPageRelResult->getData()->first();
 
             $objCardPageRel->card_tab_id = 109614;
             $objCardPageRel->card_tab_rel_type = "mirror";
@@ -1225,7 +1225,7 @@ class IndexController extends TaskController
         if ($intContactInfoCount === 1 && $intContactInfoTabId !== 0)
         {
             $objCardPageRelResult = (new CardPageRels())->getWhere(["card_tab_id" => $intContactInfoTabId], 1);
-            $objCardPageRel = $objCardPageRelResult->Data->First();
+            $objCardPageRel = $objCardPageRelResult->getData()->first();
 
             $objCardPageRel->card_tab_id = 109617;
             $objCardPageRel->card_tab_rel_type = "mirror";
@@ -1235,7 +1235,7 @@ class IndexController extends TaskController
         if ($intShareThisCardCount === 1 && $intShareThisCardPageId !== 0)
         {
             $objCardPageRelResult = (new CardPageRels())->getWhere(["card_tab_id" => $intShareThisCardPageId], 1);
-            $objCardPageRel = $objCardPageRelResult->Data->First();
+            $objCardPageRel = $objCardPageRelResult->getData()->first();
 
             $objCardPageRel->card_tab_id = 109620;
             $objCardPageRel->card_tab_rel_type = "mirror";
@@ -1251,7 +1251,7 @@ class IndexController extends TaskController
         ini_set('memory_limit', '-1');
         set_time_limit(300);
 
-        $objAllCards = (new Cards())->getWhere(null, "card_num.DESC")->Data;
+        $objAllCards = (new Cards())->getWhere(null, "card_num.DESC")->getData();
 
         $duplicateCardPages = [];
 
@@ -1309,7 +1309,7 @@ class IndexController extends TaskController
         foreach($duplicateCardPages["How To Save This Card"]["tab_ids"] as $currCardId)
         {
             $objCardPageRelResult = (new CardPageRels())->getWhere(["card_tab_id" => $currCardId], 1);
-            $objCardPageRel = $objCardPageRelResult->Data->First();
+            $objCardPageRel = $objCardPageRelResult->getData()->first();
 
             $objCardPageRel->card_tab_id = 109614;
             $objCardPageRel->card_tab_rel_type = "mirror";
@@ -1320,7 +1320,7 @@ class IndexController extends TaskController
         foreach($duplicateCardPages["Contact Info"]["tab_ids"] as $currCardId)
         {
             $objCardPageRelResult = (new CardPageRels())->getWhere(["card_tab_id" => $currCardId], 1);
-            $objCardPageRel = $objCardPageRelResult->Data->First();
+            $objCardPageRel = $objCardPageRelResult->getData()->first();
 
             $objCardPageRel->card_tab_id = 109617;
             $objCardPageRel->card_tab_rel_type = "mirror";
@@ -1331,7 +1331,7 @@ class IndexController extends TaskController
         foreach($duplicateCardPages["Share This Card"]["tab_ids"] as $currCardId)
         {
             $objCardPageRelResult = (new CardPageRels())->getWhere(["card_tab_id" => $currCardId], 1);
-            $objCardPageRel = $objCardPageRelResult->Data->First();
+            $objCardPageRel = $objCardPageRelResult->getData()->first();
 
             $objCardPageRel->card_tab_id = 109620;
             $objCardPageRel->card_tab_rel_type = "mirror";
@@ -1361,14 +1361,14 @@ class IndexController extends TaskController
 
         $objCardResult = (new Cards())->getWhere(["card_id", ">", "29429"],"card_id.DESC");
 
-        foreach($objCardResult->Data as $currCard)
+        foreach($objCardResult->data as $currCard)
         {
             $strV1CardsQuery = "SELECT * FROM `customers` WHERE id = {$currCard->card_num};";
 
             Database::setDbConnection($objOldDatabase);
             $lstV1CardResult = Database::getSimple($strV1CardsQuery);
 
-            if ($lstV1CardResult->Result->Count === 0)
+            if ($lstV1CardResult->result->Count === 0)
             {
                 echo "No Old Card Found for: ". $currCard->card_num.PHP_EOL;
                 continue;
@@ -1376,26 +1376,26 @@ class IndexController extends TaskController
 
             $objUserResult = (new Users())->getById($currCard->owner_id);
 
-            if ($objUserResult->Result->Count === 0)
+            if ($objUserResult->result->Count === 0)
             {
                 echo "No User Found for: ". $currCard->id.PHP_EOL;
                 continue;
             }
 
-            $objAddressCheck = (new UserAddress())->getWhere(["user_id" => $objUserResult->Data->First()->user_id]);
+            $objAddressCheck = (new UserAddress())->getWhere(["user_id" => $objUserResult->getData()->first()->user_id]);
 
-            $blnIsPrimary = ExcellFalse;
+            $blnIsPrimary = EXCELL_FALSE;
 
-            if ($objAddressCheck->Result->Count === 0)
+            if ($objAddressCheck->result->Count === 0)
             {
-                $blnIsPrimary = ExcellTrue;
+                $blnIsPrimary = EXCELL_TRUE;
             }
 
-            $objV1Card = $lstV1CardResult->Data->First();
+            $objV1Card = $lstV1CardResult->getData()->first();
 
             $objNewAddress = new UserAddressModel();
 
-            $objNewAddress->user_id = $objUserResult->Data->First()->user_id;
+            $objNewAddress->user_id = $objUserResult->getData()->first()->user_id;
             $objNewAddress->display_name = "My Address";
             $objNewAddress->address_1 = $objV1Card->address1;
             $objNewAddress->address_2 = $objV1Card->address2;
@@ -1408,7 +1408,7 @@ class IndexController extends TaskController
 
             $objAddressResult = (new UserAddress())->createNew($objNewAddress);
 
-            if ($objUserResult->Result->Success === false)
+            if ($objUserResult->result->Success === false)
             {
                 dump($objAddressResult);
             }
@@ -1427,14 +1427,14 @@ class IndexController extends TaskController
 
         $objCardPages = (new CardPage())->getWhere(null,[$pageOffset, $pageLimit]);
 
-        foreach($objCardPages->Data as $intCardPageIndex => $objCardPage)
+        foreach($objCardPages->data as $intCardPageIndex => $objCardPage)
         {
             $strContent = Database::forceUtf8(html_entity_decode(base64_decode($objCardPage->content)));
 
             //$strContent = str_replace("src=\"uploads/tinyMCEUploads/","src=\"https://ezcard.com/uploads/tinyMCEUploads/",$strContent);
             $strContent = str_replace("src=\"../uploads/","src=\"https://ezcard.com/uploads/",$strContent);
-            $objCardPages->Data->{$intCardPageIndex}->content = base64_encode($strContent);
-            $objCardPageUpdateResult = (new CardPage())->update($objCardPages->Data->{$intCardPageIndex});
+            $objCardPages->getData()->{$intCardPageIndex}->content = base64_encode($strContent);
+            $objCardPageUpdateResult = (new CardPage())->update($objCardPages->getData()->{$intCardPageIndex});
         }
 
         return true;
@@ -1460,12 +1460,12 @@ class IndexController extends TaskController
         Database::setDbConnection($objOldDatabase);
         $lstConnection = Database::getSimple($strGetCardConnectionQuery);
 
-        if ($lstConnection->Result->Count === 0)
+        if ($lstConnection->result->Count === 0)
         {
             return true;
         }
 
-        foreach ($lstConnection->Data as $currConnectionKey => $currConnectionData)
+        foreach ($lstConnection->data as $currConnectionKey => $currConnectionData)
         {
             $strConnectionTypeId = $currConnectionData->connectionTypeId;
             $strConnectionValue  = $currConnectionData->value;
@@ -1492,7 +1492,7 @@ class IndexController extends TaskController
 
         $arAffiliateIds = [];
 
-        foreach($objCardRelResult->Data as $currCardRel)
+        foreach($objCardRelResult->data as $currCardRel)
         {
             $arAffiliateIds[$currCardRel->user_id] = $currCardRel->user_id;
         }
@@ -1502,7 +1502,7 @@ class IndexController extends TaskController
         {
             $objUserClassCheck = (new UserClass())->getWhere(["user_id" => $intAffiliateId, "user_class_type_id" => 15]);
 
-            if ($objUserClassCheck->Result->Count > 0)
+            if ($objUserClassCheck->result->Count > 0)
             {
                 continue;
             }
@@ -1514,7 +1514,7 @@ class IndexController extends TaskController
 
             $objUserClassCreation = (new UserClass())->createNew($objUserClassModel);
 
-            if ($objUserClassCreation->Result->Success === false)
+            if ($objUserClassCreation->result->Success === false)
             {
                 echo "We were unable to create an affiliate user class for user: " . $intAffiliateId . PHP_EOL;
             }
@@ -1544,24 +1544,24 @@ class IndexController extends TaskController
         Database::setDbConnection($objOldDatabase);
         $lstV1Cards = Database::getSimple($strGetCardConnectionQuery);
 
-        if ($lstV1Cards->Result->Count === 0)
+        if ($lstV1Cards->result->Count === 0)
         {
             echo "no cards!";
             return true;
         }
 
-        foreach ($lstV1Cards->Data as $currV1CardKey => $currV1CardData)
+        foreach ($lstV1Cards->data as $currV1CardKey => $currV1CardData)
         {
             $objV2CardCheck = (new Cards())->getWhere(["card_num" => $currV1CardData->id]);
 
-            if ( $objV2CardCheck->Result->Count === 0)
+            if ( $objV2CardCheck->result->Count === 0)
             {
                 continue;
             }
 
 
 
-            $objV2Card = $objV2CardCheck->Data->First();
+            $objV2Card = $objV2CardCheck->getData()->first();
 
             if (empty($objV2Card->card_data)) {
 
@@ -1573,9 +1573,9 @@ class IndexController extends TaskController
 
             $objCardUpdateResult = (new Cards())->update($objV2Card);
 
-            if ($objCardUpdateResult->Result->Success === false)
+            if ($objCardUpdateResult->result->Success === false)
             {
-                dd($objCardUpdateResult->Result);
+                dd($objCardUpdateResult->result);
             }
         }
 
@@ -1605,21 +1605,21 @@ class IndexController extends TaskController
         Database::setDbConnection($objOldDatabase);
         $lstV1Cards = Database::getSimple($strGetCardConnectionQuery);
 
-        if ($lstV1Cards->Result->Count === 0)
+        if ($lstV1Cards->result->Count === 0)
         {
             return true;
         }
 
-        foreach ($lstV1Cards->Data as $currV1CardKey => $currV1CardData)
+        foreach ($lstV1Cards->data as $currV1CardKey => $currV1CardData)
         {
             $objV2CardCheck = (new Cards())->getWhere(["card_num" => $currV1CardData->id]);
 
-            if ( $objV2CardCheck->Result->Count === 0)
+            if ( $objV2CardCheck->result->Count === 0)
             {
                 continue;
             }
 
-            $objV2Card = $objV2CardCheck->Data->First();
+            $objV2Card = $objV2CardCheck->getData()->first();
 
             if (empty($objV2Card->card_data)) {
 
@@ -1630,9 +1630,9 @@ class IndexController extends TaskController
 
             $objCardUpdateResult = (new Cards())->update($objV2Card);
 
-            if ($objCardUpdateResult->Result->Success === false)
+            if ($objCardUpdateResult->result->Success === false)
             {
-                dd($objCardUpdateResult->Result);
+                dd($objCardUpdateResult->result);
             }
         }
 
@@ -1662,22 +1662,22 @@ class IndexController extends TaskController
         Database::setDbConnection($objOldDatabase);
         $lstV1Cards = Database::getSimple($strGetCardConnectionQuery);
 
-        if ($lstV1Cards->Result->Count === 0)
+        if ($lstV1Cards->result->Count === 0)
         {
             dd($lstV1Cards);
             return true;
         }
 
-        foreach ($lstV1Cards->Data as $currV1CardKey => $currV1CardData)
+        foreach ($lstV1Cards->data as $currV1CardKey => $currV1CardData)
         {
             $objV2CardCheck = (new Cards())->getWhere(["card_num" => $currV1CardData->id]);
 
-            if ( $objV2CardCheck->Result->Count === 0)
+            if ( $objV2CardCheck->result->Count === 0)
             {
                 continue;
             }
 
-            $objV2Card = $objV2CardCheck->Data->First();
+            $objV2Card = $objV2CardCheck->getData()->first();
             $objV2Card->LoadCardPages();
 
             foreach($objV2Card->Tabs as $currCardPageIndex => $currCardPage)
@@ -1687,7 +1687,7 @@ class IndexController extends TaskController
                 Database::setDbConnection($objOldDatabase);
                 $lstV1CardPage = Database::getSimple($strGetCardPageQuery);
 
-                if ( $lstV1CardPage->Result->Count === 0 || $lstV1CardPage->Result->Count > 1)
+                if ( $lstV1CardPage->result->Count === 0 || $lstV1CardPage->result->Count > 1)
                 {
                     continue;
                 }
@@ -1695,12 +1695,12 @@ class IndexController extends TaskController
                 switch($currCardPage->card_tab_rel_type)
                 {
                     case "mirror":
-                        $objCardPageRel = (new CardPageRels())->getById($currCardPage->card_tab_rel_id)->Data->First();
-                        $objCardPageRel->rel_visibility = ( $lstV1CardPage->Data->First()->status == "On" ) ? ExcellTrue : ExcellFalse;
+                        $objCardPageRel = (new CardPageRels())->getById($currCardPage->card_tab_rel_id)->getData()->first();
+                        $objCardPageRel->rel_visibility = ( $lstV1CardPage->getData()->first()->status == "On" ) ? EXCELL_TRUE : EXCELL_FALSE;
                         (new CardPageRels())->update($objCardPageRel);
                         break;
                     default:
-                        $currCardPage->visibility = ( $lstV1CardPage->Data->First()->status == "On" ) ? ExcellTrue : ExcellFalse;
+                        $currCardPage->visibility = ( $lstV1CardPage->getData()->first()->status == "On" ) ? EXCELL_TRUE : EXCELL_FALSE;
                         $result = (new CardPage())->update($currCardPage);
                         break;
                 }
@@ -1733,12 +1733,12 @@ class IndexController extends TaskController
         Database::setDbConnection($objOldDatabase);
         $lstV1Cards = Database::getSimple($strGetCardConnectionQuery);
 
-        if ($lstV1Cards->Result->Count === 0)
+        if ($lstV1Cards->result->Count === 0)
         {
             return true;
         }
 
-        foreach ($lstV1Cards->Data as $currV1CardKey => $currV1CardData)
+        foreach ($lstV1Cards->data as $currV1CardKey => $currV1CardData)
         {
             $objConnection[1] = $this->getV2ConnectionData($currV1CardData->iconOneId);
             $objConnection[2] = $this->getV2ConnectionData($currV1CardData->iconTwoId);
@@ -1748,26 +1748,26 @@ class IndexController extends TaskController
             foreach($objConnection as $intConnectionIndex => $objConnectionData)
             {
                 $objCardResult = (new Cards())->getWhere(["card_num" => $currV1CardData->id]);
-                $objV2Connection = (new Connections())->getWhere(["connection_type_id" => $objConnectionData["NewConnectionTypeId"], "user_id" => $objCardResult->Data->First()->owner_id]);
+                $objV2Connection = (new Connections())->getWhere(["connection_type_id" => $objConnectionData["NewConnectionTypeId"], "user_id" => $objCardResult->getData()->first()->owner_id]);
 
-                if ( $objV2Connection->Result->Count === 0)
+                if ( $objV2Connection->result->Count === 0)
                 {
                     continue;
                 }
 
                 $objNewCardConnection = new CardConnectionModel();
 
-                $objNewCardConnection->connection_id = $objV2Connection->Data->First()->connection_id;
-                $objNewCardConnection->card_id = $objCardResult->Data->First()->card_id;
+                $objNewCardConnection->connection_id = $objV2Connection->getData()->first()->connection_id;
+                $objNewCardConnection->card_id = $objCardResult->getData()->first()->card_id;
                 $objNewCardConnection->status = "Active";
                 $objNewCardConnection->action = $objConnectionData["CustomAction"];
                 $objNewCardConnection->display_order = $intConnectionIndex;
 
                 $objCardUpdateResult = (new CardConnections())->createNew($objNewCardConnection);
 
-                if ($objCardUpdateResult->Result->Success === false)
+                if ($objCardUpdateResult->result->Success === false)
                 {
-                    dd($objCardUpdateResult->Result);
+                    dd($objCardUpdateResult->result);
                 }
             }
         }
@@ -1782,20 +1782,20 @@ class IndexController extends TaskController
 
         $lstV2Cards = (new Cards())->getWhere(["card_num", "=", "1452"]);
 
-        if ($lstV2Cards->Result->Count === 0)
+        if ($lstV2Cards->result->Count === 0)
         {
             dd($lstV2Cards);
         }
 
         $intBatchCount = 0;
 
-        foreach($lstV2Cards->Data as $intV2CardsIndex => $objV2CardData)
+        foreach($lstV2Cards->data as $intV2CardsIndex => $objV2CardData)
         {
             $intEzCardId = $objV2CardData->card_id;
             $intOldEzCardNum = $objV2CardData->card_num;
             $lstCardImages = (new Images())->getWhere([["entity_name" => "card", "image_class" =>"main-image"], "AND", ["entity_id" => $intEzCardId]]);
 
-            if ($lstCardImages->Result->Count > 0)
+            if ($lstCardImages->result->Count > 0)
             {
                 echo("ALREADY DONE: " . $intEzCardId . PHP_EOL);
                 continue;
@@ -1822,7 +1822,7 @@ class IndexController extends TaskController
 
             $arFilePath = explode(".", $strMainImagePath);
             $strFileExtension = end($arFilePath);
-            $strTempFileNameAndPath = AppStorage . '/uploads/'. sha1(microtime()) . "." . $strFileExtension;
+            $strTempFileNameAndPath = APP_STORAGE . '/uploads/'. sha1(microtime()) . "." . $strFileExtension;
 
             file_put_contents($strTempFileNameAndPath, $objMainImage);
 
@@ -1849,26 +1849,26 @@ class IndexController extends TaskController
 
         $lstV2Cards = (new Cards())->getAllRows();
 
-        if ($lstV2Cards->Result->Count === 0)
+        if ($lstV2Cards->result->Count === 0)
         {
             dd($lstV2Cards);
         }
 
         $intBatchCount = 0;
 
-        foreach($lstV2Cards->Data as $intV2CardsIndex => $objV2CardData)
+        foreach($lstV2Cards->data as $intV2CardsIndex => $objV2CardData)
         {
             $intEzCardId = $objV2CardData->card_id;
             $intOldEzCardNum = $objV2CardData->card_num;
             $lstCardImages = (new Images())->getWhere([["entity_name" => "card", "image_class" =>"favicon-image"], "AND", ["entity_id" => $intEzCardId]]);
 
-            if ($lstCardImages->Result->Count > 0)
+            if ($lstCardImages->result->Count > 0)
             {
                 //echo("ALREADY DONE: " . $intEzCardId . PHP_EOL);
                 continue;
             }
 
-            $lstCardExistingMainImage = AppCore . "uploads/cards/" . $intOldEzCardNum . "/mainImage.jpg";
+            $lstCardExistingMainImage = APP_CORE . "uploads/cards/" . $intOldEzCardNum . "/mainImage.jpg";
 
             if (!is_file($lstCardExistingMainImage))
             {
@@ -1886,7 +1886,7 @@ class IndexController extends TaskController
             echo $intEzCardId . " => " . $intOldEzCardNum . PHP_EOL;
 
             $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $lstCardExistingMainImage->Data->First()->url);
+            curl_setopt($ch, CURLOPT_URL, $lstCardExistingMainImage->getData()->first()->url);
             curl_setopt($ch, CURLOPT_HEADER, false);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
@@ -1895,9 +1895,9 @@ class IndexController extends TaskController
             $rescode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             curl_close($ch);
 
-            $arFilePath = explode(".", $lstCardExistingMainImage->Data->First()->url);
+            $arFilePath = explode(".", $lstCardExistingMainImage->getData()->first()->url);
             $strFileExtension = end($arFilePath);
-            $strTempFileNameAndPath = AppCore . '/uploads/'. sha1(microtime()) . "." . $strFileExtension;
+            $strTempFileNameAndPath = APP_CORE . '/uploads/'. sha1(microtime()) . "." . $strFileExtension;
 
             file_put_contents($strTempFileNameAndPath, $objMainImage);
 
@@ -2043,12 +2043,12 @@ class IndexController extends TaskController
         {
             $objUserToUpdateResult = (new Users())->getById($intUserId);
 
-            if ($objUserToUpdateResult->Result->Count === 0)
+            if ($objUserToUpdateResult->result->Count === 0)
             {
                 die("Cannot find User By Id: " . $intUserId);
             }
 
-            $objUser = $objUserToUpdateResult->Data->First();
+            $objUser = $objUserToUpdateResult->getData()->first();
 
             $objUser->password = "secret2019";
 
@@ -2056,21 +2056,21 @@ class IndexController extends TaskController
         }
         else
         {
-            $objUserToUpdateResult = (new Users())->getWhere(["password" => ExcellNull]);
+            $objUserToUpdateResult = (new Users())->getWhere(["password" => EXCELL_NULL]);
 
-            if ($objUserToUpdateResult->Result->Count === 0)
+            if ($objUserToUpdateResult->result->Count === 0)
             {
                 die("Cannot find any Users with Null password.");
             }
 
-            foreach($objUserToUpdateResult->Data as $currUser)
+            foreach($objUserToUpdateResult->data as $currUser)
             {
                 $currUser->password = "secret2019";
 
                 (new Users())->update($currUser);
             }
 
-            echo $objUserToUpdateResult->Result->Count;
+            echo $objUserToUpdateResult->result->Count;
             die();
         }
     }
@@ -2093,12 +2093,12 @@ class IndexController extends TaskController
             $trnCardResult = (new Cards())->getWhere(["card_num" => $intCardNum]);
         }
 
-        if ($trnCardResult->Result->Success === false || $trnCardResult->Result->Count === 0)
+        if ($trnCardResult->result->Success === false || $trnCardResult->result->Count === 0)
         {
             die("unable to find card with number: " . $intCardNum);
         }
 
-        foreach($trnCardResult->Data as $currCard)
+        foreach($trnCardResult->data as $currCard)
         {
             if (empty($currCard->card_data->style->tab->height))
             {
@@ -2122,8 +2122,8 @@ class IndexController extends TaskController
             (new Cards())->update($currCard);
         }
 
-        dump($trnCardResult->Result);
-        dump($trnCardResult->Data->First());
+        dump($trnCardResult->result);
+        dump($trnCardResult->getData()->first());
 
         return true;
     }
@@ -2146,12 +2146,12 @@ class IndexController extends TaskController
             $trnCardResult = (new Cards())->getWhere(["card_num" => $intCardNum]);
         }
 
-        if ($trnCardResult->Result->Success === false || $trnCardResult->Result->Count === 0)
+        if ($trnCardResult->result->Success === false || $trnCardResult->result->Count === 0)
         {
             die("unable to find card with number: " . $intCardNum);
         }
 
-        foreach($trnCardResult->Data as $currCard)
+        foreach($trnCardResult->data as $currCard)
         {
             if (empty($currCard->card_data->style->card->color->main))
             {
@@ -2167,8 +2167,8 @@ class IndexController extends TaskController
             (new Cards())->update($currCard);
         }
 
-        dump($trnCardResult->Result);
-        dump($trnCardResult->Data->First());
+        dump($trnCardResult->result);
+        dump($trnCardResult->getData()->first());
 
         return true;
     }

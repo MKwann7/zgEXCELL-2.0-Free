@@ -1,8 +1,8 @@
 <?php
 
-namespace Entities\Orders\Controllers;
+namespace Http\Orders\Controllers;
 
-use Entities\Orders\Classes\Base\OrderController;
+use Http\Orders\Controllers\Base\OrderController;
 
 class IndexController extends OrderController
 {

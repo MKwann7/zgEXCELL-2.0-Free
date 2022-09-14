@@ -1,6 +1,6 @@
 <?php
 
-namespace Entities\Modules\Controllers\Api\V1;
+namespace Http\Modules\Controllers\Api\V1;
 
 use App\Utilities\Database;
 use App\Utilities\Excell\ExcellHttpModel;
@@ -15,7 +15,7 @@ use Entities\Modules\Classes\AppInstances;
 use Entities\Cards\Models\CardAddonModel;
 use Entities\Companies\Classes\Companies;
 use Entities\Modules\Classes\Authorizations;
-use Entities\Modules\Classes\Base\ModulesController;
+use Http\Modules\Controllers\Base\ModulesController;
 use Entities\Modules\Classes\ModuleAppWidgets;
 use Entities\Modules\Classes\ModuleAppEndpoints;
 use Entities\Modules\Classes\ModuleApps;
@@ -27,7 +27,7 @@ use Entities\Modules\Models\ModuleAppModel;
 use Entities\Orders\Classes\OrderLines;
 use Entities\Orders\Classes\Orders;
 use Entities\Users\Classes\Users;
-use Module\Orders\Models\OrderLineModel;
+use Entities\Orders\Models\OrderLineModel;
 
 class ApiController extends ModulesController
 {
@@ -111,7 +111,7 @@ class ApiController extends ModulesController
         $objModuleResult = $this->getModule($guidId, $version);
 
         /** @var ModuleMainModel $module */
-        $module = $objModuleResult->Data->First();
+        $module = $objModuleResult->getData()->first();
 
         return $this->renderReturnJson(true, $module->ToPublicArray(), "Module found.");
     }
@@ -136,23 +136,23 @@ class ApiController extends ModulesController
         $objAuthorization = new Authorizations();
         $objAuthorizationResult = $objAuthorization->getWhere(["authorization_uuid" => $objJsonForSync->authorization_token]);
 
-        if ($objAuthorizationResult->Result->Count === 0)
+        if ($objAuthorizationResult->result->Count === 0)
         {
             return $this->renderReturnJson(false, null, "There is no Authorization request for this token. Id: {$objJsonForSync->authorization_token}");
         }
 
         $objModule = new Modules();
-        $objModuleResult = $objModule->getWhere(["module_uuid" => $objAuthorizationResult->Data->First()->record_uuid, "version" => $objJsonForSync->version]);
+        $objModuleResult = $objModule->getWhere(["module_uuid" => $objAuthorizationResult->getData()->first()->record_uuid, "version" => $objJsonForSync->version]);
 
-        if ($objModuleResult->Result->Count > 0)
+        if ($objModuleResult->result->Count > 0)
         {
-            return $this->renderReturnJson(false, ["module_version_exists" => ["token" => $objAuthorizationResult->Data->First()->record_uuid, "version" => $objJsonForSync->version]], "There is already an existing module with this name and version. Module Id: {$objAuthorizationResult->Data->First()->record_uuid}, version: {$objJsonForSync->version}");
+            return $this->renderReturnJson(false, ["module_version_exists" => ["token" => $objAuthorizationResult->getData()->first()->record_uuid, "version" => $objJsonForSync->version]], "There is already an existing module with this name and version. Module Id: {$objAuthorizationResult->getData()->first()->record_uuid}, version: {$objJsonForSync->version}");
         }
 
         $module = new ModuleMainModel();
         $module->name = $objJsonForSync->name;
-        $module->module_uuid= $objAuthorizationResult->Data->First()->record_uuid;
-        $module->company_id = $objAuthorizationResult->Data->First()->company_id;
+        $module->module_uuid= $objAuthorizationResult->getData()->first()->record_uuid;
+        $module->company_id = $objAuthorizationResult->getData()->first()->company_id;
         $module->author = $objJsonForSync->author;
         $module->version = $objJsonForSync->version;
         $module->category = $objJsonForSync->category;
@@ -160,12 +160,12 @@ class ApiController extends ModulesController
 
         $objNewModuleResult = $objModule->createNew($module);
 
-        if ($objModuleResult->Result->Success === false)
+        if ($objModuleResult->result->Success === false)
         {
-            return $this->renderReturnJson(false, ["query" => $objNewModuleResult->Result->Query], $objNewModuleResult->Result->Message);
+            return $this->renderReturnJson(false, ["query" => $objNewModuleResult->result->Query], $objNewModuleResult->result->Message);
         }
 
-        return $this->renderReturnJson(true, $objNewModuleResult->Data->First()->ToPublicArray(), $objNewModuleResult->Result->Message);
+        return $this->renderReturnJson(true, $objNewModuleResult->getData()->first()->ToPublicArray(), $objNewModuleResult->result->Message);
     }
 
     /**
@@ -187,14 +187,14 @@ class ApiController extends ModulesController
         $objAuthorization = new Authorizations();
         $objAuthorizationResult = $objAuthorization->getWhere(["record_uuid" => $objJsonForSync->id]);
 
-        if ($objAuthorizationResult->Result->Count === 0)
+        if ($objAuthorizationResult->result->Count === 0)
         {
             return $this->renderReturnJson(false, null, "There is no Authorization request for this token. Module Id: {$objJsonForSync->id}");
         }
 
         $objModuleResult = $this->getModule($objJsonForSync->id, $objJsonForSync->version);
 
-        $module = $objModuleResult->Data->First();
+        $module = $objModuleResult->getData()->first();
         $module->name = $objJsonForSync->name ?? $module->name;
         $module->author = $objJsonForSync->author ?? $module->author;
         $module->version = $objJsonForSync->version ?? $module->version;
@@ -204,12 +204,12 @@ class ApiController extends ModulesController
         $objModule = new Modules();
         $objNewModuleResult = $objModule->update($module);
 
-        if ($objModuleResult->Result->Success === false)
+        if ($objModuleResult->result->Success === false)
         {
-            return $this->renderReturnJson(false, ["query" => $objNewModuleResult->Result->Query], $objNewModuleResult->Result->Message);
+            return $this->renderReturnJson(false, ["query" => $objNewModuleResult->result->Query], $objNewModuleResult->result->Message);
         }
 
-        return $this->renderReturnJson(true, $objNewModuleResult->Data->First()->ToPublicArray(), $objNewModuleResult->Result->Message);
+        return $this->renderReturnJson(true, $objNewModuleResult->getData()->first()->ToPublicArray(), $objNewModuleResult->result->Message);
     }
 
     protected function delete(ExcellHttpModel $objData) : bool
@@ -241,7 +241,7 @@ class ApiController extends ModulesController
         $objAuthorizationResult = $this->getAuthorization($guidId);
 
         /** @var ModuleMainModel $authorization */
-        $authorization = $objAuthorizationResult->Data->First();
+        $authorization = $objAuthorizationResult->getData()->first();
 
         return $this->renderReturnJson(true, $authorization->ToPublicArray(), "Authorization found.");
     }
@@ -267,7 +267,7 @@ class ApiController extends ModulesController
         $objAuthorization = new Authorizations();
         $objAuthorizationResult = $objAuthorization->getWhere(["authorization_uuid" => $objJsonForSync->id]);
 
-        if ($objAuthorizationResult->Result->Count > 0)
+        if ($objAuthorizationResult->result->Count > 0)
         {
             return $this->renderReturnJson(false, null, "An authorization already exists for this token. Id: {$objJsonForSync->id}");
         }
@@ -275,7 +275,7 @@ class ApiController extends ModulesController
         $objCompany = new Companies();
         $objCompanyResult = $objCompany->getwhere(["company_id" => $objJsonForSync->company_id]);
 
-        if ($objCompanyResult->Result->Count === 0)
+        if ($objCompanyResult->result->Count === 0)
         {
             return $this->renderReturnJson(false, null, "No company exists for id: {$objJsonForSync->company_id}");
         }
@@ -290,12 +290,12 @@ class ApiController extends ModulesController
 
         $objNewAuthorizationResult = $objAuthorization->createNew($authorization);
 
-        if ($objNewAuthorizationResult->Result->Success === false)
+        if ($objNewAuthorizationResult->result->Success === false)
         {
-            return $this->renderReturnJson(false, ["query" => $objNewAuthorizationResult->Result->Query], $objNewAuthorizationResult->Result->Message);
+            return $this->renderReturnJson(false, ["query" => $objNewAuthorizationResult->result->Query], $objNewAuthorizationResult->result->Message);
         }
 
-        return $this->renderReturnJson(true, $objNewAuthorizationResult->Data->First()->ToPublicArray(), "Authorization created.");
+        return $this->renderReturnJson(true, $objNewAuthorizationResult->getData()->first()->ToPublicArray(), "Authorization created.");
     }
 
     /*
@@ -324,25 +324,25 @@ class ApiController extends ModulesController
         $objModuleResult = $this->getModuleWidget($guidId, $version);
 
         /** @var ModuleMainModel $module */
-        $module = $objModuleResult->Data->First();
+        $module = $objModuleResult->getData()->first();
 
         $objModule = new Modules();
         $objModuleResult = $objModule->getWhere(["module_id" => $module->module_id]);
-        $objModuleResult->Data;
+        $objModuleResult->getData();
 
-        if ($objModuleResult->Result->Count !== 1)
+        if ($objModuleResult->result->Count !== 1)
         {
             return $this->renderReturnJson(false, null, "Widget installed incorrectly. No parent module found.");
         }
 
-        $module->AddUnvalidatedValue("module_version", $objModuleResult->Data->First()->version,true);
-        $module->AddUnvalidatedValue("module", $objModuleResult->Data->First()->module_uuid,true);
+        $module->AddUnvalidatedValue("module_version", $objModuleResult->getData()->first()->version,true);
+        $module->AddUnvalidatedValue("module", $objModuleResult->getData()->first()->module_uuid,true);
 
         $objWidgetEndpoints = new ModuleAppEndpoints();
-        $module->AddUnvalidatedValue("endpoints", $objWidgetEndpoints->getWhere(["module_app_id" => $module->module_id])->Data->ToPublicArray());
+        $module->AddUnvalidatedValue("endpoints", $objWidgetEndpoints->getWhere(["module_app_id" => $module->module_id])->getData()->ToPublicArray());
 
         $objWidgetComponents = new ModuleAppWidgets();
-        $module->AddUnvalidatedValue("components", $objWidgetComponents->getWhere(["module_app_id" => $module->module_id])->Data->ToPublicArray());
+        $module->AddUnvalidatedValue("components", $objWidgetComponents->getWhere(["module_app_id" => $module->module_id])->getData()->ToPublicArray());
 
         return $this->renderReturnJson(true, $module->ToPublicArray(), "Widget found.");
     }
@@ -367,33 +367,33 @@ class ApiController extends ModulesController
         $objAuthorization = new Authorizations();
         $objAuthorizationResult = $objAuthorization->getWhere(["authorization_uuid" => $objJsonForSync->authorization_token]);
 
-        if ($objAuthorizationResult->Result->Count === 0)
+        if ($objAuthorizationResult->result->Count === 0)
         {
             return $this->renderReturnJson(false, null, "There is no Authorization request for this token. Id: {$objJsonForSync->authorization_token}");
         }
 
         $objModule = new Modules();
-        $objModuleResult = $objModule->getWhere(["module_uuid" => $objAuthorizationResult->Data->First()->parent_uuid, "version" => $objJsonForSync->module_version]);
+        $objModuleResult = $objModule->getWhere(["module_uuid" => $objAuthorizationResult->getData()->first()->parent_uuid, "version" => $objJsonForSync->module_version]);
 
-        if ($objModuleResult->Result->Count === 0)
+        if ($objModuleResult->result->Count === 0)
         {
-            return $this->renderReturnJson(false, [], "No module exists with this name and version. Module Id: {$objAuthorizationResult->Data->First()->parent_uuid}, version: {$objJsonForSync->module_version}");
+            return $this->renderReturnJson(false, [], "No module exists with this name and version. Module Id: {$objAuthorizationResult->getData()->first()->parent_uuid}, version: {$objJsonForSync->module_version}");
         }
 
         $objModuleWidget = new ModuleApps();
-        $objModuleWidgetResult = $objModuleWidget->getWhere(["app_uuid" => $objAuthorizationResult->Data->First()->record_uuid, "version" => $objJsonForSync->version]);
+        $objModuleWidgetResult = $objModuleWidget->getWhere(["app_uuid" => $objAuthorizationResult->getData()->first()->record_uuid, "version" => $objJsonForSync->version]);
 
-        if ($objModuleWidgetResult->Result->Count > 0)
+        if ($objModuleWidgetResult->result->Count > 0)
         {
-            return $this->renderReturnJson(false, ["widget_version_exists" => ["token" => $objAuthorizationResult->Data->First()->record_uuid, "version" => $objJsonForSync->version]], "There is already an existing widget with this name and version. Widget Id: {$objAuthorizationResult->Data->First()->record_uuid}, version: {$objJsonForSync->version}");
+            return $this->renderReturnJson(false, ["widget_version_exists" => ["token" => $objAuthorizationResult->getData()->first()->record_uuid, "version" => $objJsonForSync->version]], "There is already an existing widget with this name and version. Widget Id: {$objAuthorizationResult->getData()->first()->record_uuid}, version: {$objJsonForSync->version}");
         }
 
         $moduleWidget = new ModuleAppModel();
-        $moduleWidget->module_id = $objModuleResult->Data->First()->module_id;
-        $moduleWidget->company_id = $objModuleResult->Data->First()->company_id;
-        $moduleWidget->app_uuid = $objAuthorizationResult->Data->First()->record_uuid;
+        $moduleWidget->module_id = $objModuleResult->getData()->first()->module_id;
+        $moduleWidget->company_id = $objModuleResult->getData()->first()->company_id;
+        $moduleWidget->app_uuid = $objAuthorizationResult->getData()->first()->record_uuid;
         $moduleWidget->name = $objJsonForSync->name;
-        $moduleWidget->author = $objJsonForSync->author ?? $objModuleResult->Data->First()->author;
+        $moduleWidget->author = $objJsonForSync->author ?? $objModuleResult->getData()->first()->author;
         $moduleWidget->version = $objJsonForSync->version;
         $moduleWidget->domain = $objJsonForSync->domain;
         $moduleWidget->ui_type = $objJsonForSync->ui_type;
@@ -402,12 +402,12 @@ class ApiController extends ModulesController
 
         $objNewModuleWidgetResult = $objModuleWidget->createNew($moduleWidget);
 
-        if ($objModuleResult->Result->Success === false)
+        if ($objModuleResult->result->Success === false)
         {
-            return $this->renderReturnJson(false, ["query" => $objNewModuleWidgetResult->Result->Query], $objNewModuleWidgetResult->Result->Message);
+            return $this->renderReturnJson(false, ["query" => $objNewModuleWidgetResult->result->Query], $objNewModuleWidgetResult->result->Message);
         }
 
-        return $this->renderReturnJson(true, $objNewModuleWidgetResult->Data->First()->ToPublicArray(), "Widget created.");
+        return $this->renderReturnJson(true, $objNewModuleWidgetResult->getData()->first()->ToPublicArray(), "Widget created.");
     }
 
     /**
@@ -429,14 +429,14 @@ class ApiController extends ModulesController
         $objAuthorization = new Authorizations();
         $objAuthorizationResult = $objAuthorization->getWhere(["record_uuid" => $objJsonForSync->id]);
 
-        if ($objAuthorizationResult->Result->Count === 0)
+        if ($objAuthorizationResult->result->Count === 0)
         {
             return $this->renderReturnJson(false, null, "There is no Authorization request for this token. Widget Id: {$objJsonForSync->id}");
         }
 
         $objModuleResult = $this->getModuleWidget($objJsonForSync->id, $objJsonForSync->version);
 
-        $moduleWidget = $objModuleResult->Data->First();
+        $moduleWidget = $objModuleResult->getData()->first();
         $moduleWidget->name = $objJsonForSync->name;
         $moduleWidget->author = $objJsonForSync->author;
         $moduleWidget->domain = $objJsonForSync->domain ?? $moduleWidget->domain;
@@ -449,12 +449,12 @@ class ApiController extends ModulesController
         $objModuleApps = new ModuleApps();
         $objNewModuleResult = $objModuleApps->update($moduleWidget);
 
-        if ($objModuleResult->Result->Success === false)
+        if ($objModuleResult->result->Success === false)
         {
-            return $this->renderReturnJson(false, ["query" => $objNewModuleResult->Result->Query], $objNewModuleResult->Result->Message);
+            return $this->renderReturnJson(false, ["query" => $objNewModuleResult->result->Query], $objNewModuleResult->result->Message);
         }
 
-        return $this->renderReturnJson(true, $objNewModuleResult->Data->First()->ToPublicArray(), $objNewModuleResult->Result->Message);
+        return $this->renderReturnJson(true, $objNewModuleResult->getData()->first()->ToPublicArray(), $objNewModuleResult->result->Message);
     }
 
     /*
@@ -471,9 +471,9 @@ class ApiController extends ModulesController
     {
         $objModule = new Modules();
         $objModuleResult = $objModule->getWhere(["module_uuid" => $uuid, "version" => $version]);
-        $objModuleResult->Data;
+        $objModuleResult->getData();
 
-        if ($objModuleResult->Result->Count !== 1)
+        if ($objModuleResult->result->Count !== 1)
         {
             return $this->renderReturnJson(false, null, "No module found for id: $uuid, version: $version");
         }
@@ -489,9 +489,9 @@ class ApiController extends ModulesController
     {
         $objModule = new Authorizations();
         $objModuleResult = $objModule->getWhere(["authorization_uuid" => $uuid]);
-        $objModuleResult->Data;
+        $objModuleResult->getData();
 
-        if ($objModuleResult->Result->Count === 0)
+        if ($objModuleResult->result->Count === 0)
         {
             return $this->renderReturnJson(false, null, "No module authorization found for token: $uuid,");
         }
@@ -503,9 +503,9 @@ class ApiController extends ModulesController
     {
         $objModuleWidget = new ModuleApps();
         $objModuleWidgetResult = $objModuleWidget->getWhere(["app_uuid" => $uuid, "version" => $version]);
-        $objModuleWidgetResult->Data;
+        $objModuleWidgetResult->getData();
 
-        if ($objModuleWidgetResult->Result->Count !== 1)
+        if ($objModuleWidgetResult->result->Count !== 1)
         {
             return $this->renderReturnJson(false, null, "No widget found for id: $uuid, version: $version");
         }
@@ -518,7 +518,7 @@ class ApiController extends ModulesController
         $customPlatformId = $this->app->objCustomPlatform->getCompany()->company_id;
 
         $objUsersResult = (new Users())->getWhere(["company_id" => $customPlatformId, "status" => "Active"]);
-        $users = $objUsersResult->Data->ToPublicArray(["user_id", "first_name", "last_name"]);
+        $users = $objUsersResult->getData()->ToPublicArray(["user_id", "first_name", "last_name"]);
 
         return $this->renderReturnJson(true, $users, "We found these users in the system.");
     }
@@ -548,26 +548,26 @@ class ApiController extends ModulesController
         $objPageWidgets = new AppInstances();
         $objPageWidgetResult = $objPageWidgets->getWhere(["instance_uuid" => $objPost->app_uuid]);
 
-        if ($objPageWidgetResult->Result->Count !== 1)
+        if ($objPageWidgetResult->result->Count !== 1)
         {
             return $this->renderReturnJson(false, [], "Widget not found.");
         }
 
         $objCardPage = new CardPage();
-        $objCardPageResult = $objCardPage->getWhere(["card_tab_id" => $objPageWidgetResult->Data->First()->card_tab_id]);
+        $objCardPageResult = $objCardPage->getWhere(["card_tab_id" => $objPageWidgetResult->getData()->first()->card_tab_id]);
 
-        if ($objCardPageResult->Result->Count !== 1)
+        if ($objCardPageResult->result->Count !== 1)
         {
             return $this->renderReturnJson(false, [], "Card page not found.");
         }
 
-        $cardPage = $objCardPageResult->Data->First();
+        $cardPage = $objCardPageResult->getData()->first();
 
         $cardPage->title = $objPost->title;
         $cardPage->user_id = $objPost->user_id;
         $updateResult = $objCardPage->update($cardPage);
 
-        return $this->renderReturnJson($updateResult->Result->Success, [], "Request processed.");
+        return $this->renderReturnJson($updateResult->result->Success, [], "Request processed.");
     }
 
     public function getAppBatches(ExcellHttpModel $objData) : bool
@@ -585,18 +585,18 @@ class ApiController extends ModulesController
                 air.app_instance_rel_id AS id,
                 air.card_page_rel_id AS on_page,
                 air.card_id AS on_card,
-                (SELECT platform_name FROM `ezdigital_v2_main`.`company` WHERE company.company_id = air.company_id LIMIT 1) AS platform,
-                (SELECT display_name FROM `ezdigital_v2_main`.`product` WHERE product.product_id = ai.product_id ORDER BY product_id DESC LIMIT 1) AS display_name,
-                (SELECT CONCAT(user.first_name, ' ', user.last_name) FROM `ezdigital_v2_main`.`user` WHERE user.user_id = air.user_id LIMIT 1) AS user_name,
+                (SELECT platform_name FROM `excell_main`.`company` WHERE company.company_id = air.company_id LIMIT 1) AS platform,
+                (SELECT display_name FROM `excell_main`.`product` WHERE product.product_id = ai.product_id ORDER BY product_id DESC LIMIT 1) AS display_name,
+                (SELECT CONCAT(user.first_name, ' ', user.last_name) FROM `excell_main`.`user` WHERE user.user_id = air.user_id LIMIT 1) AS user_name,
                 ca.order_line_id,
-                (SELECT source_uuid FROM `ezdigital_v2_main`.`product` WHERE product.product_id = ai.product_id ORDER BY product_id DESC LIMIT 1) AS app_uuid,
+                (SELECT source_uuid FROM `excell_main`.`product` WHERE product.product_id = ai.product_id ORDER BY product_id DESC LIMIT 1) AS app_uuid,
                 ai.module_app_id AS app_id,
-                ai.module_app_widget_id AS app_widget_id,
+                air.module_app_widget_id AS app_widget_id,
                 ai.instance_uuid
             FROM 
-                `ezdigital_v2_main`.`app_instance_rel` air
-            LEFT JOIN `ezdigital_v2_main`.app_instance ai ON ai.app_instance_id = air.app_instance_id
-            LEFT JOIN `ezdigital_v2_main`.card_addon ca ON ca.card_addon_id = air.card_addon_id
+                `excell_main`.`app_instance_rel` air
+            LEFT JOIN `excell_main`.app_instance ai ON ai.app_instance_id = air.app_instance_id
+            LEFT JOIN `excell_main`.card_addon ca ON ca.card_addon_id = air.card_addon_id
             ";
 
         $objWhereClause .= "WHERE air.company_id = {$this->app->objCustomPlatform->getCompanyId()}";
@@ -610,19 +610,19 @@ class ApiController extends ModulesController
 
         $appInstanceResult = Database::getSimple($objWhereClause, "app_instance_rel_id");
 
-        if ($appInstanceResult->Data->Count() < $batchCount)
+        if ($appInstanceResult->getData()->Count() < $batchCount)
         {
             $strEnd = "true";
         }
 
-        $appInstanceResult->Data->HydrateModelData(AppInstanceRelModel::class, true);
+        $appInstanceResult->getData()->HydrateModelData(AppInstanceRelModel::class, true);
 
         $arUserDashboardInfo = array(
-            "list" => $appInstanceResult->Data->FieldsToArray($arFields),
+            "list" => $appInstanceResult->getData()->FieldsToArray($arFields),
             //"query" => $objWhereClause,
         );
 
-        return $this->renderReturnJson(true, $arUserDashboardInfo, "We found " . $appInstanceResult->Data->Count() . " apps in this batch.", 200, "data", $strEnd);
+        return $this->renderReturnJson(true, $arUserDashboardInfo, "We found " . $appInstanceResult->getData()->Count() . " apps in this batch.", 200, "data", $strEnd);
     }
 
     public function sendModuleOwnerNotification(ExcellHttpModel $objData) : bool
@@ -644,9 +644,9 @@ class ApiController extends ModulesController
             return $this->renderReturnJson(false, $this->validationErrors, "Validation errors.");
         }
 
-        $moduleAppResult = (new ModuleApps())->getLatestModuleWidgetsByUuid($objPost->module_app_uuid);
+        $moduleAppResult = (new ModuleApps())->getLatestModuleAppsByUuid($objPost->module_app_uuid);
 
-        if ($moduleAppResult->Result->Count !== 1)
+        if ($moduleAppResult->result->Count !== 1)
         {
             return $this->renderReturnJson(false, [], "Module app page not found.");
         }
@@ -672,5 +672,10 @@ class ApiController extends ModulesController
         );
 
         return $this->renderReturnJson(true, [], "Message sent successfully.");
+    }
+
+    public function getUserModules(ExcellHttpModel $objData) : bool
+    {
+        
     }
 }

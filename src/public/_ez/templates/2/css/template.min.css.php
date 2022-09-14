@@ -33,9 +33,9 @@ header('Content-Type:text/css');
     max-height: -webkit-fill-available;
 }
 .app-card {
-    width: 500px;
+    /*width: 500px;*/
     display: block;
-    height: 890px;
+    /*height: 890px;*/
     position: relative;
 }
 .app-template-2 .app-main-comp-header {
@@ -642,7 +642,7 @@ body.theme_shade_light div.universal-float-shield {
     padding:15px 15pc 15px 5px;
 }
 .social-media-icon {
-    background: url(<?php echo $this->app->objCustomPlatform->getFullPortalDomain(); ?>/_ez/images/social-media-icon.svg) no-repeat center center / 100% auto;
+    background: url(<?php echo $this->app->objCustomPlatform->getFullPortalDomainName(); ?>/_ez/images/social-media-icon.svg) no-repeat center center / 100% auto;
     width: 38px;
     height: 38px;
     display: block;
@@ -766,11 +766,7 @@ body.theme_shade_light div.universal-float-shield {
     .handed-right .app-template-2 .app-kabob-float {
         right: -190px;
     }
-    body div.universal-float-shield {
-        display: flex;
-        width: 100%;
-        height: 100%;
-    }
+
     .handed-left .app-template-2 .app-main-comp-pages {
         padding-right: 15px;
     }

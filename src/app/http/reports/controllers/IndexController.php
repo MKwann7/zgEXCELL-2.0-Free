@@ -1,9 +1,9 @@
 <?php
 
-namespace Entities\Reports\Controllers;
+namespace Http\Reports\Controllers;
 
 use App\Utilities\Excell\ExcellHttpModel;
-use Entities\Reports\Classes\Base\ReportController;
+use Http\Reports\Controllers\Base\ReportController;
 use Entities\Reports\Classes\Reports;
 
 class IndexController extends ReportController

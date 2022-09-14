@@ -10,7 +10,7 @@ use App\Utilities\Database;
 
 $this->CurrentPage->BodyId            = "view-my-cards-page";
 $this->CurrentPage->BodyClasses       = ["admin-page", "view-my-cards-page", "two-columns", "left-side-column"];
-$this->CurrentPage->Meta->Title       = "List My Cards | " . $this->app->objCustomPlatform->getPortalDomain();
+$this->CurrentPage->Meta->Title       = "List My Cards | " . $this->app->objCustomPlatform->getPortalDomainName();
 $this->CurrentPage->Meta->Description = "Welcome to the NEW AMAZING WORLD of EZ Digital Cards, where you can create and manage your own cards!";
 $this->CurrentPage->Meta->Keywords    = "";
 $this->CurrentPage->SnipIt->Title     = "List My Cards";
@@ -868,7 +868,7 @@ $this->LoadVendorForPageStyles($this->CurrentPage->BodyId, ["jquery"=>"input-pic
                     let intConnectionRelId = connection.connection_rel_id;
                     let intConnectionId = connection.connection_id;
                     let intCardId = $('#dashboard-entity-id').val();
-                    ajax.Send("cards/card-data/update-card-data?type=remove-connection&id=" + intCardId + "&connection_id=" + intConnectionId + "&connection_rel_id=" + intConnectionRelId, null, null,"POST");
+                    ajax.Post("cards/card-data/update-card-data?type=remove-connection&id=" + intCardId + "&connection_id=" + intConnectionId + "&connection_rel_id=" + intConnectionRelId);
                     connection.connection_rel_id = null;
                     connection.connection_id = null;
                     connection.connection_type_id = "blank";
@@ -962,7 +962,7 @@ $this->LoadVendorForPageStyles($this->CurrentPage->BodyId, ["jquery"=>"input-pic
                     let intTabnRelId = cardTab.card_tab_rel_id;
                     let intTabId = cardTab.card_tab_id;
                     let intCardId = $('#dashboard-entity-id').val();
-                    ajax.Send("cards/card-data/update-card-data?type=remove-tab&id=" + intCardId + "&card_tab_id=" + intTabId + "&card_tab_rel_id=" + intTabnRelId, null, null,"POST");
+                    ajax.Post("cards/card-data/update-card-data?type=remove-tab&id=" + intCardId + "&card_tab_id=" + intTabId + "&card_tab_rel_id=" + intTabnRelId);
 
                     customerApp.cardTabs = customerApp.cardTabs.filter(function (currTab) {
                         return cardTab.card_tab_rel_id != currTab.card_tab_rel_id;
@@ -985,7 +985,7 @@ $this->LoadVendorForPageStyles($this->CurrentPage->BodyId, ["jquery"=>"input-pic
                     let intTabnRelId = cardTab.card_tab_rel_id;
                     let intTabId = cardTab.card_tab_id;
                     let intCardId = $('#dashboard-entity-id').val();
-                    ajax.Send("cards/card-data/update-card-data?type=remove-tab-rel&id=" + intCardId + "&card_tab_id=" + intTabId + "&card_tab_rel_id=" + intTabnRelId, null, null,"POST");
+                    ajax.Post1("cards/card-data/update-card-data?type=remove-tab-rel&id=" + intCardId + "&card_tab_id=" + intTabId + "&card_tab_rel_id=" + intTabnRelId);
 
                     customerApp.cardTabs = customerApp.cardTabs.filter(function (currTab) {
                         return cardTab.card_tab_rel_id != currTab.card_tab_rel_id;
@@ -1003,7 +1003,7 @@ $this->LoadVendorForPageStyles($this->CurrentPage->BodyId, ["jquery"=>"input-pic
                     let intEntityId = $('#dashboard-entity-id').val();
                     let blnVisibility = tab.rel_visibility;
                     console.log(tab);
-                    ajax.Send("/cards/card-data/update-card-data?type=update-tab-rel-visibility&id=" + intEntityId + "&card_tab_id=" + tab.card_tab_id + "&card_tab_rel_id=" + tab.card_tab_rel_id + "&rel_visibility=" + blnVisibility, null, function (objResult) {
+                    ajax.Post("/cards/card-data/update-card-data?type=update-tab-rel-visibility&id=" + intEntityId + "&card_tab_id=" + tab.card_tab_id + "&card_tab_rel_id=" + tab.card_tab_rel_id + "&rel_visibility=" + blnVisibility, null, function (objResult) {
                         console.log(objResult);
                     });
                 },500);
@@ -1038,7 +1038,7 @@ $this->LoadVendorForPageStyles($this->CurrentPage->BodyId, ["jquery"=>"input-pic
                 let objConnectionsUpdate = {connections: btoa(JSON.stringify(reOrderedConnections))};
                 this.$parent.cardConnections = $event;
                 let intCardId = $('#dashboard-entity-id').val();
-                ajax.Send("cards/card-data/update-card-data?type=reorder-connection&id=" + intCardId, objConnectionsUpdate, null,"POST");
+                ajax.Post("cards/card-data/update-card-data?type=reorder-connection&id=" + intCardId, objConnectionsUpdate);
             }
         },
         computed: {
@@ -1080,13 +1080,13 @@ $this->LoadVendorForPageStyles($this->CurrentPage->BodyId, ["jquery"=>"input-pic
                 let objTabUpdate = {tabs: btoa(JSON.stringify(reOrderedTabs))};
                 this.$parent.cardTabs = $event;
                 let intCardId = $('#dashboard-entity-id').val();
-                ajax.Send("cards/card-data/update-card-data?type=reorder-tabs&id=" + intCardId, objTabUpdate, function(data) {
+                ajax.Post("cards/card-data/update-card-data?type=reorder-tabs&id=" + intCardId, objTabUpdate, function(data) {
                     console.log(data);
                     if (data.success == false)
                     {
                         alert("We apologize for the inconvenience, but there was an error updating your tabs. We've recorded this error and will provide a resolution right away.")
                     }
-                },"POST");
+                });
             }
         },
         computed: {
@@ -1422,7 +1422,7 @@ $this->LoadVendorForPageStyles($this->CurrentPage->BodyId, ["jquery"=>"input-pic
                 this.cardAffiliates = [];
                 this.cardConnections = [];
 
-                ajax.Send("cards/card-data/get-card-dashboard-info", entityIdParameter, function(objCardResult)
+                ajax.Post("cards/card-data/get-card-dashboard-info", entityIdParameter, function(objCardResult)
                 {
                     if (objCardResult.success == false)
                     {
@@ -1493,7 +1493,7 @@ $this->LoadVendorForPageStyles($this->CurrentPage->BodyId, ["jquery"=>"input-pic
 
                     modal.CloseFloatShield();
 
-                },"POST");
+                });
             },
 
             deleteColumn: function(card)
@@ -2232,7 +2232,7 @@ $this->LoadVendorForPageStyles($this->CurrentPage->BodyId, ["jquery"=>"input-pic
 
                 let strCardUpdateDataParameters = "fieldlabels=" + btoa(strStyleLabel) + "&value=" + btoa(objValue);
 
-                ajax.Send("cards/card-data/update-card-data?id=" + intEntityId + "&type=card-data", strCardUpdateDataParameters, function(objCardResult)
+                ajax.Post("cards/card-data/update-card-data?id=" + intEntityId + "&type=card-data", strCardUpdateDataParameters, function(objCardResult)
                 {
                     if(typeof callback === "function")
                     {
@@ -2245,7 +2245,7 @@ $this->LoadVendorForPageStyles($this->CurrentPage->BodyId, ["jquery"=>"input-pic
             {
                 let intEntityId = $('#dashboard-entity-id').val();
 
-                ajax.Send("cards/card-data/get-card-images?id=" + intEntityId + "&type=main-image", null, function(objCardResult)
+                ajax.Post("cards/card-data/get-card-images?id=" + intEntityId + "&type=main-image", null, function(objCardResult)
                 {
                     console.log(objCardResult.image);
                     $("#entityMainImage").attr("data-src",objCardResult.image);
@@ -2312,7 +2312,7 @@ $this->LoadVendorForPageStyles($this->CurrentPage->BodyId, ["jquery"=>"input-pic
             cardAffiliateIndex: 1,
             transIndex: 1,
 
-            cards: <?php echo $objActiveCards->Data->ConvertToJavaScriptArray([
+            cards: <?php echo $objActiveCards->getData()->ConvertToJavaScriptArray([
                     "card_id",
                     "card_num",
                     "card_name",

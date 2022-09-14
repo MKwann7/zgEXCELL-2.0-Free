@@ -6,7 +6,8 @@ use App\Website\Vue\Classes\Base\VueComponent;
 
 class MarketplaceWidget extends VueComponent
 {
-    protected $id = "5240aa56-d65f-4ba5-8abe-a0c62c41d8b3";
+    protected string $id = "5240aa56-d65f-4ba5-8abe-a0c62c41d8b3";
+    protected string $title = "Marketplace";
 
     public function __construct(array $components = [])
     {
@@ -37,7 +38,6 @@ class MarketplaceWidget extends VueComponent
     protected function renderComponentComputedValues() : string
     {
         return '
-            ,
         ';
     }
 
@@ -58,7 +58,7 @@ class MarketplaceWidget extends VueComponent
     {
         return '
         <div class="marketplace-app-wrapper">
-            
+            Here!
         </div>';
     }
 }

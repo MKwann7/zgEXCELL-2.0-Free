@@ -1,6 +1,6 @@
 <?php
 
-namespace Entities\Media\Classes\Base;
+namespace Http\Media\Controllers\Base;
 
 use App\Core\AppController;
 use Entities\Media\Classes\Media;

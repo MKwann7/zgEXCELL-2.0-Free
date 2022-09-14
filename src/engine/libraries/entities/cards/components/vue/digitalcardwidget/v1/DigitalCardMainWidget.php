@@ -8,9 +8,9 @@ use Entities\Cards\Components\Vue\DigitalCardWidget\V3\DigitalCardPageWidget;
 
 class DigitalCardMainWidget extends VueComponent
 {
-    protected $id = "74db623b-2abd-41b4-b710-c9e1108ab608";
-    protected $title = "Digital Card";
-    protected $endpointUriAbstract = "{card_num}";
+    protected string $id = "74db623b-2abd-41b4-b710-c9e1108ab608";
+    protected string $title = "Digital Card";
+    protected string $endpointUriAbstract = "{card_num}";
 
     public function __construct (?AppModel $entity = null)
     {
@@ -90,8 +90,6 @@ class DigitalCardMainWidget extends VueComponent
                         backgroundImage: "linear-gradient(180deg, rgba("+red+","+green+","+blue+",1.00) 0%, rgba("+redDark+","+greenDark+","+blueDark+",1.00) 100%)",
                     }
                     
-                    console.log(backgroundImage);
-                    
                     return backgroundImage;
                 },
                 cardWidthPadding: function()
@@ -113,8 +111,8 @@ class DigitalCardMainWidget extends VueComponent
     {
         return '
             let cardId = props.cardId;
-            
-            if(typeof this.activeCardId !== "undefined" && this.activeCardId != null)
+           
+            if(typeof this.activeCardId !== "undefined" && this.activeCardId != null && this.activeCardId != "")
             {
                 cardId = this.activeCardId;
             }
@@ -124,6 +122,8 @@ class DigitalCardMainWidget extends VueComponent
             let self = this;
             self.checkHanded();
             self.setAuth();
+            
+            if (typeof cardId === "undefined") { return; }
             
             self.loadCardDataById(cardId, function(data) {
                 self.loadCardModules();
@@ -140,12 +140,13 @@ class DigitalCardMainWidget extends VueComponent
             {
                 let self = this;
                 const url = "api/v1/cards/get-card-by-uuid?uuid=" + id + "&pages=true&pageContent=false&addons=modules";
+
                 ajax.Get(url, null, function(result)
                 {
                     if (result.success === false || typeof result.response === "undefined") 
                     { 
                         return;
-                    }
+                    } 
                     
                     self.entityFound = true;                    
                     self.entity = result.response.data.card;
@@ -220,6 +221,8 @@ class DigitalCardMainWidget extends VueComponent
             {
                 let self = this;
                 const url = "modules/widget/card-widget?id=" + self.entity.card_id + "&modules=" + this.buildModuleIds();
+                
+                return;
             
                 ajax.Get(url, null, function(result) 
                 {
@@ -318,12 +321,12 @@ class DigitalCardMainWidget extends VueComponent
             },
             loadCardIntoContacts: function()
             {
-                window.open("'.$app->objCustomPlatform->getFullPublicDomain().'/api/v1/cards/download-vcard?card_id=" + this.entity.card_num, "_blank");
+                window.open("'.$app->objCustomPlatform->getFullPublicDomainName().'/api/v1/cards/download-vcard?card_id=" + this.entity.card_num, "_blank");
             },
             sendSms: function()
             {
                 const unqiueUrl = (this.entity.card_vanity_url !== "" ? this.entity.card_vanity_url : this.entity.card_num);
-                window.location = "sms:?&body='.$app->objCustomPlatform->getFullPublicDomain().'/" + unqiueUrl + "%20Click%20the%20link%20to%20connect%20with%20" + this.entity.card_owner_name + "!";
+                window.location = "sms:?&body='.$app->objCustomPlatform->getFullPublicDomainName().'/" + unqiueUrl + "%20Click%20the%20link%20to%20connect%20with%20" + this.entity.card_owner_name + "!";
             },
             sendShare: function()
             {
@@ -444,7 +447,7 @@ class DigitalCardMainWidget extends VueComponent
                 
                 let self = this;
                 this.loginCardUser(
-                    "'.$app->objCustomPlatform->getFullPortalDomain().'/api/v1/users/validate-existing-user-credentials",
+                    "'.$app->objCustomPlatform->getFullPortalDomainName().'/api/v1/users/validate-existing-user-credentials",
                     this.loginUsername, 
                     this.loginPassword, 
                     function(result) 
@@ -538,7 +541,7 @@ class DigitalCardMainWidget extends VueComponent
             {
                 if (typeof this.entity.user_avatar === "undefined")
                 {
-                    return "'.$app->objCustomPlatform->getFullPortalDomain().'/_ez/images/users/no-user.jpg";
+                    return "'.$app->objCustomPlatform->getFullPortalDomainName().'/_ez/images/users/no-user.jpg";
                 }
                 return this.entity.user_avatar;
             },
@@ -633,7 +636,7 @@ class DigitalCardMainWidget extends VueComponent
     protected function renderTemplate(): string
     {
         return '
-            <div v-if="entityFound == true" class="app-section app-template-3 app-section-scrollable">
+            <div v-if="entityFound == true" class="app-section app-template-1 app-section-scrollable">
                 <v-style type="text/css">
                     .wrapper {
                         box-shadow:rgba(0,0,0,.3) 0 0 10px;
@@ -728,7 +731,7 @@ class DigitalCardMainWidget extends VueComponent
                     }
                     .mainImageHandler {
                         height:500px;
-                    } 
+                    }
                     
                     @media (max-width:600px){
             

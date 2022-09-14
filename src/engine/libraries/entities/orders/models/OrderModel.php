@@ -1,6 +1,6 @@
 <?php
 
-namespace Module\Orders\Models;
+namespace Entities\Orders\Models;
 
 use App\Core\AppModel;
 

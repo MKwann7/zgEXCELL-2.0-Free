@@ -10,8 +10,9 @@ use Entities\Cards\Models\CardPageModel;
 
 class ManageCardPagesWidget extends VueComponentList
 {
-    protected $id = "524811d0-486a-4e7d-b2d8-b81cab8efa51";
-    protected $noMount = true;
+    protected string $id = "524811d0-486a-4e7d-b2d8-b81cab8efa51";
+    protected string $modalWidth = "850";
+    protected string $mountType = "default";
 
     public function __construct ($props = [], ?VueComponentListTable $listTable = null, ?VueComponentSortableList $sortableList = null)
     {
@@ -25,10 +26,20 @@ class ManageCardPagesWidget extends VueComponentList
 
         parent::__construct(new CardPageModel(), $manageCardPageListItemWidget, $manageCardPageSortableWidget, $props);
 
-        $this->modalTitleForAddEntity = "Add Card Page List";
-        $this->modalTitleForEditEntity = "Edit Card Page List";
-        $this->modalTitleForDeleteEntity = "Delete Card Page List";
-        $this->modalTitleForRowEntity = "View Card Page List";
+        $this->modalTitleForAddEntity = "Add Page List";
+        $this->modalTitleForEditEntity = "Edit Page List";
+        $this->modalTitleForDeleteEntity = "Delete Page List";
+        $this->modalTitleForRowEntity = "View Page List";
+    }
+
+    protected function renderComponentHydrationScript(): string
+    {
+        return '
+            if (!this.card && this.entity) {
+                this.card = this.entity
+            }
+            
+        '.parent::renderComponentHydrationScript();
     }
 
     protected function renderComponentMethods() : string
@@ -52,7 +63,7 @@ class ManageCardPagesWidget extends VueComponentList
                 let objTabUpdate = {tabs: btoa(JSON.stringify(reOrderedTabs))};
                 let intCardId = this.card.card_id;
 
-                ajax.Send("cards/card-data/update-card-data?type=reorder-tabs&id=" + intCardId, objTabUpdate, function(data) {
+                ajax.Post("cards/card-data/update-card-data?type=reorder-tabs&id=" + intCardId, objTabUpdate, function(data) {
                     if (data.success == false)
                     {
                         alert("We apologize for the inconvenience, but there was an error updating your tabs. We\'ve recorded this error and will provide a resolution right away.")
@@ -95,6 +106,7 @@ class ManageCardPagesWidget extends VueComponentList
         return 'cardPages: function()
             {
                 if (typeof this.card !== "undefined" && this.card !== null && typeof this.card.Tabs !== "undefined") { return this.card.Tabs; }
+                if (typeof this.entity !== "undefined" && this.entity !== null && typeof this.entity.Tabs !== "undefined") { return this.entity.Tabs; }
                 return [];
             },';
     }

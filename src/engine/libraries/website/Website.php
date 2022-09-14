@@ -38,14 +38,11 @@ class Website
     private $strPageBreadcrumb             = "";
     public  $arDdrPages                    = [];
     public  $blnShow404Page                = false;
-    /** @var AppEntity $AppEntity */
-    public  $AppEntity;
-    /** @var VueApp $VueApp */
-    public  $VueApp;
-    /** @var VueModal $Modal */
-    public  $Modal;
-    /** @var App $app */
-    private $app;
+
+    public AppEntity $AppEntity;
+    public ?VueApp $VueApp = null;
+    public VueModal $Modal;
+    private App $app;
 
     public function __construct(App $app)
     {
@@ -82,7 +79,7 @@ class Website
 
         $objPathMatching = $website->UriPathMatchesWebsiteEntity();
 
-        if ($objPathMatching->Result->Success === false)
+        if ($objPathMatching->result->Success === false)
         {
             if ($website->app->isPublicWebsite() && !empty($website->app->objCustomPlatform->getCompany()->public_domain_404_redirect))
             {
@@ -99,11 +96,11 @@ class Website
     {
         $objAllActivePages = (new Pages())->GetAllActivePages();
 
-        foreach ( $objAllActivePages->Data as $currKey => $currPageData)
+        foreach ($objAllActivePages->data as $currKey => $currPageData)
         {
-            if ( $currPageData->Data->ddr_widget != null)
+            if ( $currPageData->getData()->ddr_widget != null)
             {
-                $this->arDdrPages[$currPageData->Data->page_id] = $currPageData->Data->ddr_widget;
+                $this->arDdrPages[$currPageData->getData()->page_id] = $currPageData->getData()->ddr_widget;
             }
         }
 
@@ -123,21 +120,21 @@ class Website
 
         $strUriOriginal = (empty($this->app->objHttpRequest->UriOriginal) || $this->app->objHttpRequest->UriOriginal === "/") ? "home" : $this->app->objHttpRequest->UriOriginal;
 
-        $strWebsiteStylePageRequest = PublicData . $strUriOriginal . XT;
+        $strWebsiteStylePageRequest = PUBLIC_DATA . $strUriOriginal . XT;
 
         if( is_file($strWebsiteStylePageRequest))
         {
-            $objUriMatchResult->Result->Success = true;
-            $objUriMatchResult->Result->Count = 1;
-            $objUriMatchResult->Data->Add("page-css", $strWebsiteStylePageRequest);
+            $objUriMatchResult->result->Success = true;
+            $objUriMatchResult->result->Count = 1;
+            $objUriMatchResult->getData()->Add("page-css", $strWebsiteStylePageRequest);
             return $objUriMatchResult;
         }
 
         if (!$this->app->isPortalWebsite())
         {
             $this->blnShow404Page = true;
-            $objUriMatchResult->Result->Success = false;
-            $objUriMatchResult->Result->Count = 0;
+            $objUriMatchResult->result->Success = false;
+            $objUriMatchResult->result->Count = 0;
             return $objUriMatchResult;
         }
 
@@ -148,22 +145,22 @@ class Website
 
         if( is_file($strStaticPageRequest))
         {
-            $objUriMatchResult->Result->Success = true;
-            $objUriMatchResult->Result->Count = 1;
-            $objUriMatchResult->Data->Add("static-pages", $strStaticPageRequest);
+            $objUriMatchResult->result->Success = true;
+            $objUriMatchResult->result->Count = 1;
+            $objUriMatchResult->getData()->Add("static-pages", $strStaticPageRequest);
             return $objUriMatchResult;
         }
 
         $this->blnShow404Page = true;
 
-        $objUriMatchResult->Result->Success = false;
-        $objUriMatchResult->Result->Count = 0;
+        $objUriMatchResult->result->Success = false;
+        $objUriMatchResult->result->Count = 0;
         return $objUriMatchResult;
     }
 
     private function getPortalOrWebsitePage($strUriOriginal, $strTemplateName) : ?string
     {
-        $strStaticPageRequest = PublicData . "website/static-pages/" . $strUriOriginal . XT;
+        $strStaticPageRequest = PUBLIC_DATA . "website/static-pages/" . $strUriOriginal . XT;
 
         switch($strUriOriginal)
         {
@@ -178,7 +175,7 @@ class Website
             case "coming-soon-portal":
             case "coming-soon-website":
             case "terms-of-service":
-                $strStaticPageRequest = PublicData . "website/template/{$strTemplateName}/pages/" . $strUriOriginal . XT;
+                $strStaticPageRequest = PUBLIC_DATA . "website/template/{$strTemplateName}/pages/" . $strUriOriginal . XT;
                 break;
         }
 
@@ -192,7 +189,7 @@ class Website
 
     private function DisplayWebsitePage(ExcellTransaction $objPathMatching = null) : void
     {
-        $objPageRequest = $objPathMatching->Data->GetKeyByIndex(0);
+        $objPageRequest = $objPathMatching->getData()->GetKeyByIndex(0);
 
         switch($objPageRequest)
         {
@@ -208,7 +205,7 @@ class Website
             case "page-css":
 
                 header('Content-Type:text/css');
-                require $objPathMatching->Data->First();
+                require $objPathMatching->getData()->first();
                 die();
                 break;
         }
@@ -378,8 +375,8 @@ class Website
 
     public function BuildPageTemplate(string $strTemplateName, $blnAdmin = false) : self
     {
-        $strWebTheme = ($blnAdmin === false) ? PublicWebsiteTheme : PublicPortalTheme;
-        $strAppTheme = ($blnAdmin === false) ? PublicPortalTheme : AppPortalTheme;
+        $strWebTheme = ($blnAdmin === false) ? PUBLIC_WEBSITE_THEME : PUBLIC_PORTAL_THEME;
+        $strAppTheme = ($blnAdmin === false) ? PUBLIC_PORTAL_THEME : APP_PORTAL_THEME;
 
         if ($this->VueApp !== null)
         {
@@ -447,7 +444,7 @@ class Website
         {
             // TODO - This is duplicated logic that needs to be abstracted
 
-            $str404PageRequest = PublicData . "website/static-pages/404" . XT;
+            $str404PageRequest = PUBLIC_DATA . "website/static-pages/404" . XT;
 
             // Output buffering start
             ob_start();
@@ -618,8 +615,8 @@ class Website
 
     public function RenderPage($strTemplateName, $blnAdmin = false )
     {
-        $strWebTheme = ($blnAdmin === false) ? PublicWebsiteTheme : PublicPortalTheme;
-        $strAppTheme = ($blnAdmin === false) ? PublicPortalTheme : AppPortalTheme;
+        $strWebTheme = ($blnAdmin === false) ? PUBLIC_WEBSITE_THEME : PUBLIC_PORTAL_THEME;
+        $strAppTheme = ($blnAdmin === false) ? PUBLIC_PORTAL_THEME : APP_PORTAL_THEME;
 
         $this->strPageView = str_replace(array("[APP_REPLACE_VIEW]", "[APP_REPLACE_HEADER]"), array($this->strPageBody, $this->strTemplateHeader), $this->strTemplateInterface);
 
@@ -642,13 +639,13 @@ class Website
 
     public function RenderPortalComponent($strComponentFileName)
     {
-        if (is_file(PublicPortalComponents . $strComponentFileName . XT))
+        if (is_file(PUBLIC_PORTAL_COMPONENTS . $strComponentFileName . XT))
         {
-            require PublicPortalComponents . $strComponentFileName . XT;
+            require PUBLIC_PORTAL_COMPONENTS . $strComponentFileName . XT;
         }
-        elseif (is_file(AppPortalComponents . $strComponentFileName . XT))
+        elseif (is_file(APP_PORTAL_COMPONENTS . $strComponentFileName . XT))
         {
-            require AppPortalComponents . $strComponentFileName . XT;
+            require APP_PORTAL_COMPONENTS . $strComponentFileName . XT;
         }
         else
         {
@@ -683,12 +680,22 @@ class Website
                 return;
             }
 
+            if (empty($this->app->objAppSession["Website"]["Venders"]["Page"][$strBodyId][$strVenderName]["all"])) {
+                $this->app->objAppSession["Website"]["Venders"]["Page"][$strBodyId][$strVenderName]["all"] = new \stdClass();
+            }
+
             $this->app->objAppSession["Website"]["Venders"]["Page"][$strBodyId][$strVenderName]["all"]->JS = $this->app->arJavaScriptLibraries->vendor->{$strVenderName};
         }
         else
         {
             foreach($strVenderName as $currVender => $currVenderScript)
             {
+                if (empty($this->app->objAppSession["Website"]["Venders"]["Page"][$strBodyId][$currVender][$currVenderScript])) {
+                    $this->app->objAppSession["Website"]["Venders"]["Page"][$strBodyId][$currVender][$currVenderScript] = new \stdClass();
+                }
+                if (empty($this->app->objAppSession["Website"]["Venders"]["Page"][$strBodyId][$currVender][$currVenderScript]->JS)) {
+                    $this->app->objAppSession["Website"]["Venders"]["Page"][$strBodyId][$currVender][$currVenderScript]->JS = new \stdClass();
+                }
                 $this->app->objAppSession["Website"]["Venders"]["Page"][$strBodyId][$currVender][$currVenderScript]->JS->{$currVenderScript} = $this->app->arJavaScriptLibraries->vendor->{$currVender}->{$currVenderScript};
             }
         }
@@ -708,13 +715,21 @@ class Website
             {
                 return;
             }
-
+            if (empty($this->app->objAppSession["Website"]["Venders"]["Page"][$strBodyId][$strVenderName]["all"])) {
+                $this->app->objAppSession["Website"]["Venders"]["Page"][$strBodyId][$strVenderName]["all"] = new \stdClass();
+            }
             $this->app->objAppSession["Website"]["Venders"]["Page"][$strBodyId][$strVenderName]["all"]->CSS = $this->app->arCssLibraries->vendor->{$strVenderName};
         }
         else
         {
             foreach($strVenderName as $currVender => $currVenderScript)
             {
+                if (empty($this->app->objAppSession["Website"]["Venders"]["Page"][$strBodyId][$currVender][$currVenderScript])) {
+                    $this->app->objAppSession["Website"]["Venders"]["Page"][$strBodyId][$currVender][$currVenderScript] = new \stdClass();
+                }
+                if (empty($this->app->objAppSession["Website"]["Venders"]["Page"][$strBodyId][$currVender][$currVenderScript]->CSS)) {
+                    $this->app->objAppSession["Website"]["Venders"]["Page"][$strBodyId][$currVender][$currVenderScript]->CSS = new \stdClass();
+                }
                 $this->app->objAppSession["Website"]["Venders"]["Page"][$strBodyId][$currVender][$currVenderScript]->CSS->{$currVenderScript} = $this->app->arCssLibraries->vendor->{$currVender}->{$currVenderScript};
             }
         }
@@ -736,7 +751,7 @@ class Website
 
         $objPathMatching = $static->UriPathMatchesWebsiteEntity();
 
-        if ($objPathMatching->Result->Success === false)
+        if ($objPathMatching->result->Success === false)
         {
             $static->Display404Page();
         }
@@ -745,7 +760,7 @@ class Website
 
         $blnDoNotRedirect = true;
 
-        require $objPathMatching->Data->first();
+        require $objPathMatching->getData()->first();
 
         $static->strPageBody = ob_get_clean();
 
@@ -787,7 +802,7 @@ class Website
 
     public function generateJavascriptForStylesheet($arActiveJavaScriptLibraries) : void
     {
-        foreach($this->app->arJavaScriptLibraries->vendor as $strVenderName => $arVenderLibraries)
+        foreach ($this->app->arJavaScriptLibraries->vendor as $strVenderName => $arVenderLibraries)
         {
             foreach($arVenderLibraries as $strLibraryPath => $strLibraryFileNames)
             {
@@ -796,7 +811,7 @@ class Website
                 {
                     foreach($strLibraryFileNames as $strLibraryFileName)
                     {
-                        $strJsFilePath = AppVendors . $strVenderName . "/" . $strLibraryPath . "/min/" . $strLibraryFileName;
+                        $strJsFilePath = APP_VENDORS . $strVenderName . "/" . $strLibraryPath . "/min/" . $strLibraryFileName;
 
                         if (is_file($strJsFilePath))
                         {
@@ -812,7 +827,7 @@ class Website
                     {
                         if( !empty($arActiveJavaScriptLibraries["vendor"][$strVenderName]) && !empty($arActiveJavaScriptLibraries["vendor"][$strVenderName][$arLibraryPaths[0]]) && $arActiveJavaScriptLibraries["vendor"][$strVenderName][$arLibraryPaths[0]] === true)
                         {
-                            $strJsFilePath = AppVendors . $strVenderName . "/" . $strLibraryPath . "/min/" . $strLibraryFileName;
+                            $strJsFilePath = APP_VENDORS . $strVenderName . "/" . $strLibraryPath . "/min/" . $strLibraryFileName;
 
                             if (is_file($strJsFilePath))
                             {

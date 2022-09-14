@@ -1,9 +1,9 @@
 <?php
 
-namespace Entities\Visitors\Controllers;
+namespace Http\Visitors\Controllers;
 
 use App\Utilities\Excell\ExcellHttpModel;
-use Entities\Visitors\Classes\Base\VisitorController;
+use Http\Visitors\Controllers\Base\VisitorController;
 
 class IndexController extends VisitorController
 {

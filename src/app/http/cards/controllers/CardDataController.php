@@ -1,6 +1,6 @@
 <?php
 
-namespace Entities\Cards\Controllers;
+namespace Http\Cards\Controllers;
 
 use App\Utilities\Database;
 use App\Utilities\Excell\ExcellCollection;
@@ -11,11 +11,11 @@ use Entities\Cards\Classes\CardSocialMedia;
 use Entities\Modules\Classes\AppInstanceRels;
 use Entities\Modules\Classes\ModuleApps;
 use Entities\Modules\Models\ModuleAppModel;
-use Module\Orders\Models\OrderLineModel;
-use Module\Orders\Models\OrderModel;
+use Entities\Orders\Models\OrderLineModel;
+use Entities\Orders\Models\OrderModel;
 use Entities\Activities\Classes\UserLogs;
 use Entities\Cards\Classes\Cards;
-use Entities\Cards\Classes\Base\CardController;
+use Http\Cards\Controllers\Base\CardController;
 use Entities\Cards\Classes\CardConnections;
 use Entities\Cards\Classes\CardGroupsModule;
 use Entities\Cards\Classes\CardRels;
@@ -73,23 +73,23 @@ class CardDataController extends CardController
         ]
         )->getById($intCardId);
 
-        if ($objCardResult->Result->Count > 0)
+        if ($objCardResult->result->Count > 0)
         {
             $blnCardViewFound = true;
         }
 
-        $objCard         = $objCardResult->Data->First();
-        $objCardTemplate = (new CardTemplates())->getById($objCard->template_id__value)->Data->First();
+        $objCard         = $objCardResult->getData()->first();
+        $objCardTemplate = (new CardTemplates())->getById($objCard->template_id__value)->getData()->first();
         $colCardPages    = (new CardPage())->getFks()->GetByCardId($intCardId);
-        $colCardPages->Data->ConvertDatesToFormat("m/d/Y");
-        $colCardPages->Data->AssignCustomFieldsForAdminList($objCard);
-        $colCardPages->Data->SortBy("rel_sort_order", "ASC");
+        $colCardPages->getData()->ConvertDatesToFormat("m/d/Y");
+        $colCardPages->getData()->AssignCustomFieldsForAdminList($objCard);
+        $colCardPages->getData()->SortBy("rel_sort_order", "ASC");
         $colCardUsers = (new Users())->GetByCardId($intCardId);
-        $objOwner     = (new Users())->getById($objCard->owner_id)->Data->First();
-        //$colCardUsers->Data->DeleteEntityByValue("user_id", $this->app->$intActiveUserId);
-        $colCardConnections = (new Cards())->getFks()->GetConnectionsByCardId($intCardId)->Data;
+        $objOwner     = (new Users())->getById($objCard->owner_id)->getData()->first();
+        //$colCardUsers->data->DeleteEntityByValue("user_id", $this->app->$intActiveUserId);
+        $colCardConnections = (new Cards())->getFks()->GetConnectionsByCardId($intCardId)->getData();
 
-        for ($intConnectionIndex = 1; $intConnectionIndex <= $objCardTemplate->data->connections->count; $intConnectionIndex++)
+        for ($intConnectionIndex = 1; $intConnectionIndex <= $objCardTemplate->getData()->connections->count; $intConnectionIndex++)
         {
             $objConnection = $colCardConnections->FindEntityByValue("display_order", $intConnectionIndex);
 
@@ -125,16 +125,16 @@ class CardDataController extends CardController
         ], "image_id.DESC"
         );
 
-        if ($objImageResult->Result->Success === true && $objImageResult->Result->Count > 0)
+        if ($objImageResult->result->Success === true && $objImageResult->result->Count > 0)
         {
-            $strCardMainImage  = $objImageResult->Data->First()->url;
-            $strCardThumbImage = $objImageResult->Data->First()->thumb;
+            $strCardMainImage  = $objImageResult->getData()->first()->url;
+            $strCardThumbImage = $objImageResult->getData()->first()->thumb;
         }
 
-        if ($objFaviconResult->Result->Success === true && $objFaviconResult->Result->Count > 0)
+        if ($objFaviconResult->result->Success === true && $objFaviconResult->result->Count > 0)
         {
-            $strCardFaviconImage = $objFaviconResult->Data->First()->url;
-            $strCardFaviconIco   = $objFaviconResult->Data->First()->thumb;
+            $strCardFaviconImage = $objFaviconResult->getData()->first()->url;
+            $strCardFaviconIco   = $objFaviconResult->getData()->first()->thumb;
         }
 
         if (!empty($objCard))
@@ -148,14 +148,14 @@ class CardDataController extends CardController
             $objCard->AddUnvalidatedValue("card_tab_height", $objCard->card_data->style->tab->height ?? "55");
         }
 
-        //$colCardContacts = ContactsModule::GetByCardId($intCardId)->Data;
-        $colCardContacts = (new MobinitiContacts())->GetByCardId($intCardId)->Data;
+        //$colCardContacts = ContactsModule::GetByCardId($intCardId)->getData();
+        $colCardContacts = (new MobinitiContacts())->GetByCardId($intCardId)->getData();
 
         $arUserDashboardInfo = array(
             "card"             => !empty($objCard) ? $objCard->ToArray() : "[]",
             "blnCardViewFound" => $blnCardViewFound,
-            "cardTabs"         => $colCardPages->Data->CollectionToArray(),
-            "cardUsers"        => $colCardUsers->Data->CollectionToArray(),
+            "cardTabs"         => $colCardPages->getData()->CollectionToArray(),
+            "cardUsers"        => $colCardUsers->getData()->CollectionToArray(),
             "cardContacts"     => $colCardContacts->CollectionToArray(),
             "owner"            => $objOwner->ToArray(),
             "cardConnections"  => $colCardDisplayConnections->CollectionToArray(),
@@ -179,18 +179,18 @@ class CardDataController extends CardController
 
         $intCardGroupId = $objData->Data->PostData->card_group_id;
 
-        require AppEntities . "cards/classes/card_group.class" . XT;
+        require APP_ENTITIES . "cards/classes/card_group.class" . XT;
 
         $objCardGroup     = (new CardGroupsModule())->getFks()->getById($intCardGroupId);
         $colCardGroupUser = (new Users())->getFks()->GetUsersByCardGroupId($intCardGroupId);
         $objCards         = (new Cards())->getFks()->GetCardByGroupId($intCardGroupId);
 
-        $arCards = $objCards->Data->CollectionToArray();
+        $arCards = $objCards->getData()->CollectionToArray();
         $objCard = array_shift($arCards);
 
         $arUserDashboardInfo = array(
-            "cardGroup"      => $objCardGroup->Data->CollectionToArray(),
-            "cardGroupUsers" => $colCardGroupUser->Data->CollectionToArray(),
+            "cardGroup"      => $objCardGroup->getData()->CollectionToArray(),
+            "cardGroupUsers" => $colCardGroupUser->getData()->CollectionToArray(),
             "card"           => $objCard,
         );
 
@@ -299,7 +299,7 @@ class CardDataController extends CardController
         $objCardPage       = new CardPage();
         $objCardPageResult = $objCardPage->getById($objParamsForSync["card_tab_id"]);
 
-        return $this->renderReturnJson($objCardPageResult->Result->Success, $objCardPageResult->Data->ToPublicArray(), $objCardPageResult->Result->Message);
+        return $this->renderReturnJson($objCardPageResult->result->Success, $objCardPageResult->getData()->ToPublicArray(), $objCardPageResult->result->Message);
     }
 
     public function getCardPageData(ExcellHttpModel $objData)
@@ -325,30 +325,30 @@ class CardDataController extends CardController
         $intCardId        = $objData->Data->Params["card_id"];
 
         $objCardPageRelResult = (new CardPageRels())->getCardPageAndRelWithWidgetByRelId($intCardPageRelId);
-        $intCardPageId        = $objCardPageRelResult->Data->First()->card_tab_id;
+        $intCardPageId        = $objCardPageRelResult->getData()->first()->card_tab_id;
 
         $strContent = "";
 
-        if (!empty($objCardPageRelResult->Data->First()->__app))
+        if (!empty($objCardPageRelResult->getData()->first()->__app))
         {
-            $strContent = $this->RenderCardPageWidgetData($intCardId, $objCardPageRelResult->Data->First());
+            $strContent = $this->RenderCardPageWidgetData($intCardId, $objCardPageRelResult->getData()->first());
         }
-        elseif ($objCardPageRelResult->Data->First()->card_tab_type_id !== 2)
+        elseif ($objCardPageRelResult->getData()->first()->card_tab_type_id !== 2)
         {
-            $strContent = $this->RenderCardPageContentData($intCardId, $objCardPageRelResult->Data->First());
+            $strContent = $this->RenderCardPageContentData($intCardId, $objCardPageRelResult->getData()->first());
         }
         else
         {
-            $strContent = $this->RenderCardPageClassData($intCardId, $objCardPageRelResult->Data->First());
+            $strContent = $this->RenderCardPageClassData($intCardId, $objCardPageRelResult->getData()->first());
         }
 
-        if ($strContent === "")
-        {
-            $strContent = base64_encode("<p>Content coming soon!</p>");
-        }
+//        if ($strContent === "")
+//        {
+//            $strContent = base64_encode("<p>Content coming soon!</p");
+//        }
 
         $objJsonReturn = array(
-            "tab_id"  => $objCardPageRelResult->Data->First()->card_tab_id,
+            "tab_id"  => $objCardPageRelResult->getData()->first()->card_tab_id,
             "content" => $strContent,
         );
 
@@ -360,28 +360,28 @@ class CardDataController extends CardController
         $objModuleApps        = new ModuleApps();
         $objConfigurationResults = $objModuleApps->getLatestWidgetContentForPage($intCardId, $objCardPageRel);
 
-        if ($objConfigurationResults->Result->Success === false)
+        if ($objConfigurationResults->result->Success === false)
         {
-            return base64_encode("Drat. There was an error loading this page: " . $objConfigurationResults->Result->Message);
+            return base64_encode("Drat. There was an error loading this page: " . $objConfigurationResults->result->Message);
         }
 
-        $response = $objConfigurationResults->Data;
+        $response = $objConfigurationResults->getData()->first();
 
-        if (empty($response->data) || empty($response->data->type) || empty($response->data->content))
+        if (empty($response->data) || empty($response->data->type) || empty($response->getData()->content))
         {
             return base64_encode("Oops! This page has no content to display!");
         }
 
         if (($response->data->type ?? "") === "vue") { return ""; }
 
-        return base64_encode($response->data->content);
+        return base64_encode($response->getData()->content);
     }
 
     protected function RenderCardPageContentData(int $intCardId, CardPageRelModel $objCardPageRel): string
     {
         /** @var CardModel $objCard */
-        $objCard  = (new Cards())->getById($intCardId)->Data->First()->LoadCardOwner()->LoadCardAddress();
-        $objOwner = (new Users())->getById($objCard->owner_id)->Data->First();
+        $objCard  = (new Cards())->getById($intCardId)->getData()->first()->LoadCardOwner()->LoadCardAddress();
+        $objOwner = (new Users())->getById($objCard->owner_id)->getData()->first();
 
         return (new CardPage)->ReplaceCarotsWithCustomerData($objCardPageRel->content, $objCard, $objOwner, $objCard->Connections, $objCard->Addresses);
     }
@@ -393,7 +393,7 @@ class CardDataController extends CardController
         $arContentClass       = explode("_", $objTabControllerClass);
         $intControllerRequest = buildUnderscoreLowercaseFromPascalCase(str_replace("Controller", "", $arContentClass[1]));
 
-        $strControllerPath = PublicData . "_ez/tabs/v1/controllers/" . $intControllerRequest . "Controller" . XT;
+        $strControllerPath = PUBLIC_DATA . "_ez/tabs/v1/controllers/" . $intControllerRequest . "Controller" . XT;
 
         if (is_file($strControllerPath))
         {
@@ -402,8 +402,8 @@ class CardDataController extends CardController
             $objTabController = new $objTabControllerClass($this->app);
 
             /** @var CardModel $objCard */
-            $objCard     = (new Cards())->getById($intCardId)->Data->First()->LoadCardOwner()->LoadCardAddress();
-            $objCardData = (new CardPage)->getById($objCardPageRel->card_tab_id)->Data->First();
+            $objCard     = (new Cards())->getById($intCardId)->getData()->first()->LoadCardOwner()->LoadCardAddress();
+            $objCardData = (new CardPage)->getById($objCardPageRel->card_tab_id)->getData()->first();
 
             return base64_encode($objTabController->render($objCardPageRel, $objCardData, $objCard));
         }
@@ -416,12 +416,12 @@ class CardDataController extends CardController
         $intCardId     = $objData->Data->PostData->card_id;
         $objCardResult = (new Cards())->getById($intCardId);
 
-        if ($objCardResult->Result->Count === 0)
+        if ($objCardResult->result->Count === 0)
         {
-            die('{"success":false,"message":"' . $objCardResult->Result->Message . '"}');
+            die('{"success":false,"message":"' . $objCardResult->result->Message . '"}');
         }
 
-        $objCard = $objCardResult->Data->First();
+        $objCard = $objCardResult->getData()->first();
         $objCard->LoadCardOwner();
 
         $strCustomMessage = $objData->Data->PostData->msg ?? "";
@@ -460,19 +460,19 @@ class CardDataController extends CardController
 
         $objCards = Database::getSimple($objWhereClause, "card_id");
 
-        if ($objCards->Data->Count() < $batchCount)
+        if ($objCards->getData()->Count() < $batchCount)
         {
             $strEnd = "true";
         }
 
-        $objCards->Data->HydrateModelData(CardModel::class, true);
+        $objCards->getData()->HydrateModelData(CardModel::class, true);
 
         $arUserDashboardInfo = array(
-            "list" => $objCards->Data->FieldsToArray($arFields),
+            "list" => $objCards->getData()->FieldsToArray($arFields),
             "query" => $objWhereClause,
         );
 
-        return $this->renderReturnJson(true, $arUserDashboardInfo, "We found " . $objCards->Data->Count() . " cards in this batch.", 200, "data", $strEnd);
+        return $this->renderReturnJson(true, $arUserDashboardInfo, "We found " . $objCards->getData()->Count() . " cards in this batch.", 200, "data", $strEnd);
     }
 
     public function getCustomPlatformCardBatches(ExcellHttpModel $objData) : bool
@@ -486,13 +486,13 @@ class CardDataController extends CardController
 
         $objWhereClause = "
             SELECT card.*,
-            (SELECT platform_name FROM `ezdigital_v2_main`.`company` WHERE company.company_id = card.company_id LIMIT 1) AS platform, 
-            (SELECT url FROM `ezdigital_v2_media`.`image` WHERE image.entity_id = card.card_id AND image.entity_name = 'card' AND image_class = 'main-image' ORDER BY image_id DESC LIMIT 1) AS banner, 
-            (SELECT thumb FROM `ezdigital_v2_media`.`image` WHERE image.entity_id = card.card_id AND image.entity_name = 'card' AND image_class = 'favicon-image' ORDER BY image_id DESC LIMIT 1) AS favicon,
-            (SELECT CONCAT(user.first_name, ' ', user.last_name) FROM `ezdigital_v2_main`.`user` WHERE user.user_id = card.owner_id LIMIT 1) AS card_owner_name,
-            (SELECT CONCAT(user.first_name, ' ', user.last_name) FROM `ezdigital_v2_main`.`user` WHERE user.user_id = card.card_user_id LIMIT 1) AS card_user_name,
-            (SELECT title FROM `ezdigital_v2_main`.`product` WHERE product.product_id = card.product_id LIMIT 1) AS product, 
-            (SELECT COUNT(*) FROM `ezdigital_v2_main`.`mobiniti_contact_group_rel` mcgr WHERE mcgr.card_id = card.card_id) AS card_contacts
+            (SELECT platform_name FROM `excell_main`.`company` WHERE company.company_id = card.company_id LIMIT 1) AS platform, 
+            (SELECT url FROM `excell_media`.`image` WHERE image.entity_id = card.card_id AND image.entity_name = 'card' AND image_class = 'main-image' ORDER BY image_id DESC LIMIT 1) AS banner, 
+            (SELECT thumb FROM `excell_media`.`image` WHERE image.entity_id = card.card_id AND image.entity_name = 'card' AND image_class = 'favicon-image' ORDER BY image_id DESC LIMIT 1) AS favicon,
+            (SELECT CONCAT(user.first_name, ' ', user.last_name) FROM `excell_main`.`user` WHERE user.user_id = card.owner_id LIMIT 1) AS card_owner_name,
+            (SELECT CONCAT(user.first_name, ' ', user.last_name) FROM `excell_main`.`user` WHERE user.user_id = card.card_user_id LIMIT 1) AS card_user_name,
+            (SELECT title FROM `excell_main`.`product` WHERE product.product_id = card.product_id LIMIT 1) AS product, 
+            (SELECT COUNT(*) FROM `excell_main`.`mobiniti_contact_group_rel` mcgr WHERE mcgr.card_id = card.card_id) AS card_contacts
             FROM `card` ";
 
         $objWhereClause .= "WHERE card.company_id = {$filterEntity}";
@@ -501,19 +501,19 @@ class CardDataController extends CardController
 
         $objCards = Database::getSimple($objWhereClause, "card_id");
 
-        if ($objCards->Data->Count() < $batchCount)
+        if ($objCards->getData()->Count() < $batchCount)
         {
             $strEnd = "true";
         }
 
-        $objCards->Data->HydrateModelData(CardModel::class, true);
+        $objCards->getData()->HydrateModelData(CardModel::class, true);
 
         $arUserDashboardInfo = array(
-            "list" => $objCards->Data->FieldsToArray($arFields),
+            "list" => $objCards->getData()->FieldsToArray($arFields),
             "query" => $objWhereClause,
         );
 
-        return $this->renderReturnJson(true, $arUserDashboardInfo, "We found " . $objCards->Data->Count() . " cards in this batch.", 200, "data", $strEnd);
+        return $this->renderReturnJson(true, $arUserDashboardInfo, "We found " . $objCards->getData()->Count() . " cards in this batch.", 200, "data", $strEnd);
     }
 
     public function getCardBatches(ExcellHttpModel $objData)
@@ -548,32 +548,37 @@ class CardDataController extends CardController
             ]
             )->GetAllCardsForDisplay(1000, ($intOffset * 1000) - 750);
 
-        if ($lstUserCards->Data->Count() < 1000)
+        if ($lstUserCards->getData()->Count() < 1000)
         {
             $strEnd = "true";
         }
 
-        foreach ($lstUserCards->Data as $currCardId => $currCardData)
+        foreach ($lstUserCards->data as $currCardId => $currCardData)
         {
             $strPackageId = (empty($currCardData->product_id) || $currCardData->product_id === 0) ? "Unset" : $currCardData->product_id;
-            $lstUserCards->Data->{$currCardId}->AddUnvalidatedValue("product_id", $strPackageId);
+            $listCardData = $lstUserCards->getData();
+            $cardDataInstance = $listCardData->FindRowByKey($currCardId);
+            $cardDataInstance->AddUnvalidatedValue("product_id", $strPackageId);
 
-            $lstUserCards->Data->{$currCardId}->created_on   = date("m/d/Y", strtotime($currCardData->created_on));
-            $lstUserCards->Data->{$currCardId}->last_updated = date("m/d/Y", strtotime($currCardData->last_updated));
+            $cardDataInstance->created_on   = date("m/d/Y", strtotime($currCardData->created_on));
+            $cardDataInstance->last_updated = date("m/d/Y", strtotime($currCardData->last_updated));
 
             if (empty($currCardData->main_image))
             {
-                $lstUserCards->Data->{$currCardId}->AddUnvalidatedValue("main_image", "/_ez/templates/" . ($currCardData->template_id__value ?? "1") . "/images/mainImage.jpg");
+                $cardDataInstance->AddUnvalidatedValue("main_image", "/_ez/templates/" . ($currCardData->template_id__value ?? "1") . "/images/mainImage.jpg");
             }
 
             if (empty($currCardData->main_thumb))
             {
-                $lstUserCards->Data->{$currCardId}->AddUnvalidatedValue("main_thumb", "/_ez/templates/" . ($currCardData->template_id__value ?? "1") . "/images/mainImage.jpg");
+                $cardDataInstance->AddUnvalidatedValue("main_thumb", "/_ez/templates/" . ($currCardData->template_id__value ?? "1") . "/images/mainImage.jpg");
             }
+
+            $listCardData->AddRowByKey($currCardId, $cardDataInstance);
+            $lstUserCards->setData($listCardData);
         }
 
         $arUserDashboardInfo = array(
-            "cards" => $lstUserCards->Data->FieldsToArray([
+            "cards" => $lstUserCards->getData()->FieldsToArray([
                 "card_id",
                 "owner_id",
                 "card_type_id",
@@ -595,7 +600,7 @@ class CardDataController extends CardController
 
         $objJsonReturn = array(
             "success" => true,
-            "message" => "We found " . $lstUserCards->Data->Count() . " cards in this batch.",
+            "message" => "We found " . $lstUserCards->getData()->Count() . " cards in this batch.",
             "end"     => $strEnd,
             "data"    => $arUserDashboardInfo,
         );
@@ -616,21 +621,21 @@ class CardDataController extends CardController
         ], 1000, $intOffset
         );
 
-        if ($lstLibraryTabs->Data->Count() < 1000)
+        if ($lstLibraryTabs->getData()->Count() < 1000)
         {
             $strEnd = "true";
         }
 
         $objModuleApp = new AppInstanceRels();
-        $objCardWidgets = $objModuleApp->getByPageIds($lstLibraryTabs->Data->FieldsToArray(["card_tab_id"]));
+        $objCardWidgets = $objModuleApp->getByPageIds($lstLibraryTabs->getData()->FieldsToArray(["card_tab_id"]));
 
-        $lstLibraryTabs->Data->HydrateChildModelData("__app", ["card_page_rel_id" => "card_tab_rel_id"], $objCardWidgets->Data, true);
+        $lstLibraryTabs->getData()->HydrateChildModelData("__app", ["card_page_rel_id" => "card_tab_rel_id"], $objCardWidgets->data, true);
 
         $arUserDashboardInfo = array(
-            "list" => $lstLibraryTabs->Data->FieldsToArray($arFields),
+            "list" => $lstLibraryTabs->getData()->FieldsToArray($arFields),
         );
 
-        return $this->renderReturnJson(true, $arUserDashboardInfo, "We found " . $lstLibraryTabs->Data->Count() . " cards in this batch.", 200, "data", $strEnd);
+        return $this->renderReturnJson(true, $arUserDashboardInfo, "We found " . $lstLibraryTabs->getData()->Count() . " cards in this batch.", 200, "data", $strEnd);
     }
 
     public function createCardData(ExcellHttpModel $objData)
@@ -642,23 +647,23 @@ class CardDataController extends CardController
             case "addProfile":
 
                 $objLoggedInUser  = $this->app->getActiveLoggedInUser();
-                $objCurrentUser   = (new Users())->getById($objLoggedInUser->user_id)->Data->First();
+                $objCurrentUser   = (new Users())->getById($objLoggedInUser->user_id)->getData()->first();
                 $objPackageResult = (new Products())->getById($objData->Data->PostData->product_id ?? 0);
                 $intAffiliateId   = $objLoggedInUser->sponsor_id;
 
-                if ($objPackageResult->Result->Success === false)
+                if ($objPackageResult->result->Success === false)
                 {
                     $objJsonReturn = array(
                         "success" => false,
-                        "message" => "An error occured during user update: " . $objPackageResult->Result->Message . "."
+                        "message" => "An error occured during user update: " . $objPackageResult->result->Message . "."
                     );
 
                     die(json_encode($objJsonReturn));
                 }
 
-                $objPackage = $objPackageResult->Data->First();
+                $objPackage = $objPackageResult->getData()->first();
 
-                $objCardNumCheck = (new Cards())->getWhere(null, "card_num.DESC", 1)->Data->First();
+                $objCardNumCheck = (new Cards())->getWhere(null, "card_num.DESC", 1)->getData()->first();
                 $intNewCardNum   = $objCardNumCheck->card_num + 1;
 
                 $objCardCreate                = new CardModel($objData->Data->PostData);
@@ -666,7 +671,7 @@ class CardDataController extends CardController
                 $objCardCreate->company_id    = $this->app->objCustomPlatform->getCompanyId();
                 $objCardCreate->division_id   = 0;
                 $objCardCreate->template_id   = $objData->Data->PostData->template_id;
-                $objCardCreate->template_card = ExcellFalse;
+                $objCardCreate->template_card = EXCELL_FALSE;
                 $objCardCreate->card_type_id  = 1;
                 $objCardCreate->card_num      = $intNewCardNum;
                 $objCardCreate->created_by    = $objLoggedInUser->user_id;
@@ -689,17 +694,17 @@ class CardDataController extends CardController
 
                 $objNewOrderCreationResult = (new Orders())->createNew($objOrderModel);
 
-                if ($objNewOrderCreationResult->Result->Success === false)
+                if ($objNewOrderCreationResult->result->Success === false)
                 {
                     $objJsonReturn = array(
                         "success" => false,
-                        "message" => "An error occured during user update: " . $objNewOrderCreationResult->Result->Message . "."
+                        "message" => "An error occured during user update: " . $objNewOrderCreationResult->result->Message . "."
                     );
 
                     die(json_encode($objJsonReturn));
                 }
 
-                $objNewOrderCreation = $objNewOrderCreationResult->Data->First();
+                $objNewOrderCreation = $objNewOrderCreationResult->getData()->first();
 
                 $objOrderLineModel = new OrderLineModel();
 
@@ -718,17 +723,17 @@ class CardDataController extends CardController
 
                 $objNewOrderLineCreationResult = (new OrderLines())->createNew($objOrderLineModel);
 
-                if ($objNewOrderLineCreationResult->Result->Success === false)
+                if ($objNewOrderLineCreationResult->result->Success === false)
                 {
                     $objJsonReturn = array(
                         "success" => false,
-                        "message" => "An error occured during user update: " . $objNewOrderLineCreationResult->Result->Message . "."
+                        "message" => "An error occured during user update: " . $objNewOrderLineCreationResult->result->Message . "."
                     );
 
                     die(json_encode($objJsonReturn));
                 }
 
-                $objNewOrderLineCreation = $objNewOrderLineCreationResult->Data->First();
+                $objNewOrderLineCreation = $objNewOrderLineCreationResult->getData()->first();
 
                 $objCardCreate->order_line_id = $objNewOrderLineCreation->order_line_id;
 
@@ -736,17 +741,17 @@ class CardDataController extends CardController
                 {
                     $objCardCreationResult = (new Cards())->createNew($objCardCreate);
 
-                    if ($objCardCreationResult->Result->Success === false)
+                    if ($objCardCreationResult->result->Success === false)
                     {
                         $objJsonReturn = array(
                             "success" => false,
-                            "message" => "An error occured during user update: " . $objCardCreationResult->Result->Message . "."
+                            "message" => "An error occured during user update: " . $objCardCreationResult->result->Message . "."
                         );
 
                         die(json_encode($objJsonReturn));
                     }
 
-                    $objCardCreation = $objCardCreationResult->Data->First();
+                    $objCardCreation = $objCardCreationResult->getData()->first();
 
                     $objCardAffiliateModel                   = new CardRelModel();
                     $objCardAffiliateModel->card_id          = $objCardCreation->card_id;
@@ -758,20 +763,20 @@ class CardDataController extends CardController
 
                     $objCardAffiateCreationResult = (new CardRels())->createNew($objCardAffiliateModel);
 
-                    if ($objCardAffiateCreationResult->Result->Success === false)
+                    if ($objCardAffiateCreationResult->result->Success === false)
                     {
                         $objJsonReturn = array(
                             "success" => false,
-                            "message" => "An error occured during user update: " . $objCardAffiateCreationResult->Result->Message . "."
+                            "message" => "An error occured during user update: " . $objCardAffiateCreationResult->result->Message . "."
                         );
 
                         die(json_encode($objJsonReturn));
                     }
 
-                    $objCardCreationResult->Data->{$objCardCreation->card_id}->AddUnvalidatedValue("main_image", "/_ez/templates/" . $objData->Data->PostData->template_id . "/images/mainImage.jpg");
-                    $objCardCreationResult->Data->{$objCardCreation->card_id}->AddUnvalidatedValue("main_thumb", "/_ez/templates/" . $objData->Data->PostData->template_id . "/images/mainImage.jpg");
+                    $objCardCreationResult->getData()->{$objCardCreation->card_id}->AddUnvalidatedValue("main_image", "/_ez/templates/" . $objData->Data->PostData->template_id . "/images/mainImage.jpg");
+                    $objCardCreationResult->getData()->{$objCardCreation->card_id}->AddUnvalidatedValue("main_thumb", "/_ez/templates/" . $objData->Data->PostData->template_id . "/images/mainImage.jpg");
 
-                    $arNewCardCreationResult = $objCardCreationResult->Data->FieldsToArray([
+                    $arNewCardCreationResult = $objCardCreationResult->getData()->FieldsToArray([
                         "main_image",
                         "main_thumb",
                         "card_id",
@@ -838,7 +843,7 @@ class CardDataController extends CardController
 
             $objCardResult = (new Cards())->noFks()->getById($intCardId);
 
-            if ($objCardResult->Result->Success === false || $objCardResult->Result->Count === 0)
+            if ($objCardResult->result->Success === false || $objCardResult->result->Count === 0)
             {
                 $objJsonReturn = array(
                     "success" => false,
@@ -850,14 +855,14 @@ class CardDataController extends CardController
                 die(json_encode($objJsonReturn));
             }
 
-            $objCard = $objCardResult->Data->First();
+            $objCard = $objCardResult->getData()->first();
         }
 
         $strUpdateType = $objData->Data->Params["type"];
 
         switch ($strUpdateType)
         {
-            case "profile":
+            case "profilewidget":
             case "editProfileAdmin":
             case "account":
 
@@ -879,7 +884,7 @@ class CardDataController extends CardController
                     ]
                     );
 
-                    if ($objVanityUrlCheckResult->Result === true && $objVanityUrlCheckResult->Result->Count > 0)
+                    if ($objVanityUrlCheckResult->result === true && $objVanityUrlCheckResult->result->Count > 0)
                     {
                         $objJsonReturn = array(
                             "success" => false,
@@ -891,7 +896,7 @@ class CardDataController extends CardController
                 }
                 else
                 {
-                    $objData->Data->PostData->card_vanity_url = ExcellNull;
+                    $objData->Data->PostData->card_vanity_url = EXCELL_NULL;
                 }
 
                 if (!empty($objData->Data->PostData->card_keyword))
@@ -912,7 +917,7 @@ class CardDataController extends CardController
                     ]
                     );
 
-                    if ($objCardKeywordCheckResult->Result === true && $objCardKeywordCheckResult->Result->Count > 0)
+                    if ($objCardKeywordCheckResult->result === true && $objCardKeywordCheckResult->result->Count > 0)
                     {
                         $objJsonReturn = array(
                             "success" => false,
@@ -924,7 +929,7 @@ class CardDataController extends CardController
                 }
                 else
                 {
-                    $objData->Data->PostData->card_keyword = ExcellNull;
+                    $objData->Data->PostData->card_keyword = EXCELL_NULL;
                 }
 
                 $objCardUpdate           = new CardModel($objData->Data->PostData);
@@ -934,11 +939,11 @@ class CardDataController extends CardController
                 try
                 {
                     $objCardProfileUpdateResult = (new Cards())->update($objCardUpdate);
-                    $objResult                  = $objCardProfileUpdateResult->Data->First();
+                    $objResult                  = $objCardProfileUpdateResult->getData()->first();
 
                     (new UserLogs())->RegisterActivity($objLoggedInUser->user_id, "updated_card", "Card Updated Successfully", "card", $intCardId);
 
-                    $objOwner      = (new Users())->getById($objCardUpdate->owner_id)->Data->First();
+                    $objOwner      = (new Users())->getById($objCardUpdate->owner_id)->getData()->first();
                     $objJsonReturn = [
                         "success" => true,
                         "card"    => $objResult->ToArray([
@@ -1005,14 +1010,14 @@ class CardDataController extends CardController
                     $objCurrentCardConnection = (new CardConnections())->getWhere([
                         [
                             "connection_id" => $intConnectionId,
-                            "display_order" => ExcellNull
+                            "display_order" => EXCELL_NULL
                         ],
                         "OR",
                         ["connection_rel_id" => $intConnectionRelId]
                     ]
                     );
 
-                    if ($objCurrentCardConnection->Result->Count === 0)
+                    if ($objCurrentCardConnection->result->Count === 0)
                     {
                         $objCardConnectionUpdateModel = new CardConnectionModel();
 
@@ -1022,12 +1027,12 @@ class CardDataController extends CardController
                         $objCardConnectionUpdateModel->action        = $strConnectionRelAction;
                         $objCardConnectionUpdateModel->display_order = $intDisplayOrder;
 
-                        $objResult              = (new CardConnections())->createNew($objCardConnectionUpdateModel)->Data->ConvertToArray();
+                        $objResult              = (new CardConnections())->createNew($objCardConnectionUpdateModel)->getData()->ConvertToArray();
                         $objConnectionForReturn = array_shift($objResult);
 
                         $objConnection                                = (new Connections())->getFks()->getById($intConnectionId);
-                        $objConnectionForReturn["connection_value"]   = formatAsPhoneIfApplicable($objConnection->Data->First()->connection_value);
-                        $objConnectionForReturn["connection_type_id"] = $objConnection->Data->First()->connection_type_id;
+                        $objConnectionForReturn["connection_value"]   = formatAsPhoneIfApplicable($objConnection->getData()->first()->connection_value);
+                        $objConnectionForReturn["connection_type_id"] = $objConnection->getData()->first()->connection_type_id;
 
                         (new UserLogs())->RegisterActivity($objLoggedInUser->user_id, "updated_connection_rel", "Card Connection Relationship Updated", "connection_rel", $objConnectionForReturn["connection_rel_id"]);
 
@@ -1040,16 +1045,16 @@ class CardDataController extends CardController
                     }
                     else
                     {
-                        $objCurrentCardConnection->Data->First()->connection_id = $intConnectionId;
-                        $objCurrentCardConnection->Data->First()->action        = $strConnectionRelAction;
-                        $objCurrentCardConnection->Data->First()->display_order = $intDisplayOrder;
+                        $objCurrentCardConnection->getData()->first()->connection_id = $intConnectionId;
+                        $objCurrentCardConnection->getData()->first()->action        = $strConnectionRelAction;
+                        $objCurrentCardConnection->getData()->first()->display_order = $intDisplayOrder;
 
-                        $objResult              = (new CardConnections())->update($objCurrentCardConnection->Data->First())->Data->ConvertToArray();
+                        $objResult              = (new CardConnections())->update($objCurrentCardConnection->getData()->first())->getData()->ConvertToArray();
                         $objConnectionForReturn = array_shift($objResult);
 
                         $objConnection                                = (new Connections())->getFks()->getById($intConnectionId);
-                        $objConnectionForReturn["connection_value"]   = $objConnection->Data->First()->connection_value;
-                        $objConnectionForReturn["connection_type_id"] = $objConnection->Data->First()->connection_type_id;
+                        $objConnectionForReturn["connection_value"]   = $objConnection->getData()->first()->connection_value;
+                        $objConnectionForReturn["connection_type_id"] = $objConnection->getData()->first()->connection_type_id;
 
                         $arResult = [
                             "success"    => true,
@@ -1080,7 +1085,7 @@ class CardDataController extends CardController
                     foreach ($lstConnections as $currConnection)
                     {
                         $socialMediaResult          = (new CardConnections())->getById($currConnection->connection_rel_id);
-                        $socialMedia                = $socialMediaResult->Data->First();
+                        $socialMedia                = $socialMediaResult->getData()->first();
                         $socialMedia->display_order = $currConnection->display_order;
 
                         $result = (new CardConnections())->update($socialMedia);
@@ -1143,8 +1148,8 @@ class CardDataController extends CardController
                 try
                 {
                     $socialMediaResult          = (new CardConnections())->getById($intSocialMediaId);
-                    $socialMedia                = $socialMediaResult->Data->First();
-                    $socialMedia->display_order = ExcellNull;
+                    $socialMedia                = $socialMediaResult->getData()->first();
+                    $socialMedia->display_order = EXCELL_NULL;
 
                     $result = (new CardConnections())->update($socialMedia);
 
@@ -1180,7 +1185,7 @@ class CardDataController extends CardController
                     $objTabValidationResult    = (new CardPage())->getById($intCardPageId);
                     $objTabRelValidationResult = (new CardPageRels())->getById($intCardPageRelId);
 
-                    if ($objTabValidationResult->Result->Count === 0)
+                    if ($objTabValidationResult->result->Count === 0)
                     {
                         $arResult = [
                             "success" => false,
@@ -1189,7 +1194,7 @@ class CardDataController extends CardController
                         die(json_encode($arResult));
                     }
 
-                    if ($objTabValidationResult->Data->First()->permanent == 1)
+                    if ($objTabValidationResult->getData()->first()->permanent == 1)
                     {
                         $arResult = [
                             "success" => false,
@@ -1198,7 +1203,7 @@ class CardDataController extends CardController
                         die(json_encode($arResult));
                     }
 
-                    if ($objTabRelValidationResult->Result->Count === 0)
+                    if ($objTabRelValidationResult->result->Count === 0)
                     {
                         $arResult = [
                             "success" => false,
@@ -1207,7 +1212,7 @@ class CardDataController extends CardController
                         die(json_encode($arResult));
                     }
 
-                    if ($objTabRelValidationResult->Data->First()->card_tab_rel_type !== "mirror")
+                    if ($objTabRelValidationResult->getData()->first()->card_tab_rel_type !== "mirror")
                     {
                         $objTabDeletionResult = (new CardPage())->deleteById($intCardPageId);
                     }
@@ -1241,7 +1246,7 @@ class CardDataController extends CardController
                 {
                     $objTabRelValidationResult = (new CardPageRels())->getById($intCardPageRelId);
 
-                    if ($objTabRelValidationResult->Result->Count === 0)
+                    if ($objTabRelValidationResult->result->Count === 0)
                     {
                         $arResult = [
                             "success" => false,
@@ -1278,7 +1283,7 @@ class CardDataController extends CardController
                 {
                     $objCardPageResult = (new CardPage())->getById($intCardPageId);
 
-                    if ($objCardPageResult->Result->Success === false)
+                    if ($objCardPageResult->result->Success === false)
                     {
                         $objJsonReturn = array(
                             "success" => false,
@@ -1294,13 +1299,13 @@ class CardDataController extends CardController
                     {
                         $objUserResult = (new Users())->getById($this->app->objHttpRequest->Data->PostData->user_id);
 
-                        if ($objUserResult->Result->Count > 0)
+                        if ($objUserResult->result->Count > 0)
                         {
-                            $objUser = $objUserResult->Data->First();
+                            $objUser = $objUserResult->getData()->first();
                         }
                     }
 
-                    $objCardPage       = $objCardPageResult->Data->First();
+                    $objCardPage       = $objCardPageResult->getData()->first();
                     $objCardPageResult = new ExcellTransaction();
 
                     if ($objData->Data->Params["tab_type"] === "system-tab")
@@ -1318,11 +1323,11 @@ class CardDataController extends CardController
                     }
                     else
                     {
-                        $blnLibraryTab = ExcellTrue;
+                        $blnLibraryTab = EXCELL_TRUE;
 
                         if (empty($this->app->objHttpRequest->Data->PostData->tab_library) || $this->app->objHttpRequest->Data->PostData->tab_library != "true")
                         {
-                            $blnLibraryTab = ($this->app->objHttpRequest->Data->PostData->library_tab === "on" ? ExcellTrue : ExcellFalse);
+                            $blnLibraryTab = ($this->app->objHttpRequest->Data->PostData->library_tab === "on" ? EXCELL_TRUE : EXCELL_FALSE);
                         }
 
                         $objCardPage->title        = $this->app->objHttpRequest->Data->PostData->tab_title;
@@ -1333,8 +1338,8 @@ class CardDataController extends CardController
                         $objCardPageResult         = (new CardPage())->getFks()->update($objCardPage);
                     }
 
-                    $objCardPageResult->Data->ConvertDatesToFormat('m/d/Y');
-                    $objResult = $objCardPageResult->Data->ConvertToArray();
+                    $objCardPageResult->getData()->ConvertDatesToFormat('m/d/Y');
+                    $objResult = $objCardPageResult->getData()->ConvertToArray();
 
                     $objCardPageForReturn = array_shift($objResult);
 
@@ -1373,7 +1378,7 @@ class CardDataController extends CardController
                 {
                     $objCardPageResult = (new CardPage())->getById($intCardPageId);
 
-                    if ($objCardPageResult->Result->Success === false)
+                    if ($objCardPageResult->result->Success === false)
                     {
                         $objJsonReturn = array(
                             "success" => false,
@@ -1383,7 +1388,7 @@ class CardDataController extends CardController
                         die(json_encode($objJsonReturn));
                     }
 
-                    $objCardPage          = $objCardPageResult->Data->First();
+                    $objCardPage          = $objCardPageResult->getData()->first();
                     $objCardPageRelResult = null;
                     $objCardPage->title   = $this->app->objHttpRequest->Data->PostData->tab_title;
                     $objCardPage->content = base64_encode($this->app->objHttpRequest->Data->PostData->tab_content);
@@ -1396,21 +1401,21 @@ class CardDataController extends CardController
                         ], 1
                         );
 
-                        $objCardPageRelResult->Data->First()->rel_visibility = $this->app->objHttpRequest->Data->PostData->visibility === "on" ? ExcellTrue : ExcellFalse;
-                        $objCardPageRelUpdate                                = (new CardPageRels())->update($objCardPageRelResult->Data->First());
+                        $objCardPageRelResult->getData()->first()->rel_visibility = $this->app->objHttpRequest->Data->PostData->visibility === "on" ? EXCELL_TRUE : EXCELL_FALSE;
+                        $objCardPageRelUpdate                                = (new CardPageRels())->update($objCardPageRelResult->getData()->first());
 
-                        $objCardPage->library_tab = $this->app->objHttpRequest->Data->PostData->library_tab === "on" ? ExcellTrue : $objCardPage->library_tab;
+                        $objCardPage->library_tab = $this->app->objHttpRequest->Data->PostData->library_tab === "on" ? EXCELL_TRUE : $objCardPage->library_tab;
                     }
                     else
                     {
-                        $objCardPage->library_tab = $this->app->objHttpRequest->Data->PostData->library_tab === "on" ? ExcellTrue : ExcellFalse;
+                        $objCardPage->library_tab = $this->app->objHttpRequest->Data->PostData->library_tab === "on" ? EXCELL_TRUE : EXCELL_FALSE;
                     }
 
                     $objCardPageResult = (new CardPage())->getFks()->update($objCardPage);
 
                     if (empty($this->app->objHttpRequest->Data->PostData->tab_library) || $this->app->objHttpRequest->Data->PostData->tab_library != "true")
                     {
-                        $objCardPageResult->Data->MergeFields($objCardPageRelUpdate->Data, [
+                        $objCardPageResult->getData()->MergeFields($objCardPageRelUpdate->data, [
                             "card_tab_rel_id",
                             "rel_sort_order",
                             "rel_visibility"
@@ -1418,8 +1423,8 @@ class CardDataController extends CardController
                         );
                     }
 
-                    $objCardPageResult->Data->ConvertDatesToFormat('m/d/Y');
-                    $objResult = $objCardPageResult->Data->ConvertToArray();
+                    $objCardPageResult->getData()->ConvertDatesToFormat('m/d/Y');
+                    $objResult = $objCardPageResult->getData()->ConvertToArray();
 
                     $objCardPageForReturn            = array_shift($objResult);
                     $objCardPageForReturn["content"] = strip_tags(html_entity_decode(base64_decode($objCardPageForReturn["content"])));
@@ -1457,37 +1462,37 @@ class CardDataController extends CardController
                 ], 1
                 );
 
-                if ($objCardPageRelResult->Result->Success === false)
+                if ($objCardPageRelResult->result->Success === false)
                 {
                     $objJsonReturn = array(
                         "success" => false,
-                        "message" => "An error occured during tab update: " . $objCardPageRelResult->Result->Message . "."
+                        "message" => "An error occured during tab update: " . $objCardPageRelResult->result->Message . "."
                     );
 
                     die(json_encode($objJsonReturn));
                 }
 
-                $objCardPageRel                 = $objCardPageRelResult->Data->First();
-                $objCardPageRel->rel_visibility = $this->app->objHttpRequest->Data->Params["rel_visibility"] == "1" ? ExcellTrue : ExcellFalse;
+                $objCardPageRel                 = $objCardPageRelResult->getData()->first();
+                $objCardPageRel->rel_visibility = $this->app->objHttpRequest->Data->Params["rel_visibility"] == "1" ? EXCELL_TRUE : EXCELL_FALSE;
                 $objUpdateResult                      = (new CardPageRels())->update($objCardPageRel);
 
 
-                if ($objCardPageRel->card_tab_rel_type !== "mirror" && $objUpdateResult->Result->Success === true)
+                if ($objCardPageRel->card_tab_rel_type !== "mirror" && $objUpdateResult->result->Success === true)
                 {
                     $objCardPageResult = (new CardPage())->getById($objCardPageRel->card_tab_id);
 
-                    if ($objCardPageResult->Result->Count === 1)
+                    if ($objCardPageResult->result->Count === 1)
                     {
-                        $objCardPage = $objCardPageResult->Data->First();
-                        $objCardPage->visibility = $this->app->objHttpRequest->Data->Params["rel_visibility"] == "1" ? ExcellTrue : ExcellFalse;
+                        $objCardPage = $objCardPageResult->getData()->first();
+                        $objCardPage->visibility = $this->app->objHttpRequest->Data->Params["rel_visibility"] == "1" ? EXCELL_TRUE : EXCELL_FALSE;
 
                         $result = (new CardPage())->update($objCardPage);
                     }
                 }
 
                 $arResult                             = [
-                    "success" => $objUpdateResult->Result->Success,
-                    "tab"     => $objUpdateResult->Data->First()->ToArray()
+                    "success" => $objUpdateResult->result->Success,
+                    "tab"     => $objUpdateResult->getData()->first()->ToArray()
                 ];
 
                 die(json_encode($arResult));
@@ -1503,39 +1508,39 @@ class CardDataController extends CardController
                 $objLoggedInUser      = $this->app->getActiveLoggedInUser();
                 $lstCardPageRelResult = (new CardPageRels())->getById($this->app->objHttpRequest->Data->Params["card_tab_rel_id"]);
 
-                if ($lstCardPageRelResult->Result->Count === 0)
+                if ($lstCardPageRelResult->result->Count === 0)
                 {
                     $objJsonReturn = array(
                         "success" => false,
-                        "message" => "We were unable to find this card tab rel [" . $this->app->objHttpRequest->Data->Params["card_tab_rel_id"] . "]: " . $lstCardPageRelResult->Result->Message
+                        "message" => "We were unable to find this card tab rel [" . $this->app->objHttpRequest->Data->Params["card_tab_rel_id"] . "]: " . $lstCardPageRelResult->result->Message
                     );
 
                     die(json_encode($objJsonReturn));
                 }
 
                 /** @var CardPageRelModel $objCardPageRel */
-                $objCardPageRel = $lstCardPageRelResult->Data->First();
+                $objCardPageRel = $lstCardPageRelResult->getData()->first();
 
                 $objCardPageRel->card_tab_id    = $objData->Data->PostData->card_library_tab_id;
-                $objCardPageRel->rel_visibility = ($objData->Data->PostData->visibility ?? null) ? ExcellTrue : ExcellFalse;
+                $objCardPageRel->rel_visibility = ($objData->Data->PostData->visibility ?? null) ? EXCELL_TRUE : EXCELL_FALSE;
 
                 $objCardPageResult = (new CardPage())->getById($objData->Data->PostData->card_library_tab_id);
 
-                if ($objCardPageResult->Result->Count === 0)
+                if ($objCardPageResult->result->Count === 0)
                 {
                     $objJsonReturn = array(
                         "success" => false,
-                        "message" => "We were unable to find this card tab [" . $this->app->objHttpRequest->Data->PostData->card_library_tab_id . "]: " . $lstCardPageRelResult->Result->Message
+                        "message" => "We were unable to find this card tab [" . $this->app->objHttpRequest->Data->PostData->card_library_tab_id . "]: " . $lstCardPageRelResult->result->Message
                     );
 
                     die(json_encode($objJsonReturn));
                 }
 
-                if ($objCardPageResult->Data->First()->card_tab_type_id == 2)
+                if ($objCardPageResult->getData()->first()->card_tab_type_id == 2)
                 {
                     $objCardPageRel->card_tab_rel_type = "mirror";
 
-                    $objCardPage     = $objCardPageResult->Data->First();
+                    $objCardPage     = $objCardPageResult->getData()->first();
                     $strTabClassName = $objCardPage->content;
 
                     //                    $arTabClasses = (new CardPage())->LoadTabClasses();
@@ -1585,11 +1590,11 @@ class CardDataController extends CardController
 
                 $objCardPageRelUpdatedResult = (new CardPageRels())->update($objCardPageRel);
 
-                if ($objCardPageRelUpdatedResult->Result->Success === false)
+                if ($objCardPageRelUpdatedResult->result->Success === false)
                 {
                     $objJsonReturn = array(
                         "success" => false,
-                        "message" => "We were unable to save this card tab rel: " . $objCardPageRelUpdatedResult->Result->Message
+                        "message" => "We were unable to save this card tab rel: " . $objCardPageRelUpdatedResult->result->Message
                     );
 
                     die(json_encode($objJsonReturn));
@@ -1597,11 +1602,11 @@ class CardDataController extends CardController
 
                 $objNewCardPageResult = (new CardPage())->getFks()->getById($objData->Data->PostData->card_library_tab_id);
 
-                $objNewCardPageResult->Data->First()->AddUnvalidatedValue("card_tab_rel_type", $objCardPageRel->card_tab_rel_type);
-                $objNewCardPageResult->Data->First()->AddUnvalidatedValue("rel_sort_order", $objCardPageRel->rel_sort_order);
-                $objNewCardPageResult->Data->First()->AddUnvalidatedValue("rel_visibility", ($objData->Data->PostData->visibility ?? null) === "on" ? true : false);
-                $objNewCardPageResult->Data->ConvertDatesToFormat("m/d/Y");
-                $arObjCardPageData = $objNewCardPageResult->Data->ConvertToArray();
+                $objNewCardPageResult->getData()->first()->AddUnvalidatedValue("card_tab_rel_type", $objCardPageRel->card_tab_rel_type);
+                $objNewCardPageResult->getData()->first()->AddUnvalidatedValue("rel_sort_order", $objCardPageRel->rel_sort_order);
+                $objNewCardPageResult->getData()->first()->AddUnvalidatedValue("rel_visibility", ($objData->Data->PostData->visibility ?? null) === "on" ? true : false);
+                $objNewCardPageResult->getData()->ConvertDatesToFormat("m/d/Y");
+                $arObjCardPageData = $objNewCardPageResult->getData()->ConvertToArray();
 
                 $objConnectionForReturn = array_shift($arObjCardPageData);
 
@@ -1629,32 +1634,32 @@ class CardDataController extends CardController
                 );
                 $objCardOwnerResult = (new Users())->GetCardOwnerByCardId($intCardId);
 
-                if ($objCardOwnerResult->Result->Success === false)
+                if ($objCardOwnerResult->result->Success === false)
                 {
                     $objJsonReturn = array(
                         "success" => false,
-                        "message" => "We were unable to get card owner for tab creation: " . $objCardOwnerResult->Result->Message
+                        "message" => "We were unable to get card owner for tab creation: " . $objCardOwnerResult->result->Message
                     );
 
                     die(json_encode($objJsonReturn));
                 }
 
-                $objCardOwner  = $objCardOwnerResult->Data->First();
+                $objCardOwner  = $objCardOwnerResult->getData()->first();
                 $intCardPageId = $objData->Data->PostData->card_library_tab_id;
 
                 $intNextCardOrder = 1;
 
-                if ($colCardPagesResult->Result->Success === true && $colCardPagesResult->Result->Count > 0)
+                if ($colCardPagesResult->result->Success === true && $colCardPagesResult->result->Count > 0)
                 {
-                    $intNextCardOrder = $colCardPagesResult->Data->Count() + 1;
+                    $intNextCardOrder = $colCardPagesResult->getData()->Count() + 1;
                 }
 
                 $objCardRelData       = null;
                 $objNewCardPageResult = (new CardPage())->getFks()->getById($intCardPageId);
 
-                if ($objNewCardPageResult->Result->Success === true)
+                if ($objNewCardPageResult->result->Success === true)
                 {
-                    $objCardRelData = $objNewCardPageResult->Data->First()->card_tab_data;
+                    $objCardRelData = $objNewCardPageResult->getData()->first()->card_tab_data;
                 }
 
                 $objCardPageRelResult                    = new CardPageRelModel();
@@ -1662,28 +1667,28 @@ class CardDataController extends CardController
                 $objCardPageRelResult->card_id           = $intCardId;
                 $objCardPageRelResult->user_id           = $objLoggedInUser->user_id;
                 $objCardPageRelResult->rel_sort_order    = $intNextCardOrder;
-                $objCardPageRelResult->rel_visibility    = ($this->app->objHttpRequest->Data->PostData->visibility === "on") ? ExcellTrue : ExcellFalse;
+                $objCardPageRelResult->rel_visibility    = ($this->app->objHttpRequest->Data->PostData->visibility === "on") ? EXCELL_TRUE : EXCELL_FALSE;
                 $objCardPageRelResult->card_tab_rel_data = $objCardRelData;
                 $objCardPageRelResult->card_tab_rel_type = "mirror";
 
                 $objNewCardPageRelResult = (new CardPageRels())->getFks()->createNew($objCardPageRelResult);
 
-                if ($objNewCardPageRelResult->Result->Success === false)
+                if ($objNewCardPageRelResult->result->Success === false)
                 {
                     $objJsonReturn = array(
                         "success" => false,
-                        "message" => "We were unable to save this card tab rel: " . $objCardOwnerResult->Result->Message
+                        "message" => "We were unable to save this card tab rel: " . $objCardOwnerResult->result->Message
                     );
 
                     die(json_encode($objJsonReturn));
                 }
 
                 // We're handing back the card-tab model for display, but it needs the relationship from the rel and the rel sort order and type.
-                $objNewCardPageResult->Data->First()->AddUnvalidatedValue("card_tab_rel_id", $objNewCardPageRelResult->Data->First()->card_tab_rel_id);
-                $objNewCardPageResult->Data->First()->AddUnvalidatedValue("rel_sort_order", $intNextCardOrder);
-                $objNewCardPageResult->Data->First()->AddUnvalidatedValue("card_tab_rel_type", $objNewCardPageRelResult->Data->First()->card_tab_rel_type);
-                $objNewCardPageResult->Data->ConvertDatesToFormat("m/d/Y");
-                $arObjCardPageData = $objNewCardPageResult->Data->ConvertToArray();
+                $objNewCardPageResult->getData()->first()->AddUnvalidatedValue("card_tab_rel_id", $objNewCardPageRelResult->getData()->first()->card_tab_rel_id);
+                $objNewCardPageResult->getData()->first()->AddUnvalidatedValue("rel_sort_order", $intNextCardOrder);
+                $objNewCardPageResult->getData()->first()->AddUnvalidatedValue("card_tab_rel_type", $objNewCardPageRelResult->getData()->first()->card_tab_rel_type);
+                $objNewCardPageResult->getData()->ConvertDatesToFormat("m/d/Y");
+                $arObjCardPageData = $objNewCardPageResult->getData()->ConvertToArray();
 
                 $objConnectionForReturn = array_shift($arObjCardPageData);
 
@@ -1706,9 +1711,9 @@ class CardDataController extends CardController
                 {
                     $objUserResult = (new Users())->getById($this->app->objHttpRequest->Data->PostData->user_id);
 
-                    if ($objUserResult->Result->Count > 0)
+                    if ($objUserResult->result->Count > 0)
                     {
-                        $objUser = $objUserResult->Data->First();
+                        $objUser = $objUserResult->getData()->first();
                     }
                 }
 
@@ -1753,10 +1758,10 @@ class CardDataController extends CardController
                     $objCardPage->card_tab_type_id = $this->app->objHttpRequest->Data->PostData->card_tab_type_id;
                     $objCardPage->title            = $this->app->objHttpRequest->Data->PostData->tab_title;
                     $objCardPage->content          = $strTabClassName;
-                    $objCardPage->library_tab      = ExcellTrue;
-                    $objCardPage->permanent        = ExcellFalse;
+                    $objCardPage->library_tab      = EXCELL_TRUE;
+                    $objCardPage->permanent        = EXCELL_FALSE;
                     $objCardPage->order_number     = 1;
-                    $objCardPage->visibility       = ExcellTrue;
+                    $objCardPage->visibility       = EXCELL_TRUE;
                     $objCardPage->card_tab_data    = $lstTabClassProperties;
                     $objCardPage->created_on       = date("Y-m-d H:i:s");
                     $objCardPage->created_by       = $objUser->user_id;
@@ -1774,10 +1779,10 @@ class CardDataController extends CardController
                     $objCardPage->card_tab_type_id = $this->app->objHttpRequest->Data->PostData->card_tab_type_id;
                     $objCardPage->title            = $this->app->objHttpRequest->Data->PostData->tab_title;
                     $objCardPage->content          = base64_encode($this->app->objHttpRequest->Data->PostData->tab_content);
-                    $objCardPage->library_tab      = ExcellTrue;
-                    $objCardPage->permanent        = ExcellFalse;
+                    $objCardPage->library_tab      = EXCELL_TRUE;
+                    $objCardPage->permanent        = EXCELL_FALSE;
                     $objCardPage->order_number     = 1;
-                    $objCardPage->visibility       = ExcellTrue;
+                    $objCardPage->visibility       = EXCELL_TRUE;
                     $objCardPage->created_on       = date("Y-m-d H:i:s");
                     $objCardPage->created_by       = $objUser->user_id;
                     $objCardPage->updated_by       = $objUser->user_id;
@@ -1786,18 +1791,18 @@ class CardDataController extends CardController
                     $objNewCardPageResult = (new CardPage())->getFks()->createNew($objCardPage);
                 }
 
-                if ($objNewCardPageResult->Result->Success === false)
+                if ($objNewCardPageResult->result->Success === false)
                 {
                     $objJsonReturn = array(
                         "success" => false,
-                        "message" => "We were unable to save this card tab: " . $objNewCardPageResult->Result->Message
+                        "message" => "We were unable to save this card tab: " . $objNewCardPageResult->result->Message
                     );
 
                     die(json_encode($objJsonReturn));
                 }
 
-                $objNewCardPageResult->Data->ConvertDatesToFormat("m/d/Y");
-                $arObjCardPageData = $objNewCardPageResult->Data->ConvertToArray();
+                $objNewCardPageResult->getData()->ConvertDatesToFormat("m/d/Y");
+                $arObjCardPageData = $objNewCardPageResult->getData()->ConvertToArray();
 
                 $objConnectionForReturn = array_shift($arObjCardPageData);
 
@@ -1829,23 +1834,23 @@ class CardDataController extends CardController
                     );
                     $objCardOwnerResult = (new Users())->GetCardOwnerByCardId($intCardId);
 
-                    if ($objCardOwnerResult->Result->Success === false)
+                    if ($objCardOwnerResult->result->Success === false)
                     {
                         $objJsonReturn = array(
                             "success" => false,
-                            "message" => "We were unable to get card owner for tab creation: " . $objCardOwnerResult->Result->Message
+                            "message" => "We were unable to get card owner for tab creation: " . $objCardOwnerResult->result->Message
                         );
 
                         die(json_encode($objJsonReturn));
                     }
 
-                    $objCardOwner = $objCardOwnerResult->Data->First();
+                    $objCardOwner = $objCardOwnerResult->getData()->first();
 
                     $intNextCardOrder = 1;
 
-                    if ($colCardPagesResult->Result->Success === true && $colCardPagesResult->Result->Count > 0)
+                    if ($colCardPagesResult->result->Success === true && $colCardPagesResult->result->Count > 0)
                     {
-                        $intNextCardOrder = $colCardPagesResult->Data->Count() + 1;
+                        $intNextCardOrder = $colCardPagesResult->getData()->Count() + 1;
                     }
 
                     $objCardPage                   = new CardPageModel();
@@ -1855,10 +1860,10 @@ class CardDataController extends CardController
                     $objCardPage->card_tab_type_id = $this->app->objHttpRequest->Data->PostData->card_tab_type_id ?? 1;
                     $objCardPage->title            = $this->app->objHttpRequest->Data->PostData->tab_title;
                     $objCardPage->content          = base64_encode($this->app->objHttpRequest->Data->PostData->tab_content);
-                    $objCardPage->library_tab      = ExcellFalse;
-                    $objCardPage->permanent        = ExcellFalse;
+                    $objCardPage->library_tab      = EXCELL_FALSE;
+                    $objCardPage->permanent        = EXCELL_FALSE;
                     $objCardPage->order_number     = $intNextCardOrder;
-                    $objCardPage->visibility       = ExcellTrue;
+                    $objCardPage->visibility       = EXCELL_TRUE;
                     $objCardPage->created_on       = date("Y-m-d H:i:s");
                     $objCardPage->created_by       = $objLoggedInUser->user_id;
                     $objCardPage->updated_by       = $objLoggedInUser->user_id;
@@ -1866,45 +1871,45 @@ class CardDataController extends CardController
 
                     $objNewCardPageResult = (new CardPage())->getFks()->createNew($objCardPage);
 
-                    if ($objNewCardPageResult->Result->Success === false)
+                    if ($objNewCardPageResult->result->Success === false)
                     {
                         $objJsonReturn = array(
                             "success" => false,
-                            "message" => "We were unable to save this card tab: " . $objCardOwnerResult->Result->Message
+                            "message" => "We were unable to save this card tab: " . $objCardOwnerResult->result->Message
                         );
 
                         die(json_encode($objJsonReturn));
                     }
 
                     $objCardPageRelResult                    = new CardPageRelModel();
-                    $objCardPageRelResult->card_tab_id       = $objNewCardPageResult->Data->First()->card_tab_id;
+                    $objCardPageRelResult->card_tab_id       = $objNewCardPageResult->getData()->first()->card_tab_id;
                     $objCardPageRelResult->card_id           = $intCardId;
                     $objCardPageRelResult->user_id           = $objLoggedInUser->user_id;
                     $objCardPageRelResult->rel_sort_order    = $intNextCardOrder;
-                    $objCardPageRelResult->rel_visibility    = ($this->app->objHttpRequest->Data->PostData->visibility === "on") ? ExcellTrue : ExcellFalse;
+                    $objCardPageRelResult->rel_visibility    = ($this->app->objHttpRequest->Data->PostData->visibility === "on") ? EXCELL_TRUE : EXCELL_FALSE;
                     $objCardPageRelResult->card_tab_rel_type = "default";
 
                     $objNewCardPageRelResult = (new CardPageRels())->getFks()->createNew($objCardPageRelResult);
 
-                    if ($objNewCardPageRelResult->Result->Success === false)
+                    if ($objNewCardPageRelResult->result->Success === false)
                     {
                         $objJsonReturn = array(
                             "success" => false,
-                            "message" => "We were unable to save this card tab rel: " . $objCardOwnerResult->Result->Message
+                            "message" => "We were unable to save this card tab rel: " . $objCardOwnerResult->result->Message
                         );
 
                         die(json_encode($objJsonReturn));
                     }
 
-                    $objNewCardPageRelResult->Data->First()->AddUnvalidatedValue("title", $this->app->objHttpRequest->Data->PostData->tab_title);
-                    $objNewCardPageRelResult->Data->First()->AddUnvalidatedValue("content", $this->app->objHttpRequest->Data->PostData->tab_content);
-                    $objNewCardPageRelResult->Data->First()->AddUnvalidatedValue("card_tab_type_id", $objNewCardPageResult->Data->First()->card_tab_type_id);
-                    $objNewCardPageRelResult->Data->First()->AddUnvalidatedValue("library_tab", $objNewCardPageResult->Data->First()->library_tab);
-                    $objNewCardPageRelResult->Data->First()->AddUnvalidatedValue("permanent", $objNewCardPageResult->Data->First()->permanent);
-                    $objNewCardPageRelResult->Data->First()->AddUnvalidatedValue("created_on", date("Y-m-d H:i:s"));
-                    $objNewCardPageRelResult->Data->First()->AddUnvalidatedValue("last_updated", date("Y-m-d H:i:s"));
-                    $objNewCardPageRelResult->Data->ConvertDatesToFormat("m/d/Y");
-                    $arObjCardPageData = $objNewCardPageRelResult->Data->ConvertToArray();
+                    $objNewCardPageRelResult->getData()->first()->AddUnvalidatedValue("title", $this->app->objHttpRequest->Data->PostData->tab_title);
+                    $objNewCardPageRelResult->getData()->first()->AddUnvalidatedValue("content", $this->app->objHttpRequest->Data->PostData->tab_content);
+                    $objNewCardPageRelResult->getData()->first()->AddUnvalidatedValue("card_tab_type_id", $objNewCardPageResult->getData()->first()->card_tab_type_id);
+                    $objNewCardPageRelResult->getData()->first()->AddUnvalidatedValue("library_tab", $objNewCardPageResult->getData()->first()->library_tab);
+                    $objNewCardPageRelResult->getData()->first()->AddUnvalidatedValue("permanent", $objNewCardPageResult->getData()->first()->permanent);
+                    $objNewCardPageRelResult->getData()->first()->AddUnvalidatedValue("created_on", date("Y-m-d H:i:s"));
+                    $objNewCardPageRelResult->getData()->first()->AddUnvalidatedValue("last_updated", date("Y-m-d H:i:s"));
+                    $objNewCardPageRelResult->getData()->ConvertDatesToFormat("m/d/Y");
+                    $arObjCardPageData = $objNewCardPageRelResult->getData()->ConvertToArray();
 
                     $objConnectionForReturn = array_shift($arObjCardPageData);
 
@@ -1940,14 +1945,14 @@ class CardDataController extends CardController
                     foreach ($lstTabs as $currTabRel)
                     {
                         $objCardPageRelResult                 = (new CardPageRels())->getById($currTabRel->card_tab_rel_id);
-                        $objCardPageRelResult                 = $objCardPageRelResult->Data->First();
+                        $objCardPageRelResult                 = $objCardPageRelResult->getData()->first();
                         $objCardPageRelResult->rel_sort_order = $currTabRel->rel_sort_order;
 
                         $result = (new CardPageRels())->update($objCardPageRelResult);
 
-                        if ($result->Result->Success === false)
+                        if ($result->result->Success === false)
                         {
-                            $arErrors[] = $result->Result->Message;
+                            $arErrors[] = $result->result->Message;
                         }
                     }
                 }
@@ -2027,7 +2032,7 @@ class CardDataController extends CardController
                 {
                     $result = (new Cards())->update($objCard);
 
-                    $this->renderReturnJson(true, ["card-data" => $result->Data->First()->ToPublicArray(["card_data"])["card_data"]], $result->Result->Message);
+                    $this->renderReturnJson(true, ["card-data" => $result->getData()->first()->ToPublicArray(["card_data"])["card_data"]], $result->result->Message);
                 }
                 catch (\Exception $exception)
                 {
@@ -2079,7 +2084,7 @@ class CardDataController extends CardController
 
                 $objUserResult = (new Users())->getById($intUserIdForNewRole);
 
-                if ($objUserResult->Result->Count === 0)
+                if ($objUserResult->result->Count === 0)
                 {
                     $objJsonReturn = array(
                         "success" => false,
@@ -2091,7 +2096,7 @@ class CardDataController extends CardController
 
                 $objCardResult = (new Cards())->getById($intCardId);
 
-                if ($objCardResult->Result->Count === 0)
+                if ($objCardResult->result->Count === 0)
                 {
                     $objJsonReturn = array(
                         "success" => false,
@@ -2120,7 +2125,7 @@ class CardDataController extends CardController
                     //process_dump_value($objCardUserRoleCreationResult);
 
                     $colCardUsers = (new Users())->GetByCardId($intCardId);
-                    $arCardUsers  = $colCardUsers->Data->CollectionToArray();
+                    $arCardUsers  = $colCardUsers->getData()->CollectionToArray();
 
                     $objJsonReturn = array(
                         "success"   => true,
@@ -2153,7 +2158,7 @@ class CardDataController extends CardController
                 $objUserAddressUpdate             = new UserAddressModel($objData->Data->PostData);
                 $objUserAddressUpdate->address_id = $intAddressId;
 
-                require AppEntities . "users/classes/user_address.class" . XT;
+                require APP_ENTITIES . "users/classes/user_address.class" . XT;
 
                 try
                 {
@@ -2193,7 +2198,7 @@ class CardDataController extends CardController
             die(json_encode($objJsonReturn));
         }
 
-        if ($objCardPageRelResult->Result->Count !== 1)
+        if ($objCardPageRelResult->result->Count !== 1)
         {
             $objJsonReturn = array(
                 "success" => false,
@@ -2203,7 +2208,7 @@ class CardDataController extends CardController
             die(json_encode($objJsonReturn));
         }
 
-        $objCardPageRel = $objCardPageRelResult->Data->First();
+        $objCardPageRel = $objCardPageRelResult->getData()->first();
 
         $objCardPageRel->card_tab_rel_data->Properties->TabCustomColor = $objData->Data->PostData->value ?? "";
         $objCardPageRelModule->update($objCardPageRel);
@@ -2233,7 +2238,7 @@ class CardDataController extends CardController
 
         $objCardResult = (new Cards())->getById($intCardId);
 
-        if ($objCardResult->Result->Success === false || $objCardResult->Result->Count === 0)
+        if ($objCardResult->result->Success === false || $objCardResult->result->Count === 0)
         {
             $objJsonReturn = array(
                 "success" => false,
@@ -2243,7 +2248,7 @@ class CardDataController extends CardController
             die(json_encode($objJsonReturn));
         }
 
-        $objCard = $objCardResult->Data->First();
+        $objCard = $objCardResult->getData()->first();
 
         $strImageType = $objData->Data->Params["type"];
 
@@ -2261,10 +2266,10 @@ class CardDataController extends CardController
                 ]
                 );
 
-                if ($objImageResult->Result->Success === true && $objImageResult->Result->Count > 0)
+                if ($objImageResult->result->Success === true && $objImageResult->result->Count > 0)
                 {
-                    $strCardMainImage  = $objImageResult->Data->First()->url;
-                    $strCardThumbImage = $objImageResult->Data->First()->thumb;
+                    $strCardMainImage  = $objImageResult->getData()->first()->url;
+                    $strCardThumbImage = $objImageResult->getData()->first()->thumb;
                 }
 
                 $objJsonReturn = array(
@@ -2314,17 +2319,17 @@ class CardDataController extends CardController
     {
         $objCardPageResult = (new CardPage())->getById($objData->Data->Params["card_tab_id"]);
 
-        if ($objCardPageResult->Result->Count === 0)
+        if ($objCardPageResult->result->Count === 0)
         {
             $objJsonReturn = array(
                 "success" => false,
-                "message" => "We were unable to find this card tab [" . $objData->Data->Params["card_tab_id"] . "]: " . $objCardPageResult->Result->Message
+                "message" => "We were unable to find this card tab [" . $objData->Data->Params["card_tab_id"] . "]: " . $objCardPageResult->result->Message
             );
 
             die(json_encode($objJsonReturn));
         }
 
-        $objCardPage = $objCardPageResult->Data->First();
+        $objCardPage = $objCardPageResult->getData()->first();
 
         $objJsonReturn = array(
             "success" => true,
@@ -2340,17 +2345,17 @@ class CardDataController extends CardController
 
         $objCardPageResult = (new CardPage())->getById($objData->Data->Params["card_tab_id"]);
 
-        if ($objCardPageResult->Result->Count === 0)
+        if ($objCardPageResult->result->Count === 0)
         {
             $objJsonReturn = array(
                 "success" => false,
-                "message" => "We were unable to find this card tab [" . $objData->Data->Params["card_tab_id"] . "]: " . $objCardPageResult->Result->Message
+                "message" => "We were unable to find this card tab [" . $objData->Data->Params["card_tab_id"] . "]: " . $objCardPageResult->result->Message
             );
 
             die(json_encode($objJsonReturn));
         }
 
-        $objCardPage     = $objCardPageResult->Data->First();
+        $objCardPage     = $objCardPageResult->getData()->first();
         $strTabClassName = $objCardPage->content;
 
         $arTabClasses = (new CardPage())->LoadTabClasses();
@@ -2447,9 +2452,9 @@ class CardDataController extends CardController
             {
                 $objCardPageResult = (new CardPage())->getById($objData->Data->Params["card_tab_id"]);
 
-                if ($objCardPageResult->Result->Count === 1)
+                if ($objCardPageResult->result->Count === 1)
                 {
-                    $objCardPage = $objCardPageResult->Data->First();
+                    $objCardPage = $objCardPageResult->getData()->first();
 
                     if (!empty($objCardPage->card_tab_data->Properties))
                     {
@@ -2472,9 +2477,9 @@ class CardDataController extends CardController
         {
             $lstCardPageRelResult = (new CardPageRels())->getById($this->app->objHttpRequest->Data->Params["card_tab_rel_id"]);
 
-            if ($lstCardPageRelResult->Result->Count === 1)
+            if ($lstCardPageRelResult->result->Count === 1)
             {
-                $objCardPageRel = $lstCardPageRelResult->Data->First();
+                $objCardPageRel = $lstCardPageRelResult->getData()->first();
 
                 if (!empty($objCardPageRel->card_tab_rel_data->Properties))
                 {
@@ -2644,7 +2649,7 @@ class CardDataController extends CardController
 
         $objContactCardRelResult = (new MobinitiContacts())->GetByCardId($intCardId);
 
-        if ($objContactCardRelResult->Result->Count === 0)
+        if ($objContactCardRelResult->result->Count === 0)
         {
             $objJsonReturn = array(
                 "success" => false,
@@ -2654,7 +2659,7 @@ class CardDataController extends CardController
             die(json_encode($objJsonReturn));
         }
 
-        $objContactCardRelResult->Data->Each(function (MobinitiContactModel $currContact) use ($objData) {
+        $objContactCardRelResult->getData()->Each(function (MobinitiContactModel $currContact) use ($objData) {
             $objMobinitMessageModel             = new MobinitiMessageModel();
             $objMobinitMessageModel->message    = $objData->Data->PostData->text_message_data;
             $objMobinitMessageModel->contact_id = $currContact->id;
@@ -2690,7 +2695,7 @@ class CardDataController extends CardController
 
         $objContactCardRelResult = (new MobinitiContacts())->getWhereIn("id", $arCardContacts);
 
-        if ($objContactCardRelResult->Result->Count === 0)
+        if ($objContactCardRelResult->result->Count === 0)
         {
             $objJsonReturn = array(
                 "success" => false,
@@ -2700,7 +2705,7 @@ class CardDataController extends CardController
             die(json_encode($objJsonReturn));
         }
 
-        $objContactCardRelResult->Data->Each(function (MobinitiContactModel $currContact) use ($objData) {
+        $objContactCardRelResult->getData()->Each(function (MobinitiContactModel $currContact) use ($objData) {
             $objMobinitMessageModel             = new MobinitiMessageModel();
             $objMobinitMessageModel->message    = $objData->Data->PostData->text_message_data;
             $objMobinitMessageModel->contact_id = $currContact->id;
@@ -2723,7 +2728,7 @@ class CardDataController extends CardController
 
         $objContactCardRelResult = (new MobinitiContacts())->getById($strContactId);
 
-        if ($objContactCardRelResult->Result->Count !== 1)
+        if ($objContactCardRelResult->result->Count !== 1)
         {
             $objJsonReturn = array(
                 "success" => false,
@@ -2733,7 +2738,7 @@ class CardDataController extends CardController
             die(json_encode($objJsonReturn));
         }
 
-        $objContactCardRelResult->Data->Each(function (MobinitiContactModel $currContact) use ($objData) {
+        $objContactCardRelResult->getData()->Each(function (MobinitiContactModel $currContact) use ($objData) {
             $objMobinitMessageModel             = new MobinitiMessageModel();
             $objMobinitMessageModel->message    = $objData->Data->PostData->text_message_data;
             $objMobinitMessageModel->contact_id = $currContact->id;
@@ -2741,8 +2746,8 @@ class CardDataController extends CardController
             $objMobinitiMessageResult = (new MobinitiMessagesApiModule())->SendMessage($objMobinitMessageModel);
 
             $objJsonReturn = array(
-                "success" => $objMobinitiMessageResult->Result->Success,
-                "result"  => json_encode($objMobinitiMessageResult->Result),
+                "success" => $objMobinitiMessageResult->result->Success,
+                "result"  => json_encode($objMobinitiMessageResult->result),
                 "message" => json_encode($objMobinitMessageModel->ToArray()),
             );
 
@@ -2763,7 +2768,7 @@ class CardDataController extends CardController
         //            return $objContactUserRelResult;
         //        }
         //
-        //        $arContactList = $objContactUserRelResult->Data->FieldsToArray(["contact_id"]);
+        //        $arContactList = $objContactUserRelResult->getData()->FieldsToArray(["contact_id"]);
         //        $objContactsResult = parent->getWhere(["contact_id", "IN", $arContactList]);
         //
         //        if ($objContactsResult->Result->Count === 0)
@@ -2788,13 +2793,13 @@ class CardDataController extends CardController
         {
             $objCardPageResult = (new CardPage())->getById($objParams["id"]);
 
-            if ($objCardPageResult->Result->Success === false)
+            if ($objCardPageResult->result->Success === false)
             {
                 return $this->saveNewCardPageWidgetContent($objPost);
             }
             else
             {
-                return $this->updateNewCardPageWidgetContent($objCardPageResult->Data->First(), $objPost);
+                return $this->updateNewCardPageWidgetContent($objCardPageResult->getData()->first(), $objPost);
             }
         }
         catch (\Exception $exception)
@@ -2819,12 +2824,12 @@ class CardDataController extends CardController
 
         $objCardPageResult = (new CardPage())->getFks()->createNew($objCardPage);
 
-        if ($objCardPageResult->Result->Success === false)
+        if ($objCardPageResult->result->Success === false)
         {
-            return $this->renderReturnJson($objCardPageResult->Result->Success, ["quert" => $objCardPageResult->Result->Query], $objCardPageResult->Result->Message);
+            return $this->renderReturnJson($objCardPageResult->result->Success, ["quert" => $objCardPageResult->result->Query], $objCardPageResult->result->Message);
         }
 
-        return $this->renderReturnJson($objCardPageResult->Result->Success, ["card" => $objCardPageResult->Data->First()->ToPublicArray()], $objCardPageResult->Result->Message);
+        return $this->renderReturnJson($objCardPageResult->result->Success, ["card" => $objCardPageResult->getData()->first()->ToPublicArray()], $objCardPageResult->result->Message);
     }
 
     public function updateNewCardPageWidgetContent(CardPageModel $objCardPage,  $objPost): bool
@@ -2839,7 +2844,7 @@ class CardDataController extends CardController
 
         $result = (new Cards())->update($cardUpdate);
 
-        return $this->renderReturnJson($objCardPageResult->Result->Success, ["card" => $objCardPageResult->Data->First()->ToPublicArray()], $objCardPageResult->Result->Message);
+        return $this->renderReturnJson($objCardPageResult->result->Success, ["card" => $objCardPageResult->getData()->first()->ToPublicArray()], $objCardPageResult->result->Message);
     }
 
     public function getCardPageAppContent(ExcellHttpModel $objData) : bool
@@ -2866,11 +2871,11 @@ class CardDataController extends CardController
         $objCardPages = new CardPage();
         $objCardPagesResult = $objCardPages->getById($objParams["id"]);
 
-        if ($objCardPagesResult->Result->Count !== 1)
+        if ($objCardPagesResult->result->Count !== 1)
         {
-            return $this->renderReturnJson(false, $objCardPagesResult->Result->Errors, $objCardPagesResult->Result->Message);
+            return $this->renderReturnJson(false, $objCardPagesResult->result->Errors, $objCardPagesResult->result->Message);
         }
 
-        return $this->renderReturnJson(true, $objCardPagesResult->Data->First()->content, "We got this.");
+        return $this->renderReturnJson(true, $objCardPagesResult->getData()->first()->content, "We got this.");
     }
 }

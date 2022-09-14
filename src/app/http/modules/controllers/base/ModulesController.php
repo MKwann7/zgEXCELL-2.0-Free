@@ -1,6 +1,6 @@
 <?php
 
-namespace Entities\Modules\Classes\Base;
+namespace Http\Modules\Controllers\Base;
 
 use App\Core\AppController;
 use App\Utilities\Excell\ExcellHttpModel;
@@ -23,7 +23,7 @@ class ModulesController extends AppController
         $strBrowserCookie = $objData->Password;
         $objBrowserCookieResult = (new VisitorBrowser())->getWhere(["browser_cookie" => $strBrowserCookie]);
 
-        if ($objBrowserCookieResult->Result->Count === 0)
+        if ($objBrowserCookieResult->result->Count === 0)
         {
             return false;
         }

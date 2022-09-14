@@ -1,6 +1,6 @@
 <?php
 
-namespace Entities\Emails\Classes\Base;
+namespace Http\Emails\Controllers\Base;
 
 use App\Core\AppController;
 use Entities\Emails\Classes\Emails;

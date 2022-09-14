@@ -1,10 +1,10 @@
 <?php
 
-namespace Entities\Cards\Controllers;
+namespace Http\Cards\Controllers;
 
 use App\Utilities\Excell\ExcellHttpModel;
 use Entities\Cards\Classes\Cards;
-use Entities\Cards\Classes\Base\CardController;
+use Http\Card\Controllers\Base\CardController;
 use Entities\Cards\Classes\CardGroupsModule;
 use Entities\Users\Classes\Users;
 
@@ -68,8 +68,8 @@ class CardGroupsController extends CardController
 
         foreach($objActiveCardGroups->Data as $currCardGroupIndex => $currCardGroupData)
         {
-            $objActiveCardGroups->Data->{$currCardGroupIndex}->created_on = date("m/d/Y", strtotime($currCardGroupData->created_on));
-            $objActiveCardGroups->Data->{$currCardGroupIndex}->last_updated = date("m/d/Y", strtotime($currCardGroupData->last_updated));
+            $objActiveCardGroups->getData()->{$currCardGroupIndex}->created_on = date("m/d/Y", strtotime($currCardGroupData->created_on));
+            $objActiveCardGroups->getData()->{$currCardGroupIndex}->last_updated = date("m/d/Y", strtotime($currCardGroupData->last_updated));
         }
 
         $objCardGroup = null;
@@ -80,9 +80,9 @@ class CardGroupsController extends CardController
         {
             $intCardGroupId = $objData->Data->Params["id"];
 
-            $objCardGroup = (new CardGroupsModule())->getFks()->getById($intCardGroupId)->Data->First();
-            $colCardGroupUser = (new Users())->getFks()->GetUsersByCardGroupId($intCardGroupId)->Data;
-            $objCard = (new Cards())->getFks()->GetCardByGroupId($intCardGroupId)->Data->First();
+            $objCardGroup = (new CardGroupsModule())->getFks()->getById($intCardGroupId)->getData()->first();
+            $colCardGroupUser = (new Users())->getFks()->GetUsersByCardGroupId($intCardGroupId)->getData();
+            $objCard = (new Cards())->getFks()->GetCardByGroupId($intCardGroupId)->getData()->first();
 
             $objCardGroup->created_on = date("m/d/Y", strtotime($objCardGroup->created_on));
             $objCardGroup->last_updated = date("m/d/Y", strtotime($objCardGroup->last_updated));

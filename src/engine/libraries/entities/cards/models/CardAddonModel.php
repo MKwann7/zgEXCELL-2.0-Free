@@ -30,6 +30,7 @@ class CardAddonModel extends AppModel
             "module_id" => ["type" => "int","length" => 15],
             "widget_id" => ["type" => "int","length" => 15],
             "status" => ["type" => "varchar","length" => 15],
+            "data" => ["type" => "text"],
             "created_on" => ["type" => "datetime"],
             "last_updated" => ["type" => "datetime"],
             "sys_row_id" => ["type" => "char","length" => 36]

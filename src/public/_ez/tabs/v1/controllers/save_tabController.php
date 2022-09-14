@@ -19,7 +19,7 @@ class Tabs_SaveTabController extends AppController
 
         ob_start();
 
-        $strViewPath = PublicData . "_ez/tabs/v1/views/save_tabView" . XT;
+        $strViewPath = PUBLIC_DATA . "_ez/tabs/v1/views/save_tabView" . XT;
 
         if(!is_file($strViewPath))
         {

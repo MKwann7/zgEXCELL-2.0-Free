@@ -1,6 +1,6 @@
 <?php
 
-namespace Entities\Cards\Tests\Controller;
+namespace Http\Cards\Tests\Controller;
 
 use PHPUnit\Framework\TestCase;
 

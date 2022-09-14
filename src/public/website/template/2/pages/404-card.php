@@ -23,7 +23,7 @@ $this->CurrentPage->Columns           = 0;
                     <h2 style="margin-bottom: 35px;">Card not found</h2>
                     <p><span class="pretty-text"><?php echo $this->app->objHttpRequest->Uri[0]; ?></span> is unavailable.</p>
                     <p>You may try again,<br>or we can guide you to the <?php echo $this->app->objCustomPlatform->getPublicName() ; ?> login.</p>
-                    <a href="<?php echo $this->app->objCustomPlatform->getFullPortalDomain() ; ?>/login">Go To Login</a>
+                    <a href="<?php echo $this->app->objCustomPlatform->getFullPortalDomainName() ; ?>/login">Go To Login</a>
                 </div>
             </div>
         </div>

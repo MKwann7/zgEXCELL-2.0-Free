@@ -66,7 +66,7 @@ function AjaxApp()
 
         return new Promise(function(resolve, reject)
         {
-            sendAjax(url, verb, data, {resolve: resolve, reject: reject, security: security});
+            sendAjax(url, verb, data, null, {resolve: resolve, reject: reject, security: security});
         });
     }
 
@@ -77,28 +77,8 @@ function AjaxApp()
         {
             if (this.readyState == 4)
             {
-                if (typeof callback === "function")
-                {
-                    if(xhr.status == 200)
-                    {
-                        callback({success: true, response: parseReturnedText(this.responseText)});
-                    }
-                    else
-                    {
-                        callback({success: false, response: this.statusText});
-                    }
-                }
-                else
-                {
-                    if(xhr.status == 200)
-                    {
-                        options.resolve({success: true, response: parseReturnedText(this.responseText)});
-                    }
-                    else
-                    {
-                        options.reject(Error(this.statusText));
-                    }
-                }
+                processCallback(this, xhr, callback);
+                processOptions(this, xhr, options);
             }
         };
 
@@ -125,9 +105,50 @@ function AjaxApp()
         xhr.send(JSON.stringify(data));
     }
 
+    const processCallback = function(self, xhr, callback)
+    {
+        if (typeof callback === "function")
+        {
+            if (xhr.status === 200)
+            {
+                callback({success: true, response: parseReturnedText(self.responseText)});
+            }
+            else
+            {
+                callback({success: false, response: self.statusText});
+            }
+        }
+    }
+
+    const processOptions = function(self, xhr, options)
+    {
+        if (typeof options !== "undefined" && options !== null)
+        {
+            if (xhr.status === 200)
+            {
+                if (typeof options.resolve === "function")
+                {
+                    options.resolve({success: true, response: parseReturnedText(self.responseText)});
+                }
+            }
+            else
+            {
+                if (typeof options.reject === "function")
+                {
+                    options.reject(Error(self.statusText));
+                }
+            }
+        }
+    }
+
     const parseReturnedText = function(text)
     {
-        let data = JSON.parse(text);
+        let data = {}
+        try {
+            data = JSON.parse(text);
+        } catch (ex) {
+            return {};
+        }
 
         if ( data.title )
         {

@@ -7,10 +7,10 @@ use App\website\vue\classes\VueComponentHtml;
 
 class ManageCardPageHtmlWidget extends VueComponentHtml
 {
-    protected $id = "1db71dce-e26f-403d-b83f-3e79be9b0b98";
-    protected $name = "compHtml";
-    protected $vueType = "compHtml";
-    protected $modalWidth = 1200;
+    protected string $id = "1db71dce-e26f-403d-b83f-3e79be9b0b98";
+    protected string $name = "compHtml";
+    protected string $vueType = "compHtml";
+    protected string $modalWidth = "1200";
 
     public function __construct(?AppModel $entity = null, $name = "Html Widget", $props = [])
     {
@@ -41,7 +41,7 @@ class ManageCardPageHtmlWidget extends VueComponentHtml
                 
                 modal.EngageFloatShield();
 
-                ajax.SendExternal(url, htmlFroalaObject, "POST", "json", true, function(result) 
+                ajax.PostExternal(url, htmlFroalaObject, true, function(result) 
                 {
                     if (result.success === false) 
                     {
@@ -54,7 +54,7 @@ class ManageCardPageHtmlWidget extends VueComponentHtml
                     
                     if (self.action === "create")
                     {
-                        self.entities.push(result.data.card);
+                        self.entities.push(result.response.data.card);
                     }
                     else
                     {
@@ -94,7 +94,7 @@ class ManageCardPageHtmlWidget extends VueComponentHtml
             const url = "/cards/card-data/get-card-page-app-content?id=" + this.entity.card_tab_id;
             const self = this;
             
-            ajax.SendExternal(url, {}, "POST", "json", true, function(result) 
+            ajax.PostExternal(url, {}, true, function(result) 
             {
                 if (result.success === false) 
                 {
@@ -105,7 +105,7 @@ class ManageCardPageHtmlWidget extends VueComponentHtml
                     return;
                 }
                 
-                self.htmlData = atob(result.data);
+                self.htmlData = atob(result.response.data);
                 $(".' . $this->froalaElementId . '").froalaEditor("html.set", self.htmlData);
             });
         }
@@ -117,8 +117,6 @@ class ManageCardPageHtmlWidget extends VueComponentHtml
             $(".' . $this->froalaElementId . '").froalaEditor("html.set", "");
             this.htmlActionButton = "Create New '.$this->name.'";
         }
-        
-        console.log(this);
         ';
     }
 }

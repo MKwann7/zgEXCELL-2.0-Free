@@ -23,8 +23,9 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
     let initialComponentLoad = false;
     let uriBasePath = uriBase;
     if (time) { transitionTime = time; }
+    let isChangingComponents = false;
     let userId = vueInstance.userId;
-    if (typeof userId === "undefined" || userId === null) { userId = Cookie.get("user") }
+    if (typeof userId === "undefined" || userId === null) { userId = Cookie.get("userId") }
 
     let userNum = vueInstance.userNum;
 
@@ -58,7 +59,7 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
 
     const renderVueModalWrapper = function()
     {
-        const section = document.createElement("section");
+        const section = document.createElement("div");
         section.id = "vue-app-body-custom";
         section.classList.add("vue-app-body");
         section.classList.add("formwrapper-control");
@@ -124,7 +125,7 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
 
     const componentHasVc = function (component, id, rootId, props)
     {
-        if (typeof component.parentId === "undefined" || component.parentId === "") { return; }
+        if (component == null || typeof component.parentId === "undefined" || component.parentId === "") { return; }
         if ( typeof props === "undefined" ) { props = {}; }
 
         if ( typeof component.$children !== "undefined" || component.$children.length > 0)
@@ -226,15 +227,17 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
         return _;
     }
 
-	this.addComponent = function(component, baseBinding)
+	this.addComponent = function(component, props, baseBinding)
     {
         component.baseBinding = baseBinding;
+        component.props = props;
         _.components.push(_.buildComponent(component));
     }
 
-	this.addExistingComponent = function(component, baseBinding)
+	this.addExistingComponent = function(component, props, baseBinding)
     {
         component.baseBinding = baseBinding;
+        component.props = props;
         _.components.push(_.buildComponent(component));
     }
 
@@ -251,12 +254,14 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
 
 	this.runComponentDismissalScript = function()
 	{
-		let component = _.getComponentByInstanceId(currentComponentId);
+        if (currentComponentId === null) return;
 
-		if (typeof component.instance.dismissComponent === "function")
-		{
-			component.instance.dismissComponent();
-		}
+        let component = _.getComponentByInstanceId(currentComponentId);
+
+        if (component.instance !== null && typeof component.instance.dismissComponent === "function")
+        {
+            component.instance.dismissComponent();
+        }
 	}
 
 	this.getComponents = function()
@@ -293,7 +298,7 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
 			return false;
 		}
 
-		if (componentParentId === null && vcType === "modal")
+        if (componentParentId === null && (vcType === "modal" || vcType === "hub"))
 		{
 			return false;
 		}
@@ -345,6 +350,39 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
         return this;
     }
 
+    this.getComponent = function(instanceId, id, parentInstanceId, action, title, entity, entities, props)
+    {
+        if (typeof id === "undefined" || id === null)
+        {
+            console.log("No Widget id handed in to modal.");
+        }
+
+        if (typeof instanceId === "undefined" || instanceId === null)
+        {
+            console.log("Instance Id for widget id " + id + " missing for modal.");
+        }
+
+        instanceId = resolveCamelCase(instanceId);
+        id = resolveCamelCase(id);
+        let component = _.getComponentByInstanceId(instanceId);
+
+        if (component === null) {
+            component = _.getComponentById(id);
+        }
+
+        if (component !== null) {
+            instanceId = component.instanceId;
+            parentInstanceId = component.parentInstanceId;
+        }
+
+        if (typeof component !== "undefined" && component != null) {
+            hydrateComponent(instanceId, parentInstanceId, action, entity, entities, props, true)
+            return _.getComponentByInstanceId(instanceId)
+        }
+
+        return null
+    }
+
     this.loadComponent = function(instanceId, id, parentInstanceId, action, title, entity, entities, props, show, hydrate, callback)
 	{
 		if (typeof id === "undefined" || id === null)
@@ -364,16 +402,13 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
 
 		instanceId = resolveCamelCase(instanceId);
 		id = resolveCamelCase(id);
-
 		let component = _.getComponentByInstanceId(instanceId);
 
-		if (component === null)
-		{
+		if (component === null) {
 			component = _.getComponentById(id);
 		}
 
-        if (component !== null)
-        {
+        if (component !== null) {
             instanceId = component.instanceId;
             parentInstanceId = component.parentInstanceId;
         }
@@ -411,52 +446,48 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
 
 	const getDynamicComponentFromApi = function(instanceId, id, parentInstanceId, action, title, entity, entities, props, show, hydrate, callback)
 	{
-		const componentApi = "<?php echo getFullPortalUrl(); ?>/modules/widget/config?widget_id=" + id + "&user_id=" + userId + processProps(props);
+		let componentApi = "<?php echo getFullPortalUrl(); ?>/modules/widget/config?widget_id=" + id + "&user_id=" + ( userId ? userId : "visitor" )
 
-		if (show)
-		{
+        if  (props && props.site_id) {
+            componentApi = componentApi + "&site_id=" + props.site_id
+        }
+
+        componentApi = componentApi + processProps(props)
+
+		if (show) {
 			_.addAjaxClass();
 		}
 
-		ajax.GetExternal(componentApi, true, function(result)
-		{
-			if (result.success === false)
-			{
+		ajax.GetExternal(componentApi, true, function(result) {
+			if (result.success === false) {
 				return;
 			}
 
 			let widgetBase64 = null;
 
-			try
-            {
+			try {
                 widgetBase64 = atob(result.response.widget)
             }
-            catch(ex)
-            {
-                if (typeof modal !== "undefined" && modal !== null)
-                {
+            catch(ex) {
+                if (typeof modal !== "undefined" && modal !== null) {
                     modal.DisplayAlert({title:"Dynamic Vue Error", html: "We are unable to load the requested component from our system.<br> Error return: " + ex});
                     return;
-                }
-                else
-                {
+                } else {
                     console.log("We are unable to load the requested component from our system.<br> Error return: " + ex);
+                    console.log(componentApi);
                     return;
                 }
             }
 
 			let dynamicComponent = new Function(widgetBase64)();
 
-			if (typeof dynamicComponent === "undefined")
-            {
+			if (typeof dynamicComponent === "undefined") {
                 console.log("Widget Id failed to load: " + id)
                 return;
             }
 
-			if (typeof dynamicComponent["main"] === "undefined")
-			{
-                if (typeof dynamicComponent.instanceId !== "undefined")
-                {
+			if (typeof dynamicComponent["main"] === "undefined") {
+                if (typeof dynamicComponent.instanceId !== "undefined") {
                     instanceId = dynamicComponent.instanceId;
                 }
 
@@ -464,26 +495,22 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
 
                 let newComponent = loadDynamicComponent(dynamicComponent, instanceId, id, componentSubId, parentInstanceId, action, title, entity, entities, props, show, hydrate);
 
-                if (typeof callback === "function")
-                {
+                if (typeof callback === "function") {
                     callback(newComponent);
                 }
 				return;
 			}
 
-            if (typeof dynamicComponent["main"].instanceId !== "undefined")
-            {
+            if (typeof dynamicComponent["main"].instanceId !== "undefined") {
                 instanceId = dynamicComponent["main"].instanceId;
             }
 
             const componentSubId = createComponentNode(instanceId, dynamicComponent["main"]);
 
-			if (typeof dynamicComponent["helpers"] !== "undefined")
-			{
+			if (typeof dynamicComponent["helpers"] !== "undefined") {
 				let componentIds = buildComponentParentRelationships(dynamicComponent, instanceId, id, parentInstanceId);
 
-				for(let currHelper of Array.from(dynamicComponent["helpers"]))
-				{
+				for(let currHelper of Array.from(dynamicComponent["helpers"])) {
 					const currHelperName = resolveCamelCase(typeof currHelper.id === "undefined" ? currHelper.name : currHelper.id);
 					const componentInstance = getParentInstanceId(currHelperName, componentIds);
 
@@ -495,7 +522,7 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
 					const componentSubId = createComponentNode(componentInstance.instanceId, currHelper);
 					assignExpectedRootMethods(currHelper);
 
-					const helperHydrate = (currHelper.noHydrate != "true" ? hydrate : false)
+					const helperHydrate = (currHelper.noHydrate !== "true" ? hydrate : false)
 
 					loadDynamicComponent(currHelper, componentInstance.instanceId, currHelperName, componentSubId, componentInstance.parentId, action, title, entity, entities, props, false, helperHydrate);
 				}
@@ -503,8 +530,7 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
 
 			let newComponent = loadDynamicComponent(dynamicComponent["main"], instanceId, id, componentSubId, parentInstanceId, action, title, entity, entities, props, show, hydrate);
 
-            if (typeof callback === "function")
-            {
+            if (typeof callback === "function") {
                 callback(newComponent);
             }
         });
@@ -512,71 +538,101 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
 
 	const loadDynamicComponent = function(dynamicComponent, instanceId, id, componentSubId, parentInstanceId, action, title, entity, entities, props, show, hydrate)
 	{
-		if (typeof dynamicComponent.name === "undefined")
-		{
+		if (typeof dynamicComponent.name === "undefined") {
 			dynamicComponent.name = "comp" + instanceId.replace(/-/g,"");
 		}
 
-		if (parentInstanceId === "main" && typeof dynamicComponent.parent !== "undefined")
-		{
+		if (parentInstanceId === "main" && typeof dynamicComponent.parent !== "undefined") {
 			const parentInstance = _.getComponentById(dynamicComponent.parent);
 
-			if (parentInstance !== null)
-			{
+			if (parentInstance !== null) {
 				parentInstanceId = parentInstance.instanceId;
 			}
 		}
+
+        if (!dynamicComponent.mountType) dynamicComponent.mountType = "default"
 
         dynamicComponent = loadDefaultMethodsOntoDynamicComponent(dynamicComponent);
 
         addDynamicComponentsMethodIfApplicable(dynamicComponent);
 
         const instanceRef = "comp" + instanceId.replace(/-/g,"") + "Ref";
-        const newComponentItem = processComponentMount(dynamicComponent, componentSubId, instanceRef, instanceId, id, parentInstanceId, action)
+        const newComponentItem = processComponentMount(dynamicComponent, componentSubId, instanceRef, instanceId, id, parentInstanceId, action, props)
 
 		_.components.push(newComponentItem);
 
-        if (hydrate === true)
-        {
+        if (hydrate === true && newComponentItem.instance !== null) {
             hydrateComponent(instanceId, parentInstanceId, action, entity, entities, props, show);
         }
 
-		if (show)
-		{
+        if (show && newComponentItem.instance !== null) {
 			showComponent()
 		}
 
 		return newComponentItem;
 	}
 
-	const processComponentMount = function(dynamicComponent, componentSubId, instanceRef, instanceId, id, parentInstanceId, action)
+    this.mountComponentByInstanceId = function(componentId, componentSubId)
+    {
+        const instance = _.getComponentByInstanceId(componentId);
+
+        if (instance === null) return;
+
+        let ComponentClass = Vue.extend(instance.rawInstance);
+        let newComponent = null;
+
+        newComponent = new ComponentClass({
+            parent: instance.parentVue
+        }).$mount(document.getElementById(componentSubId));
+
+        instance.instance = newComponent;
+        instance.addTitle = newComponent.getModalTitle("add");
+        instance.editTitle = newComponent.getModalTitle("edit");
+        instance.deleteTitle = newComponent.getModalTitle("delete");
+        instance.readTitle = newComponent.getModalTitle("read");
+    }
+
+	const processComponentMount = function(dynamicComponent, componentSubId, instanceRef, instanceId, id, parentInstanceId, action, props)
     {
         let ComponentClass = Vue.extend(dynamicComponent);
         let newComponent = null;
 
-        if (componentSubId !== null && dynamicComponent.noMount != true)
-        {
+        if (componentSubId !== null && (dynamicComponent.mountType === "default" || !dynamicComponent.mountType)) {
             newComponent = new ComponentClass({
                 parent: _.vue
             }).$mount(document.getElementById(componentSubId));
         }
-        else
-        {
+        else if (dynamicComponent.mountType === "no_mount") {
             newComponent = new ComponentClass({
                 parent: _.vue
             });
         }
+        else if (dynamicComponent.mountType === "dynamic") {
+            newComponent = null
+        }
 
-        newComponent.uriPath = dynamicComponent.uriPath;
-        newComponent.setInstanceId(instanceId);
+        let modalTitleAdd = "";
+        let modalTitleEdit = "";
+        let modalTitleDelete = "";
+        let modalTitleRead = "";
+
+        if (newComponent !== null) {
+            newComponent.uriPath = dynamicComponent.uriPath;
+            newComponent.setInstanceId(instanceId);
+
+            modalTitleAdd = newComponent.getModalTitle("add");
+            modalTitleEdit = newComponent.getModalTitle("edit");
+            modalTitleDelete = newComponent.getModalTitle("delete");
+            modalTitleRead = newComponent.getModalTitle("read");
+        }
 
         return {
             instanceId: instanceId,
             id: id,
-            addTitle: newComponent.getModalTitle("add"),
-            editTitle: newComponent.getModalTitle("edit"),
-            deleteTitle: newComponent.getModalTitle("delete"),
-            readTitle: newComponent.getModalTitle("read"),
+            addTitle: modalTitleAdd,
+            editTitle: modalTitleEdit,
+            deleteTitle: modalTitleDelete,
+            readTitle: modalTitleRead,
             parentInstanceId: parentInstanceId,
             action: action,
             modalWidth: dynamicComponent.modalWidth,
@@ -586,16 +642,14 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
             instanceEl: dynamicComponent.name,
             parentVue: _.vue,
             rawInstance: dynamicComponent,
-            noMount: dynamicComponent.noMount
+            mountType: dynamicComponent.mountType
         };
     }
 
 	this.updateComponentAuths = function(isLoggedIn, authUserId)
     {
-        for(let currComponentIndex in Array.from(_.components))
-        {
-            if (typeof _.components[currComponentIndex].instance !== "undefined")
-            {
+        for(let currComponentIndex in Array.from(_.components)) {
+            if (typeof _.components[currComponentIndex].instance !== "undefined" && _.components[currComponentIndex].instance !== null) {
                 _.components[currComponentIndex].instance.isLoggedIn = isLoggedIn;
                 _.components[currComponentIndex].instance.authUserId = authUserId;
             }
@@ -612,10 +666,8 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
 
 	const loadDefaultMethodsOntoDynamicComponent = function(dynamicComponent)
     {
-        if (typeof dynamicComponent.methods.getModalTitle !== "function")
-        {
-            dynamicComponent.methods.getModalTitle = function(action)
-            {
+        if (typeof dynamicComponent.methods.getModalTitle !== "function") {
+            dynamicComponent.methods.getModalTitle = function(action) {
                 switch(action) {
                     case "add": return "Add Entity";
                     case "edit": return "Edit Entity";
@@ -625,8 +677,7 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
             }
         }
 
-        if (typeof dynamicComponent.methods.getParentLinkActions !== "function")
-        {
+        if (typeof dynamicComponent.methods.getParentLinkActions !== "function") {
             dynamicComponent.methods.getParentLinkActions = function()
             {
                 return ["add", "edit", "read", "delete"];
@@ -637,12 +688,9 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
         {
             let vc = this.findVc(this);
 
-            if (vc.isVcModal())
-            {
+            if (vc.isVcModal()) {
                 vc.loadComponent(instanceId, id, parentId, action, title, entity, entityList, props, show, hydrate, callback);
-            }
-            else
-            {
+            } else {
                 let modal = this.findModal(this);
                 if(show) { modal.show(); }
                 modal.vc.loadComponent(instanceId, id, parentId, action, title, entity, entityList, props, show, hydrate, callback);
@@ -727,6 +775,15 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
             if (vc && typeof vc.loadComponent === "function")
             {
                 vc.loadComponent(instanceId, id, parentInstanceId, action, title, entity, entities, props, show, hydrate);
+            }
+        }
+
+        dynamicComponent.methods.getComponent = function(instanceId, id, parentInstanceId, action, title, entity, entities, props, show, hydrate)
+        {
+            let vc = this.findVc(this);
+            if (vc && typeof vc.getComponent === "function")
+            {
+                return vc.getComponent(instanceId, id, parentInstanceId, action, title, entity, entities, props, show, hydrate);
             }
         }
 
@@ -960,6 +1017,7 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
 
     const slideComponentsOver = function(callback)
     {
+        isChangingComponents = true;
         _.el.style.overflowX = "hidden";
         newComponent.style.display = "block";
         newComponent.style.position = "absolute";
@@ -980,7 +1038,7 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
         vueWrapper.style.transform = "translateX(-" + componentWidth + "px)";
 
         window.setTimeout( function() {
-
+            isChangingComponents = false;
             if (typeof callback === "function") {
                 callback();
             }
@@ -989,6 +1047,7 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
 
     const slideComponentsBack = function(callback)
     {
+        isChangingComponents = true;
         _.el.style.overflowX = "hidden";
         newComponent.style.display = "block";
         newComponent.style.position = "absolute";
@@ -1009,11 +1068,16 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
         vueWrapper.style.transform = "translateX(" + componentWidth + "px)";
 
         window.setTimeout( function() {
-
+            isChangingComponents = false;
             if (typeof callback === "function") {
                 callback();
             }
         }, 250);
+    }
+
+    this.isChangingComponents = function()
+    {
+        return isChangingComponents;
     }
 
     const whichTransitionEvent = function()
@@ -1134,7 +1198,7 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
         if (typeof component.instance.entity.card_num === "undefined")
         {
             setTimeout(function() {
-                ezLog(component.instance.entity, "InstanceEntity")
+                //ezLog(component.instance.entity, "InstanceEntity")
                 runAsyncUriUpdate(newComponentUri, component)
             },100);
             return;
@@ -1183,6 +1247,7 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
         }
 
         _.vue.showModal = true;
+        return _;
     }
 
 	const showComponent = function(methodCall, returning)
@@ -1206,6 +1271,8 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
 
 		let componentEl =  document.getElementById(currentComponentId);
 
+        if (componentEl === null) return;
+
         toggleNewComponent(componentEl, component, currentComponentId, componentParentId, function ()
         {
             let componentTitle = buildComponentTitle(component, componentAction);
@@ -1218,6 +1285,7 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
 
             // update breadCrumb
             updateBreadCrumb(component);
+            updateSubPageLinks(component);
 
             if (returning)
             {
@@ -1254,6 +1322,16 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
         if (typeof _.vue.renderBreadCrumb === "function")
         {
             _.vue.renderBreadCrumb(component.instance);
+        }
+    }
+
+	const updateSubPageLinks = function(component)
+    {
+        if (vcType !== "app") { return; }
+
+        if (typeof _.vue.renderSubPageLinks === "function")
+        {
+            _.vue.renderSubPageLinks(component.instance);
         }
     }
 
@@ -1300,8 +1378,9 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
 
 	const createComponentNode = function(instanceId, componentInstance)
 	{
-	    if (componentInstance.noMount === "true") { return null; }
-		const componentId = "a" + instanceId.replace(/-/g,"");
+        if (componentInstance.mountType !== "default" && typeof componentInstance.mountType !== "undefined") return null;
+
+        const componentId = "a" + instanceId.replace(/-/g,"");
 		const componentSubId = "sub_" + instanceId.replace(/-/g,"");
 
 		const node = document.createElement("div");
@@ -1399,7 +1478,7 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
 			typeof component.instance.hydrateComponent === "undefined"
 		)
 		{
-			console.log(instanceId + " component cannot be hydrated");
+			//console.log(instanceId + " component cannot be hydrated");
 			return;
 		}
 
@@ -1408,7 +1487,10 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
 
 		toggleComponentParent(component, parentInstanceId);
 
-		component.instance.setModalComponentInstance(component.instanceId, show).injectDefaultData(component.instanceId, component.parentInstanceId, action, entity, entities, props,  _.parentData, userId, userNum).hydrateComponent(props, show, function(self) { self.$forceUpdate(); });
+		component.instance
+            .setModalComponentInstance(component.instanceId, show)
+            .injectDefaultData(component.instanceId, component.parentInstanceId, action, entity, entities, props,  _.parentData, userId, userNum)
+            .hydrateComponent(props, show, function(self) { self.$forceUpdate(); });
 	}
 
 	const toggleComponentParent = function(component, parentInstanceId)
@@ -1470,92 +1552,134 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
     }
 
     function ResizeSensorFromSO(element, callback) {
-        let zIndex = parseInt(getComputedStyle(element));
+        let zIndex = parseInt(getComputedStyle(element))
         if (isNaN(zIndex)) {
-            zIndex = 0;
+            zIndex = 0
         }
-        zIndex--;
+        zIndex--
 
-        let expand = document.createElement('div');
-        expand.style.position = "absolute";
-        expand.style.left = "0px";
-        expand.style.top = "0px";
-        expand.style.right = "0px";
-        expand.style.bottom = "0px";
-        expand.style.overflow = "hidden";
-        expand.style.zIndex = zIndex;
-        expand.style.visibility = "hidden";
+        let expand = document.createElement('div')
+        expand.style.position = "absolute"
+        expand.style.left = "0px"
+        expand.style.top = "0px"
+        expand.style.right = "0px"
+        expand.style.bottom = "0px"
+        expand.style.overflow = "hidden"
+        expand.style.zIndex = zIndex
+        expand.style.visibility = "hidden"
 
-        let expandChild = document.createElement('div');
-        expandChild.style.position = "absolute";
-        expandChild.style.left = "0px";
-        expandChild.style.top = "0px";
-        expandChild.style.width = "10000000px";
-        expandChild.style.height = "10000000px";
-        expand.appendChild(expandChild);
+        let expandChild = document.createElement('div')
+        expandChild.style.position = "absolute"
+        expandChild.style.left = "0px"
+        expandChild.style.top = "0px"
+        expandChild.style.width = "10000000px"
+        expandChild.style.height = "10000000px"
+        expand.appendChild(expandChild)
 
-        let shrink = document.createElement('div');
-        shrink.style.position = "absolute";
-        shrink.style.left = "0px";
-        shrink.style.top = "0px";
-        shrink.style.right = "0px";
-        shrink.style.bottom = "0px";
-        shrink.style.overflow = "hidden";
-        shrink.style.zIndex = zIndex;
-        shrink.style.visibility = "hidden";
+        let shrink = document.createElement('div')
+        shrink.style.position = "absolute"
+        shrink.style.left = "0px"
+        shrink.style.top = "0px"
+        shrink.style.right = "0px"
+        shrink.style.bottom = "0px"
+        shrink.style.overflow = "hidden"
+        shrink.style.zIndex = zIndex
+        shrink.style.visibility = "hidden"
 
-        let shrinkChild = document.createElement('div');
-        shrinkChild.style.position = "absolute";
-        shrinkChild.style.left = "0px";
-        shrinkChild.style.top = "0px";
-        shrinkChild.style.width = "200%";
-        shrinkChild.style.height = "200%";
-        shrink.appendChild(shrinkChild);
+        let shrinkChild = document.createElement('div')
+        shrinkChild.style.position = "absolute"
+        shrinkChild.style.left = "0px"
+        shrinkChild.style.top = "0px"
+        shrinkChild.style.width = "200%"
+        shrinkChild.style.height = "200%"
+        shrink.appendChild(shrinkChild)
 
-        element.appendChild(expand);
-        element.appendChild(shrink);
+        element.appendChild(expand)
+        element.appendChild(shrink)
 
         function setScroll()
         {
-            expand.scrollLeft = 10000000;
-            expand.scrollTop = 10000000;
+            expand.scrollLeft = 10000000
+            expand.scrollTop = 10000000
 
-            shrink.scrollLeft = 10000000;
-            shrink.scrollTop = 10000000;
+            shrink.scrollLeft = 10000000
+            shrink.scrollTop = 10000000
         }
 
-        setScroll();
+        setScroll()
 
-        let size = element.getBoundingClientRect();
+        let size = element.getBoundingClientRect()
 
-        let currentWidth = size.width;
-        let currentHeight = size.height;
+        let currentWidth = size.width
+        let currentHeight = size.height
+
+        function processMediaQuery(windowWidth,bodyEl,comTag)
+        {
+            bodyEl.classList.remove("media-"+comTag+"-320")
+            bodyEl.classList.remove("media-"+comTag+"-400")
+            bodyEl.classList.remove("media-"+comTag+"-480")
+            bodyEl.classList.remove("media-"+comTag+"-568")
+            bodyEl.classList.remove("media-"+comTag+"-640")
+            bodyEl.classList.remove("media-"+comTag+"-768")
+            bodyEl.classList.remove("media-"+comTag+"-850")
+            bodyEl.classList.remove("media-"+comTag+"-1024")
+            bodyEl.classList.remove("media-"+comTag+"-1224")
+            bodyEl.classList.remove("media-"+comTag+"-1300")
+
+            let classClass = ""
+            if (windowWidth <= 1300) classClass = "media-"+comTag+"-1300"
+            if (windowWidth <= 1224) classClass = "media-"+comTag+"-1224"
+            if (windowWidth <= 1024) classClass = "media-"+comTag+"-1024"
+            if (windowWidth <= 850) classClass = "media-"+comTag+"-850"
+            if (windowWidth <= 768) classClass = "media-"+comTag+"-768"
+            if (windowWidth <= 640) classClass = "media-"+comTag+"-640"
+            if (windowWidth <= 568) classClass = "media-"+comTag+"-568"
+            if (windowWidth <= 480) classClass = "media-"+comTag+"-480"
+            if (windowWidth <= 400) classClass = "media-"+comTag+"-400"
+            if (windowWidth <= 320) classClass = "media-"+comTag+"-320"
+
+            if (classClass !== "") {
+                bodyEl.classList.add(classClass)
+            }
+            dispatch.broadcast("screen_resize", {width: windowWidth})
+        }
 
         let onScroll = function()
         {
-            let size = element.getBoundingClientRect();
+            let size = element.getBoundingClientRect()
 
-            let newWidth = size.width;
-            let newHeight = size.height;
+            let newWidth = size.width
+            let newHeight = size.height
 
-            if (newWidth != currentWidth || newHeight != currentHeight) {
-                currentWidth = newWidth;
-                currentHeight = newHeight;
+            if (newWidth !== currentWidth || newHeight !== currentHeight) {
+                currentWidth = newWidth
+                currentHeight = newHeight
 
-                callback();
+                // We need to check and see what the declaration is, and if it's empty, run these.
+                const windowWidth = window.innerWidth
+                let bodyEl = _.el
+                let comTag = "app"
+
+                if( _.el.id.includes("vue-hub-body")) {
+                    comTag = "hub"
+                }
+
+                processMediaQuery(windowWidth,bodyEl,comTag)
+
+                callback()
             }
 
-            setScroll();
-        };
+            setScroll()
+        }
 
-        expand.addEventListener('scroll', onScroll);
-        shrink.addEventListener('scroll', onScroll);
+        expand.addEventListener('scroll', onScroll)
+        shrink.addEventListener('scroll', onScroll)
     }
 
     const resolveCamelCase = function(string)
 	{
-		if (!string || string === "" || typeof string !== "string") { return string; }
-		return string.split(/(?=[A-Z])/).join("-").toLowerCase();
+		if (!string || string === "" || typeof string !== "string") { return string }
+		return string.split(/(?=[A-Z])/).join("-").toLowerCase()
 	}
 
 	const uuidv4 = function ()
@@ -1565,27 +1689,37 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
 		);
 	}
 
-	this.isVcModal = function()
+    this.isVcModal = function()
+    {
+        return vcType == "modal";
+    }
+
+    this.setType = function(type)
+    {
+        vcType = type;
+    }
+
+    this.getType = function()
     {
         return vcType;
     }
 
 	this.addAjaxClass = function()
 	{
-		let bodyDialogBox = document.getElementsByClassName("zgpopup-dialog-body");
-		if (typeof bodyDialogBox[bodyDialogBox.length - 1] === "undefined") { return; }
-		bodyDialogBox[bodyDialogBox.length - 1].classList.add("ajax-loading-anim");
-        _.vue.$forceUpdate();
+		let bodyDialogBox = document.getElementsByClassName("zgpopup-dialog-body")
+		if (typeof bodyDialogBox[bodyDialogBox.length - 1] === "undefined") { return }
+		bodyDialogBox[bodyDialogBox.length - 1].classList.add("ajax-loading-anim")
+        _.vue.$forceUpdate()
 	}
 
 	this.removeAjaxClass = function()
 	{
-		let bodyDialogBox = document.getElementsByClassName("zgpopup-dialog-body");
-        if (typeof bodyDialogBox[bodyDialogBox.length - 1] === "undefined") { return; }
-		bodyDialogBox[bodyDialogBox.length - 1].classList.remove("ajax-loading-anim");
-        _.vue.$forceUpdate();
+		let bodyDialogBox = document.getElementsByClassName("zgpopup-dialog-body")
+        if (typeof bodyDialogBox[bodyDialogBox.length - 1] === "undefined") { return }
+		bodyDialogBox[bodyDialogBox.length - 1].classList.remove("ajax-loading-anim")
+        _.vue.$forceUpdate()
 	}
 
-	__construct();
+	__construct()
 }
 

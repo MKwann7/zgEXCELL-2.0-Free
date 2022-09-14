@@ -7,8 +7,8 @@ use Entities\Cards\Models\CardModel;
 
 class ManageCardTemplateSettingsWidget extends VueComponent
 {
-    protected $id = "276dc4cf-5d58-48c6-9b52-15b57a07dc4f";
-    protected $modalWidth = 750;
+    protected string $id = "276dc4cf-5d58-48c6-9b52-15b57a07dc4f";
+    protected string $modalWidth = "750";
 
     public function __construct (array $components = [])
     {
@@ -128,8 +128,6 @@ class ManageCardTemplateSettingsWidget extends VueComponent
                         canvas.getContext("2d").drawImage(img, 0, 0, img.width, img.height);
                         
                         let pixelData = canvas.getContext("2d").getImageData(event.offsetX, event.offsetY, 1, 1).data;
-                        
-                        console.log(JSON.stringify(pixelData));
                     });
                 });
             },
@@ -261,7 +259,7 @@ class ManageCardTemplateSettingsWidget extends VueComponent
 
                 let strCardUpdateDataParameters = "fieldlabels=" + btoa(strStyleLabel) + "&value=" + btoa(objValue);
                 
-                ajax.Send("cards/card-data/update-card-data?id=" + intEntityId + "&type=card-data", strCardUpdateDataParameters, function(objCardResult)
+                ajax.Post("cards/card-data/update-card-data?id=" + intEntityId + "&type=card-data", strCardUpdateDataParameters, function(objCardResult)
                 {
                     if(typeof callback === "function")
                     {

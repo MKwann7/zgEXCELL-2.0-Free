@@ -4,8 +4,11 @@
  */
 
 // Custom Escape String
+use App\Core\AppModel;
 use App\Utilities\Database;
+use App\Utilities\Excell\ExcellCollection;
 use App\Utilities\Transaction\ExcellTransaction;
+use App\Utilities\Transaction\ExcellTransactionResult;
 
 if (! function_exists('getFullUrl'))
 {
@@ -353,7 +356,7 @@ if (! function_exists('buildUnderscoreLowercaseFromPascalCase'))
     function buildUnderscoreLowercaseFromPascalCase($strModelName)
     {
         $strModelFileName = preg_split('/(?=[A-Z])/',$strModelName);
-        return strtolower(implode("_",array_filter($strModelFileName)));
+        return str_replace(["_ ", " _"], "_",strtolower(implode("_",array_filter($strModelFileName))));
     }
 }
 
@@ -502,34 +505,70 @@ if (! function_exists('userCan'))
     }
 }
 
-function userIsCustomPlatform($role)
+if (! function_exists('userIsCustomPlatform'))
 {
-    if (
-        !userIsEzDigital($role) &&
-        $role !== "Custom Platform Admin" &&
-        $role !== "Custom Platform Team Member" &&
-        $role !== "Custom Platform Read-Only"
-    )
+    function userIsCustomPlatform($role)
     {
-        return false;
-    }
+        if (
+            !userIsEzDigital($role) &&
+            $role !== "Custom Platform Admin" &&
+            $role !== "Custom Platform Team Member" &&
+            $role !== "Custom Platform Read-Only"
+        )
+        {
+            return false;
+        }
 
-    return true;
+        return true;
+    }
 }
 
-function userIsEzDigital($role)
+if (! function_exists('userIsEzDigital'))
 {
-    if (
-        $role !== "Supreme" &&
-        $role !== "EZ Digital Admin" &&
-        $role !== "EZ Digital Team Member" &&
-        $role !== "EZ Digital Read-Only"
-    )
+    function userIsEzDigital($role)
     {
-        return false;
-    }
+        if (
+            $role !== "Supreme" &&
+            $role !== "EZ Digital Admin" &&
+            $role !== "EZ Digital Team Member" &&
+            $role !== "EZ Digital Read-Only"
+        )
+        {
+            return false;
+        }
 
-    return true;
+        return true;
+    }
+}
+
+if (! function_exists('applicationGroupEnabledElement'))
+{
+    function applicationGroupEnabledElement($appGroupName)
+    {
+        $result = applicationGroupEnabled($appGroupName);
+
+        if ($result !== true) {
+            echo ' style="display:none;"';
+        }
+
+        echo "";
+    }
+}
+
+
+if (! function_exists('applicationGroupEnabled'))
+{
+    function applicationGroupEnabled($appGroupName)
+    {
+        global $app;
+        $groupsEnabled = explode(",",$app->objCustomPlatform->getCompanySettings()->FindEntityByValue("label","application_groups_enabled")->value ?? "");
+
+        if (!in_array($appGroupName, $groupsEnabled)) {
+            return false;
+        }
+
+        return true;
+    }
 }
 
 if (! function_exists('userCanHideElement'))
@@ -756,9 +795,7 @@ if (! function_exists('isDateTime'))
     function isDateTime($strInput)
     {
         if (
-            is_subclass_of($strInput, \App\Core\AppModel::class) ||
-            is_a($strInput, 'stdClass') ||
-            is_array($strInput)
+            !is_string($strInput)
         ) { return false; }
 
         $strInput = trim($strInput);
@@ -848,7 +885,7 @@ if (! function_exists('isUuid'))
 {
     function isUuid( $uuid )
     {
-        if (!is_string($uuid) || (preg_match('/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i', $uuid) !== 1)) {
+        if (!is_string($uuid) || (preg_match('/[a-f0-9]{8}\-[a-f0-9]{4}\-(8|9|a|b)[a-f0-9]{3}\-(8|9|a|b)[a-f0-9]{3}\-[a-f0-9]{12}/', strtolower($uuid)) !== 1)) {
             return false;
         }
 
@@ -885,9 +922,9 @@ if (! function_exists('isJson'))
                 if ( count($objDataValueTest) > 0 )
                 {
                     $objValueTransaction = new ExcellTransaction();
-                    $objValueTransaction->Data = $objDataValueTest;
+                    $objValueTransaction->data = $objDataValueTest;
 
-                    $strJsonString = json_encode(Database::base64Encode($objValueTransaction)->Data);
+                    $strJsonString = json_encode(Database::base64Encode($objValueTransaction)->data);
                 }
                 else
                 {
@@ -900,7 +937,11 @@ if (! function_exists('isJson'))
             }
 
 
-            $result = json_decode($strJsonString);
+            if (!is_string($strJsonString)) {
+                return 'Object submitted for JSON parsing was not a string.';
+            }
+
+            json_decode($strJsonString);
             $error  = "";
 
             switch ( json_last_error() )
@@ -992,7 +1033,7 @@ if (! function_exists('formatAsPhoneIfApplicable'))
     }
 }
 
-if (function_exists('mb_ereg_replace'))
+if (function_exists('mb_ereg_replace') && !function_exists("mb_escape"))
 {
 
     function mb_escape(string $string)
@@ -1002,36 +1043,41 @@ if (function_exists('mb_ereg_replace'))
 }
 else
 {
-
-    function mb_escape(string $string)
+    if (!function_exists("mb_escape"))
     {
-        return preg_replace('~[\x00\x0A\x0D\x1A\x22\x25\x27\x5C\x5F]~u', '\\\$0', $string);
+        function mb_escape(string $string)
+        {
+            return preg_replace('~[\x00\x0A\x0D\x1A\x22\x25\x27\x5C\x5F]~u', '\\\$0', $string);
+        }
     }
 }
 
-// This will be moved to engine/libraries soon.
-function logText($strFileName, $strText)
+if (! function_exists('logText'))
 {
-    $root = AppCore;
-
-    if ( !is_dir($root . '../logs/') )
+    // This will be moved to engine/libraries soon.
+    function logText($strFileName, $strText)
     {
-        mkdir($root . 'logs/');
-        if ( !is_dir($root . 'logs/') )
+        $root = APP_CORE;
+
+        if ( !is_dir($root . '../logs/') )
         {
-            return array(
-                "0" => "zgError",
-                "1" => "Unable to make directory: " . (string)$root . 'logs/'
-            );
+            mkdir($root . 'logs/');
+            if ( !is_dir($root . 'logs/') )
+            {
+                return array(
+                    "0" => "zgError",
+                    "1" => "Unable to make directory: " . (string)$root . 'logs/'
+                );
+            }
         }
+
+        file_put_contents($root . "../logs/" . $strFileName, date("Y-m-d H:i:s") . ": " .$strText . PHP_EOL, FILE_APPEND);
+
+        return array(
+            "0" => "zgSuccess",
+            "1" => "Logged: " . (string)$strText . ' at ' . $root . 'logs/' . $strFileName
+        );
     }
-
-    file_put_contents($root . "../logs/" . $strFileName, date("Y-m-d H:i:s") . ": " .$strText . PHP_EOL, FILE_APPEND);
-
-    return array(
-        "0" => "zgSuccess",
-        "1" => "Logged: " . (string)$strText . ' at ' . $root . 'logs/' . $strFileName
-    );
 }
 
 if (! function_exists('excellErrorHandler'))
@@ -1213,6 +1259,11 @@ if (! function_exists('env'))
     function env($variableName, $defaultValue = "")
     {
         global $app;
+
+        if ($app === null) {
+            return $defaultValue;
+        }
+
         $objData = $app->getEnv($variableName);
 
         if (empty($objData))
@@ -1267,35 +1318,38 @@ if (! function_exists('isAssoc'))
     }
 }
 
-function getClassData($classPath)
+if (! function_exists('getClassData'))
 {
-    $content = explode("\n", file_get_contents($classPath));
-
-    $objClassInstanceName = "";
-
-    foreach($content as $currLine)
+    function getClassData($classPath): array
     {
-        if (substr($currLine, 0, 9) === "namespace") {
-            $objClassInstanceName .= trim(str_replace(["namespace ", ";"], "", $currLine));
-            continue;
-        }
+        $content = explode("\n", file_get_contents($classPath));
 
-        if (substr($currLine, 0, 5) === "class")
+        $objClassInstanceName = "";
+
+        foreach($content as $currLine)
         {
-            $classNameFull = trim(str_replace("class ", "", $currLine));
-
-            if (strpos($classNameFull, " extends ") !== false)
-            {
-                $classNameFull = explode(" extends ", $classNameFull)[0];
+            if (substr($currLine, 0, 9) === "namespace") {
+                $objClassInstanceName .= trim(str_replace(["namespace ", ";"], "", $currLine));
+                continue;
             }
 
-            $objClassInstanceName .= "\\".$classNameFull;
-            break;
+            if (substr($currLine, 0, 5) === "class")
+            {
+                $classNameFull = trim(str_replace("class ", "", $currLine));
+
+                if (strpos($classNameFull, " extends ") !== false)
+                {
+                    $classNameFull = explode(" extends ", $classNameFull)[0];
+                }
+
+                $objClassInstanceName .= "\\".$classNameFull;
+                break;
+            }
         }
+
+        $objClassInstanceNameArray        = explode("\\", $objClassInstanceName);
+        $currClassIndex                   = array_pop($objClassInstanceNameArray);
+
+        return [$currClassIndex, $objClassInstanceName];
     }
-
-    $objClassInstanceNameArray        = explode("\\", $objClassInstanceName);
-    $currClassIndex                   = array_pop($objClassInstanceNameArray);
-
-    return [$currClassIndex, $objClassInstanceName];
 }

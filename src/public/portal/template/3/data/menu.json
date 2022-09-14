@@ -1,0 +1,201 @@
+[{
+  "title": "LAUNCHPAD",
+  "name": "launch-pad",
+  "icon": "fa fa-rocket desktop-30px",
+  "items": [{
+    "title": "Notices",
+    "icon": "fas fa-info-circle desktop-20px",
+    "url": "/account/notices"
+  }, {
+    "title": "Quick Start",
+    "icon": "fas fa-play desktop-20px",
+    "url": "/account/quick-start"
+  }, {
+    "title": "Success Journey",
+    "icon": "fas fa-trophy desktop-20px",
+    "url": "/account/success-journey"
+  }]
+},{
+  "title": "ACCOUNT",
+  "name": "account",
+  "icon": "fas fa-user-circle desktop-30px",
+  "items": [{
+    "title": "Profile",
+    "icon": "fas fa-user desktop-20px",
+    "url": "/account/profile"
+  }, {
+    "title": "Free Resources",
+    "icon": "fa fa-book desktop-20px",
+    "url": "/account/free-resources"
+  }, {
+    "title": "Payment Center",
+    "icon": "fa fa-credit-card desktop-20px",
+    "url": "/account/payment-center"
+  }, {
+    "title": "Commisions",
+    "icon": "fa fa-money-bill desktop-20px",
+    "url": "/account/commissions"
+  }, {
+    "title": "Support/Help",
+    "icon": "fas fa-headphones desktop-20px",
+    "url": "/account/support"
+  }]
+},{
+  "title": "MAX TOOLS",
+  "name": "max-tools",
+  "icon": "fa fa-wrench desktop-30px",
+  "items": [{
+    "title": "My Max Sites",
+    "icon": "fa fa-globe desktop-20px",
+    "url": "/account/my-max-sites"
+  }, {
+    "title": "Max Pro CRM",
+    "icon": "fa fa-users desktop-20px",
+    "url": "/account/max-pro-crm"
+  }, {
+    "title": "Max Directories",
+    "icon": "fa fa-id-card desktop-20px",
+    "url": "/account/max-directories"
+  }, {
+    "title": "Max Follow Up",
+    "icon": "fa fa-handshake desktop-20px",
+    "url": "/account/max-follow-up"
+  }, {
+    "title": "Marketplace",
+    "icon": "fa fa-shopping-basket desktop-20px",
+    "url": "/account/marketplace"
+  }]
+},{
+  "title": "MY BUSINESS",
+  "name": "my-business",
+  "icon": "fa fa-building desktop-30px",
+  "items": [{
+    "title": "To-Do",
+    "icon": "fa fa-check desktop-20px",
+    "url": "/account/to-do"
+  }, {
+    "title": "Calendar",
+    "icon": "fa fa-calendar-alt desktop-20px",
+    "url": "/account/calendar"
+  }, {
+    "title": "Journal",
+    "icon": "fa fa-address-book desktop-20px",
+    "url": "/account/max-directories"
+  }, {
+    "title": "Planning",
+    "icon": "fa fa-handshake desktop-20px",
+    "url": "/account/max-follow-up"
+  }, {
+    "title": "Key Objectives",
+    "icon": "fa fa-bullseye desktop-20px",
+    "url": "/account/marketplace"
+  }, {
+    "title": "Passwords",
+    "icon": "fa fa-user-secret desktop-20px",
+    "url": "/account/marketplace"
+  }]
+},{
+  "title": "PEOPLE",
+  "name": "people",
+  "icon": "fa fa-users desktop-30px",
+  "items": [{
+    "title": "Contacts",
+    "icon": "fa fa-id-card desktop-20px",
+    "url": "/account/contacts"
+  }, {
+    "title": "Conversations",
+    "icon": "fa fa-comments desktop-20px",
+    "url": "/account/conversations"
+  }, {
+    "title": "Social Media",
+    "icon": "fa fa-share-alt desktop-20px",
+    "url": "/account/social-media"
+  }, {
+    "title": "Prospects",
+    "icon": "fa fa-search desktop-20px",
+    "url": "/account/prospects"
+  }, {
+    "title": "Follow-Up",
+    "icon": "fa fa-bullhorn desktop-20px",
+    "url": "/account/follow-up"
+  }]
+},{
+  "title": "WORKSHOP",
+  "name": "workshop",
+  "icon": "fas fa-hammer desktop-30px",
+  "items": [{
+    "title": "MaxSites",
+    "icon": "fa fa-desktop desktop-20px",
+    "url": "/account/max-cards"
+  }, {
+    "title": "MaxWebs",
+    "icon": "fa fa-calendar-alt desktop-20px",
+    "url": "/account/max-webs"
+  }, {
+    "title": "Pages",
+    "icon": "fa fa-file desktop-20px",
+    "url": "/account/pages"
+  }, {
+    "title": "Resources",
+    "icon": "fa fa-handshake desktop-20px",
+    "url": "/account/resources"
+  }, {
+    "title": "Widgets",
+    "icon": "fas fa-th-large desktop-20px",
+    "url": "/account/widgets"
+  }]
+},{
+  "title": "MAX CENTRAL",
+  "name": "max-central",
+  "icon": "fa fa-circle desktop-30px",
+  "items": [{
+    "title": "My Team",
+    "icon": "fa fa-users desktop-20px",
+    "url": "/account/my-team"
+  }, {
+    "title": "My Journey",
+    "icon": "fa fa-map desktop-20px",
+    "url": "/account/journey"
+  }, {
+    "title": "My Courses",
+    "icon": "fa fa-industry desktop-20px",
+    "url": "/account/courses"
+  }, {
+    "title": "Video Tutorials",
+    "icon": "fa fa-video desktop-20px",
+    "url": "/account/video-tutorials"
+  }, {
+    "title": "Help Center",
+    "icon": "fas fa-question-circle desktop-20px",
+    "url": "/account/help-center"
+  }, {
+    "title": "Settings",
+    "icon": "fas fa-sliders-h desktop-20px",
+    "url": "/account/settings"
+  }, {
+    "title": "Chat With Us",
+    "icon": "fas fa-comments desktop-20px",
+    "url": "/account/chat-with-us"
+  }]
+},{
+  "title": "SYSTEM",
+  "name": "system",
+  "icon": "fa fa-cog desktop-30px",
+  "items": [{
+    "title": "Custom Fields",
+    "icon": "fa fa-pencil-alt desktop-20px",
+    "url": "/account/my-team"
+  }, {
+    "title": "Triggers",
+    "icon": "fa fa-bolt desktop-20px",
+    "url": "/account/journey"
+  }, {
+    "title": "Integrations",
+    "icon": "fa fa-puzzle-piece desktop-20px",
+    "url": "/account/courses"
+  }, {
+    "title": "Settings",
+    "icon": "fa fa-cogs desktop-20px",
+    "url": "/account/video-tutorials"
+  }]
+}]

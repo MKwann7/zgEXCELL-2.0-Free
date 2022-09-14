@@ -7,12 +7,14 @@ use Entities\Users\Models\UserModel;
 
 class ManageUserProfileWidget extends VueComponent
 {
-    protected $id = "d0b1599e-48cd-4d9a-83f9-dc0c2c4fcdf6";
-    protected $title              = "Create User";
-    protected $saveNewButtonTitle = "Save New User";
-    protected $updateButtonTitle = "Update User";
-    protected $assignUserType = true;
-    protected $assignUserRoles = true;
+    protected string $id = "d0b1599e-48cd-4d9a-83f9-dc0c2c4fcdf6";
+    protected string $title              = "Create User";
+    protected string $saveNewButtonTitle = "Save New User";
+    protected string $updateButtonTitle = "Update User";
+    protected bool $assignUserType = true;
+    protected bool $assignUserRoles = true;
+    protected bool $enableOriginator = true;
+    protected bool $enableAccountEditing = true;
 
     public function __construct(array $components = [])
     {
@@ -57,8 +59,10 @@ class ManageUserProfileWidget extends VueComponent
             
             if (this.entity)
             {
-                this.entityClone = _.clone(this.entity);                
+                this.entityClone = _.clone(this.entity);
+                '.($this->enableAccountEditing === true ? '                
                 this.checkForDuplicateUsername(this.entityClone);
+                ' : '').'
                 this.checkForDuplicateUserEmail(this.entityClone);
                 this.checkForDuplicateUserPhone(this.entityClone);
             }
@@ -75,9 +79,10 @@ class ManageUserProfileWidget extends VueComponent
             
             const editCardUserProfile = document.getElementsByClassName("editEntityProfile");
             const cardUserProfile = Array.from(editCardUserProfile)[0];
+            '.($this->enableOriginator === true ? '
             this.searchBox = cardUserProfile.getElementsByClassName("dynamic-search-list")[0]; 
             this.searchBoxInner = this.searchBox.getElementsByClassName("table")[0];
-            
+            ' : '').'
             this.submitButton = this.setSubmitButton();
         '.parent::renderComponentHydrationScript();
     }
@@ -97,11 +102,13 @@ class ManageUserProfileWidget extends VueComponent
                 this.entityClone.email = this.entityClone.user_email_value;
                 this.entityClone.affiliate_id = this.entityClone.sponsor_id;
                 this.entityClone.affiliate_id = this.entityClone.sponsor_id;
+                '.($this->enableAccountEditing === true ? '
                 this.entityClone.password = this.password;
+                ' : '').' 
                 
-                ajax.Send(url, this.entityClone, function(result) 
+                ajax.Post(url, this.entityClone, function(result) 
                 {
-                    if (result.success === false) 
+                    if (result.success === false || result.response.success === false) 
                     {
                         self.showErrorFromServer(result);
                         return;
@@ -124,16 +131,18 @@ class ManageUserProfileWidget extends VueComponent
                         self.entity.last_updated = date;
                     }
                     
-                    self.entity.user_id = result.data.user.user_id;
-                    self.entity.sys_row_id = result.data.user.id;
-                    self.entity.first_name = result.data.user.first_name;
-                    self.entity.username = result.data.user.username;
-                    self.entity.last_name = result.data.user.last_name;
-                    self.entity.user_email = result.data.user.user_email;
-                    self.entity.user_email_value = result.data.user.email;
-                    self.entity.user_phone = result.data.user.user_phone;
-                    self.entity.user_phone_value = result.data.user.phone;
-                    self.entity.template_id = result.data.user.last_name;
+                    self.entity.user_id = result.response.data.user.user_id;
+                    self.entity.sys_row_id = result.response.data.user.id;
+                    self.entity.first_name = result.response.data.user.first_name;
+                    self.entity.last_name = result.response.data.user.last_name;
+                    '.($this->enableAccountEditing === true ? '
+                    self.entity.username = result.response.data.user.username;
+                    ' : '').' 
+                    self.entity.user_email = result.response.data.user.user_email;
+                    self.entity.user_email_value = result.response.data.user.email;
+                    self.entity.user_phone = result.response.data.user.user_phone;
+                    self.entity.user_phone_value = result.response.data.user.phone;
+                    self.entity.template_id = result.response.data.user.last_name;
                     self.entity.status = self.entityClone.status;
                     
                     if (updateAction === "new")
@@ -150,7 +159,7 @@ class ManageUserProfileWidget extends VueComponent
             },
             showErrorFromServer: function(result)
             {
-                switch(result.data.error)
+                switch(result.response.data.error)
                 {
                     case "primary_phone_exists":
                         const el = document.getElementById("phone_1603190947");
@@ -184,10 +193,12 @@ class ManageUserProfileWidget extends VueComponent
             },
             clearErrors: function()
             {
+                '.($this->enableAccountEditing === true ? '
                 const usernameEl = elm("username_1603190947");
                 removeNodeByClass("username-error");
                 usernameEl.classList.remove("error-validation");
-                usernameEl.classList.remove("pass-validation"); 
+                usernameEl.classList.remove("pass-validation");
+                ' : '').' 
                 
                 const phoneEl = elm("phone_1603190947"); 
                 removeNodeByClass("phone-error");
@@ -313,7 +324,7 @@ class ManageUserProfileWidget extends VueComponent
                     return; 
                 }
                 
-                ajax.Send("api/v1/users/check-user-username?username=" + entity.username + "&user_id=" + entity.user_id, null, function(objResult) 
+                ajax.Get("api/v1/users/check-user-username?username=" + entity.username + "&user_id=" + entity.user_id, null, function(objResult) 
                 {
                     switch(objResult.match) 
                     {
@@ -364,9 +375,9 @@ class ManageUserProfileWidget extends VueComponent
                 
                 const url = "/api/v1/users/check-users-primary-phone?phone=" + userPhone + "&user_id=" + entity.user_id;
                 
-                ajax.Send(url, null, function(result) 
+                ajax.Get(url, null, function(result) 
                 {
-                    if (result.success === false || result.data.match === true) 
+                    if (result.success === false || result.response.data.match === true) 
                     {
                         el.classList.remove("pass-validation");
                         el.classList.add("error-validation");
@@ -375,7 +386,7 @@ class ManageUserProfileWidget extends VueComponent
                         {
                             let errorNode = null;
                             
-                            if (result.data.match === true)
+                            if (result.response.data.match === true)
                             {
                                 errorNode = createNode("div", [".phone-error", ".error-text"], "This Primary Phone Is Already Registered");           
                             }
@@ -426,9 +437,9 @@ class ManageUserProfileWidget extends VueComponent
                 
                 const url = "api/v1/users/check-users-primary-email?email=" + entity.user_email_value + "&user_id=" + entity.user_id;
 
-                ajax.Send(url, null, function(result) 
+                ajax.Get(url, null, function(result) 
                 {
-                    if (result.success === false || result.data.match === true) 
+                    if (result.success === false || result.response.data.match === true) 
                     {                        
                         el.classList.remove("pass-validation");
                         el.classList.add("error-validation");
@@ -437,7 +448,7 @@ class ManageUserProfileWidget extends VueComponent
                         {
                             let errorNode = null;
                             
-                            if (result.data.match === true)
+                            if (result.response.data.match === true)
                             {
                                 errorNode = createNode("div", [".email-error", ".error-text"], "This Primary Email Is Already Registered");           
                             }
@@ -588,16 +599,16 @@ class ManageUserProfileWidget extends VueComponent
             {
                 const self = this;
                 this.customerList = [];
-                const url = "'.$app->objCustomPlatform->getFullPortalDomain().'/cart/get-all-users";
+                const url = "'.$app->objCustomPlatform->getFullPortalDomainName().'/cart/get-all-users";
                 
-                ajax.SendExternal(url, {}, "get", "json", true, function(result) 
+                ajax.GetExternal(url, {}, true, function(result) 
                 {
                     if (result.success === false)
                     {
                         return;
                     }
 
-                    const users = Object.entries(result.data.list);
+                    const users = Object.entries(result.response.data.list);
                     users.forEach(function([user_id, currUser])
                     {
                         if (user_id == self.entityClone.sponsor_id) { self.userSearchResult = currUser.first_name + " " + currUser.last_name; }
@@ -620,8 +631,8 @@ class ManageUserProfileWidget extends VueComponent
                         return;
                     }
                     
-                    self.customPlatformDepartments = result.data.departments;
-                    self.customPlatformDepartmentQueues = result.data.departmentQueues;
+                    self.customPlatformDepartments = result.response.data.departments;
+                    self.customPlatformDepartmentQueues = result.response.data.departmentQueues;
                     self.filterDepartmentData();
 
                     self.$forceUpdate();
@@ -660,11 +671,8 @@ class ManageUserProfileWidget extends VueComponent
             {
                 let queueList = [];
                 
-                console.log(this.customPlatformDepartmentQueues);
-                
                 for (let currQueue of this.customPlatformDepartmentQueues)
                 {
-                    console.log(currQueue.company_department_id);
                     if (currQueue.company_department_id === this.entityClone.userDepartment)
                     {
                         queueList.push(currQueue);
@@ -817,7 +825,7 @@ class ManageUserProfileWidget extends VueComponent
                     border: 1px rgba(0,0,0,.2) solid;
                     border-radius: 8px;
                 }
-            </v-style>
+            </v-style>'.($this->enableOriginator === true ? '
             <div class="augmented-form-items">
                 <table class="table" style="margin-bottom:2px;">
                     <tr>
@@ -847,8 +855,8 @@ class ManageUserProfileWidget extends VueComponent
                         </td>
                     </tr>
                 </table>
-            </div>
-            <table class="table no-top-border userProfileTable">
+            </div>' : '').
+            '<table class="table no-top-border userProfileTable">
                 <tr>
                     <td style="width:125px;vertical-align: middle;">First Name</td>
                     <td><input v-model="entityClone.first_name" class="form-control" type="text" placeholder="Enter First Name..."></td>
@@ -862,6 +870,7 @@ class ManageUserProfileWidget extends VueComponent
                     <td><input v-on:blur="checkForDuplicateUserEmail(entityClone)" v-model="entityClone.user_email_value" v-bind:class="{ \'pass-validation\': entityClone.user_email_value }" id="email_1603190947" class="form-control" type="text" placeholder="Enter E-mail..."></td>
                 </tr>
             </table>'.'
+            '.($this->enableAccountEditing === true ? '
             <div class="augmented-form-items">
                 <table class="table usernameTable" style="margin-bottom:2px;">
                     <tr>
@@ -897,6 +906,8 @@ class ManageUserProfileWidget extends VueComponent
             </div>
             '. $this->renderSetClassIfApplicable() . '
             '. $this->renderSetRolesIfApplicable() . '
+            ' : '').
+            '
             <table class="table no-top-border">
                 <tr>
                     <td style="width:125px;vertical-align: middle;">Status</td>
@@ -925,21 +936,21 @@ class ManageUserProfileWidget extends VueComponent
                     <tr>
                         <td style="width:125px;vertical-align: middle;">Class</td>
                         <td>
-                            <div v-if="userEzDigitalRole === true" class="width33">
+                            <div v-if="userSuperAdminRole === true" class="width33">
                                 <ul>
                                     <li><label for="userEzAdminClass" class="pointer"><input v-model="entityClone.userClass" id="userEzAdminClass" value="1" type="radio" /> EZ Digital Admin</label></li>
                                     <li><label for="userEzTeamClass" class="pointer"><input v-model="entityClone.userClass" id="userEzTeamClass" value="2" type="radio" /> EZ Digital Team Member</label></li>
                                     <li><label for="userEzReadOnlyClass" class="pointer"><input v-model="entityClone.userClass" id="userEzReadOnlyClass" value="3" type="radio" /> EZ Digital Read-Only</label></li>
                                 </ul>
                             </div>
-                            <div v-if="userEzDigitalRole === true" class="width33">
+                            <div v-if="userSuperAdminRole === true" class="width33">
                                 <ul>
                                     <li><label for="userCpClientClass" class="pointer"><input v-model="entityClone.userClass" id="userCpClientClass" value="5" type="radio" /> Custom Platform Admin</label></li>
                                     <li><label for="userCpTeamMemberClass" class="pointer"><input v-model="entityClone.userClass" id="userCpTeamMemberClass" value="6" type="radio" /> Custom Platform Team Member</label></li>
                                     <li><label for="userCpReadOnlyClass" class="pointer"><input v-model="entityClone.userClass" id="userCpReadOnlyClass" value="7" type="radio"/> Custom Platform Read-Only</label></li>
                                 </ul>
                             </div>
-                            <div v-if="userAdminRole === true && userEzDigitalRole === false" class="width33">
+                            <div v-if="userAdminRole === true && userSuperAdminRole === false" class="width33">
                                 <ul>
                                     <li><label for="userCpClientClass" class="pointer"><input v-model="entityClone.userClass" id="userCpClientClass" value="5" type="radio" /> Admin</label></li>
                                     <li><label for="userCpTeamMemberClass" class="pointer"><input v-model="entityClone.userClass" id="userCpTeamMemberClass" value="6" type="radio" /> Team Member</label></li>

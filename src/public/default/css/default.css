@@ -10,16 +10,29 @@ body div.universal-float-shield {
     overflow-y: auto;
     justify-content: center;
     align-items: center;
-    display: flex;
+    display:flex;
 }
-
+body div.closedModal.universal-float-shield {
+    display:none !important;
+}
 .vue-float-shield-inner {
     display: flex;
     flex-direction: column;
     max-height: 100vh;
     max-height: -webkit-fill-available;
 }
-
+.zgpopup-dialog-box {
+    transition: all 0.1s ease-in-out 0s;
+    transform: scale(1.2);
+    visibility: hidden;
+    opacity: 0;
+}
+.activeModal .zgpopup-dialog-box {
+    transform: scale(1) !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    transition: all 0.1s ease-in-out 0s;
+}
 .zgpopup-dialog-box {
     background: #ffffff;
     background: -moz-linear-gradient(top,  #ffffff 0%, #eaeaea 100%);
@@ -34,7 +47,6 @@ body div.universal-float-shield {
     max-width: calc(100vw - 50px);
     min-width: 250px;
 }
-
 .zgpopup-dialog-header {
     background: -moz-linear-gradient(top, #ffffff 0%, #FAFAFA 100%);
     background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#ffffff), color-stop(100%,#FAFAFA));
@@ -115,6 +127,19 @@ body div.universal-float-shield {
     background-size: 35px !important;
     background-position-y: center;
     min-height: inherit;
+}
+
+.hover-effect-small {
+    transition: transform .1s ease-in-out;
+}
+.hover-effect-small:hover {
+    transform: scale(1.05);
+}
+.hover-effect-medium:hover {
+    z-index:2500 !important;
+}
+.hover-effect-medium {
+    transition: all .15s ease-in-out;
 }
 
 .table .table {

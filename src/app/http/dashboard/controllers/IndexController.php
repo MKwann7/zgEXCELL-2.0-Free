@@ -1,12 +1,9 @@
 <?php
 
-namespace Entities\Dashboard\Controllers;
+namespace Http\Dashboard\Controllers;
 
 use App\Utilities\Excell\ExcellHttpModel;
-use Entities\Cards\Classes\Cards;
-use Entities\Cards\Components\Vue\CardMainApp;
-use Entities\Cards\Components\Vue\CardWidget\ManageCardWidget;
-use Entities\Dashboard\Classes\Base\DashboardController;
+use Http\Dashboard\Controllers\Base\DashboardController;
 use Entities\Dashboard\Classes\Dashboard;
 use Entities\Dashboard\Components\Vue\DashboardMainApp;
 

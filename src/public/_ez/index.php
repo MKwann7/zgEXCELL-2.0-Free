@@ -24,7 +24,7 @@
     <link rel="apple-touch-icon" href="<?php echo $objCard->favicon; ?>">
 
     <meta name="google-site-verification" content="" />
-    <meta name="Copyright" content="EZ Digital, LLC" />
+    <meta name="Copyright" content="<?php echo $app->objCustomPlatform->getPublicName(); ?>" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <link rel="shortcut icon" href="<?php echo $objCard->favicon_ico; ?>" />

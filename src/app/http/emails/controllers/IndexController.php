@@ -1,9 +1,9 @@
 <?php
 
-namespace Entities\Emails\Controllers;
+namespace Http\Emails\Controllers;
 
 use App\Utilities\Excell\ExcellHttpModel;
-use Entities\Emails\Classes\Base\EmailController;
+use Http\Emails\Controllers\Base\EmailController;
 use Entities\Emails\Classes\Emails;
 
 class IndexController extends EmailController

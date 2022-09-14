@@ -11,10 +11,10 @@ use Entities\Cards\Models\CardAddonModel;
 
 class ListProductsAdminWidget extends VueComponentEntityList
 {
-    protected $id = "5e7407ec-349f-4ec3-ad99-e51237a4830e";
-    protected $title = "Products";
-    protected $batchLoadEndpoint = "products/get-product-batches";
-    protected $noEntitiesWarning = "There are no products to display.";
+    protected string $id = "5e7407ec-349f-4ec3-ad99-e51237a4830e";
+    protected string $title = "Products";
+    protected string $batchLoadEndpoint = "products/get-product-batches";
+    protected string $noEntitiesWarning = "There are no products to display.";
 
     public function __construct($defaultEntity = null, array $components = [])
     {

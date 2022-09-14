@@ -1,6 +1,6 @@
 <?php
 
-namespace Entities\Cart\Classes\Base;
+namespace Http\Cart\Controllers\Base;
 
 use App\Core\AppController;
 use App\Utilities\Excell\ExcellHttpModel;
@@ -24,7 +24,7 @@ class CartController extends AppController
             $userId = $user->toArray(["sys_row_id"])["sys_row_id"];
         }
 
-        if ($objData->UserName === $userId && $objData->Password === $this->app->objAppSession["Core"]["Session"]["Browser"])
+        if ($objData->UserName === $userId && $objData->Password === $_COOKIE['instance'])
         {
             return true;
         }

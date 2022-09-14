@@ -9,9 +9,9 @@ use Entities\Cards\Models\CardModel;
 
 class ManageCardConnectionsListWidget extends VueComponentList
 {
-    protected $id = "8ab04d1b-6f50-4509-9a8d-964f2f05b886";
-    protected $modalWidth = 750;
-    protected $noMount = true;
+    protected string $id = "8ab04d1b-6f50-4509-9a8d-964f2f05b886";
+    protected string $modalWidth = "750";
+    protected string $mountType = "no_mount";
 
     public function __construct ($props = [])
     {
@@ -55,9 +55,9 @@ class ManageCardConnectionsListWidget extends VueComponentList
                 let objConnectionsUpdate = {connections: btoa(JSON.stringify(reOrderedConnections))};
                 let intCardId = this.card.card_id;
 
-                ajax.Send("cards/card-data/update-card-data?type=reorder-connection&id=" + intCardId, objConnectionsUpdate, function(result) {
+                ajax.Post("cards/card-data/update-card-data?type=reorder-connection&id=" + intCardId, objConnectionsUpdate, function(result) {
                     //console.log(result);
-                },"POST");
+                });
             },
             arrayMove: function(arr, old_index, new_index) 
             {
@@ -91,9 +91,9 @@ class ManageCardConnectionsListWidget extends VueComponentList
                 if (this.connectionTypeList.length > 0) return;
                 let self = this;
                 const url = "/api/v1/users/get-connection-types";
-                ajax.Send(url, null, function(result)
+                ajax.Get(url, null, function(result)
                 {
-                    self.connectionTypeList = result.data.list;
+                    self.connectionTypeList = result.response.data.list;
                     self.$forceUpdate();
                 }, "GET");
             },

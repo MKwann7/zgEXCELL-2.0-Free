@@ -4,7 +4,6 @@ namespace App\Core;
 
 use App\Core\Managers\UriManager;
 use App\Utilities\Database;
-use App\Utilities\Excell\ExcellActiveController;
 use App\Utilities\Excell\ExcellCollection;
 use App\Utilities\Command\Command;
 use App\Utilities\Command\CommandCaller;
@@ -12,11 +11,13 @@ use App\Utilities\Excell\ExcellHttpModel;
 use App\Utilities\Transaction\ExcellTransaction;
 use App\Website\Website;
 use ArgumentCountError;
+use Entities\Cards\Classes\CardDomains;
+use Entities\Cards\Classes\Cards;
 use Entities\Cards\Models\CardModel;
 use Entities\Companies\Classes\Companies;
+use Entities\Companies\Classes\CompanySettings;
 use Entities\Companies\Classes\Departments\Departments;
 use Entities\Companies\Classes\Departments\DepartmentTicketQueues;
-use Entities\Companies\Classes\Departments\DepartmentUserRels;
 use Entities\Companies\Models\Departments\DepartmentModel;
 use Entities\Media\Classes\Images;
 use Entities\Users\Classes\UserClass;
@@ -30,52 +31,58 @@ use Error;
 
 class App
 {
-    // Define all statics
-    private $arEnvData = [];
-    public $objCoreData = [];
-    public $objDBs = [];
-    public $objTemplateData = [];
-    public $objHttpRequest;
-    public $objSslSecure = false;
-    public $objActiveSession = false;
-    /** @var AppCustomPlatform $objCustomPlatform */
-    public $objCustomPlatform;
-    public $blnNoDomain      = false;
-    public $blnSameDomain      = false;
-    public $activeDomain;
+
+    public ExcellHttpModel $objHttpRequest;
+    public AppCustomPlatform $objCustomPlatform;
+    public AppCustomDomain $objActiveDomain;
+    public AppCustomDomain $objPublicDomain;
+    public AppCustomDomain $objPortalDomain;
+
+    private array $arEnvData = [];
+    public array $objCoreData = [];
+    public \stdClass $objDBs;
+    public array $objTemplateData = [];
+
+    public bool $objSslSecure = false;
+    public bool $objActiveSession = false;
+    public bool $blnNoDomain      = false;
+    public bool $blnSameDomain      = false;
+
+    // These should migrate to
     public $rootDomain;
-    public $objAppSession = [];
-    public $objAppEntities = [];
-    public $objAppRootControllerBinding = [];
-    public $objAppBaseControllerBinding = [];
+
+    public array $objAppSession = [];
+    public array $objAppEntities = [];
+    public array $objAppRootControllerBinding = [];
+    public array $objAppBaseControllerBinding = [];
     public $strPhpUser;
-    public $objSocialMediaLinks = [];
-    public $objSocialMediaVerfy = [];
-    public $objAllowedServers = [];
-    public $objBlockedServers = [];
-    public $objCustomerAccountStatuses = [];
-    public $objCustomerAccountTypes = [];
-    public $objAcceptedCreditCards = [];
-    public $objTransactionReference = [];
-    public $objUnitedStates = [];
-    public $objAllowedExt = array(".pdf",".jpeg",".jpg",".png",".gif",".html",".map",".css",".js",".zgcss",".zgjs",".woff",".txt",".xml",".svg");
+    public array $objSocialMediaLinks = [];
+    public array $objSocialMediaVerfy = [];
+    public array $objAllowedServers = [];
+    public array $objBlockedServers = [];
+    public array $objCustomerAccountStatuses = [];
+    public array $objCustomerAccountTypes = [];
+    public array $objAcceptedCreditCards = [];
+    public array $objTransactionReference = [];
+    public array $objUnitedStates = [];
+    public array $objAllowedExt = array(".pdf",".jpeg",".jpg",".png",".gif",".html",".map",".css",".js",".zgcss",".zgjs",".woff",".txt",".xml",".svg");
     public $strActiveExtensionRequestType;
     public $intActiveUserId;
-    public $blnLoggedIn = false;
-    public $lstPortalBindings = ["account","account/admin"];
+    public bool $blnLoggedIn = false;
+    public array $lstPortalBindings = ["account","account/admin"];
     public $strActivePortalBinding;
-    public $objWebsitePages = [];
+    public array $objWebsitePages = [];
     /** @var ExcellCollection $lstAppCommands */
     public $lstAppCommands = [];
-    public $arJavaScriptLibraries         = [];
-    public $arCssLibraries                = [];
-    public $objWebsiteLoginPath = "login";
-    public $strAssignedPortalTheme = "1";
-    public $strAssignedWebsiteTheme = "1";
+    public \stdClass $arJavaScriptLibraries;
+    public \stdClass $arCssLibraries;
+    public string $objWebsiteLoginPath = "login";
+    public string $strAssignedPortalTheme = "1";
+    public string $strAssignedWebsiteTheme = "1";
     public $ActiveLoggedInUser;
-    public $blnForceCommands = false;
-    public $blnModuleCache = false;
-    public $blnWidgetCache = false;
+    public bool $blnForceCommands = false;
+    public bool $blnModuleCache = false;
+    public bool$blnWidgetCache = false;
 
     public function __construct()
     {
@@ -341,7 +348,13 @@ class App
         $this->objSslSecure = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') ? true : false;
         $this->rootDomain = $this->buildRootDomain($_SERVER);
 
-        session_set_cookie_params(0, '/', '.' . $this->rootDomain);
+        $domain = "";
+
+        if (strpos($this->rootDomain, "localhost") === false) {
+            $domain = '.' . $this->rootDomain;
+        }
+
+        session_set_cookie_params(0, '/', $domain);
         $this->objActiveSession = session_start();
 
         if ( $this->objActiveSession !== true )
@@ -349,26 +362,30 @@ class App
             $this->throwProcessException("Core session unable to start.");
         }
 
-        $strBrowserId = "";
+        $strBrowserId = $_COOKIE['instance'];
+
+        if (empty($_SESSION['_zgexcell'])) {
+            $_SESSION['_zgexcell'] = [];
+        }
+
         $this->objAppSession = &$_SESSION['_zgexcell'];
         $ipAddress = getIncomingIpAddress();
 
         $this->objAppSession["Core"]["Session"]["IpAddress"] = $ipAddress;
 
-        if (empty($this->objAppSession["Core"]["Session"]["Browser"]))
-        {
-            $strBrowserId = md5((getIncomingIpAddress() ?? (string) rand(1000000, 9999999) ) . "_". date("YmdHis") . rand(1000, 9999));
-            $this->objAppSession["Core"]["Session"]["Browser"] = $_COOKIE['instance'] ?? $strBrowserId;
-        }
-        else
-        {
-            $strBrowserId = $this->objAppSession["Core"]["Session"]["Browser"];
-        }
-
         if (empty($_COOKIE['instance']))
         {
-            $blnTestCookieSet1 = setcookie('instance', $strBrowserId, strtotime('+1 years'), '/', $this->rootDomain, $this->objSslSecure, false) or die("unable to create cookie 1");
-            $blnTestCookieSet2 = setcookie('ip_address', getIncomingIpAddress(), strtotime('+1 years'), '/', $this->rootDomain, $this->objSslSecure, false) or die("unable to create cookie 1");
+            $strBrowserId = md5((getIncomingIpAddress() ?? (string) rand(1000000, 9999999) ) . "_". date("YmdHis") . rand(1000, 9999));
+
+            $domain = $this->rootDomain;
+
+            if (strpos($this->rootDomain, "localhost") !== false) {
+                $domain = "";
+
+            }
+
+            $blnTestCookieSet1 = setcookie('instance', $strBrowserId, strtotime('+1 years'), '/', $domain, $this->objSslSecure, false) or die("unable to create cookie 1");
+            $blnTestCookieSet2 = setcookie('ip_address', getIncomingIpAddress(), strtotime('+1 years'), '/', $domain, $this->objSslSecure, false) or die("unable to create cookie 1");
         }
     }
 
@@ -380,9 +397,9 @@ class App
         $this->arCssLibraries = $this->getCoreDataFromFile("libraries.css.core", true);
 
         // Load ApplicationJs Routing Overrides for Module Routing
-        $this->loadFileIfExists(AppEngineCore . "routing/app.routing".XT);
-        $this->loadFileIfExists(AppEngineCore . "config/app.licenses".XT);
-        $this->loadFileIfExists(AppEngineCore . "commands/app.commands".XT);
+        $this->loadFileIfExists(APP_ENGINE_CORE . "routing/app.routing".XT);
+        $this->loadFileIfExists(APP_ENGINE_CORE . "config/app.licenses".XT);
+        $this->loadFileIfExists(APP_ENGINE_CORE . "commands/app.commands".XT);
 
         $this->checkForRootControllerBinding();
 
@@ -431,18 +448,18 @@ class App
 
     private function getCoreDataFromFile($strDataFileRequest, $blnToObject = false)
     {
-        if ( !is_file(AppCoreData . $strDataFileRequest.".json") )
+        if ( !is_file(APP_CORE_DATA . $strDataFileRequest.".json") )
         {
             return null;
         }
 
         if ( $blnToObject === false)
         {
-            $objCoreData = json_decode(file_get_contents(AppCoreData.$strDataFileRequest.".json"), true);
+            $objCoreData = json_decode(file_get_contents(APP_CORE_DATA.$strDataFileRequest.".json"), true);
         }
         else
         {
-            $objCoreData = json_decode(file_get_contents(AppCoreData.$strDataFileRequest.".json"));
+            $objCoreData = json_decode(file_get_contents(APP_CORE_DATA.$strDataFileRequest.".json"));
         }
 
         return $objCoreData;
@@ -450,12 +467,12 @@ class App
 
     private function getModuleDataFromFile($strModuleUriRequest) : ?array
     {
-        if ( !is_file(AppStorage . "core/modules.json") )
+        if ( !is_file(APP_STORAGE . "core/modules.json") )
         {
             return null;
         }
 
-        $objCoreData = json_decode(file_get_contents(AppStorage . "core/modules.json"), true);
+        $objCoreData = json_decode(file_get_contents(APP_STORAGE . "core/modules.json"), true);
 
         if ( empty($objCoreData) || ! is_array($objCoreData) )
         {
@@ -613,7 +630,7 @@ class App
             case "uploads":
                 if ( $blnDynamicFileType === false )
                 {
-                    $strFilePathRequest = AppCore . $this->objHttpRequest->PathUri;
+                    $strFilePathRequest = APP_CORE . $this->objHttpRequest->PathUri;
 
                     if ( is_file($strFilePathRequest) )
                     {
@@ -623,7 +640,7 @@ class App
                 }
                 else
                 {
-                    $strFilePathRequest = AppCore . $this->objHttpRequest->PathUri;
+                    $strFilePathRequest = APP_CORE . $this->objHttpRequest->PathUri;
 
                     if ( ! is_file($strFilePathRequest))
                     {
@@ -639,7 +656,7 @@ class App
             default:
                 if ( $blnDynamicFileType === false )
                 {
-                    $strFilePathRequest = PublicData . $this->objHttpRequest->PathUri;
+                    $strFilePathRequest = PUBLIC_DATA . $this->objHttpRequest->PathUri;
 
                     if ( is_file($strFilePathRequest) )
                     {
@@ -649,7 +666,7 @@ class App
                 }
                 else
                 {
-                    $strFilePathRequest = PublicData . $this->objHttpRequest->PathUri;
+                    $strFilePathRequest = PUBLIC_DATA . $this->objHttpRequest->PathUri;
 
                     if ( ! is_file($strFilePathRequest))
                     {
@@ -670,204 +687,81 @@ class App
         // Load ApplicationJs Configuration
         $this->parseEnvFile();
 
-        require AppEngineCore . "config/app.config".XT;
+        require APP_ENGINE_CORE . "config/app.config".XT;
 
-        $this->objDBs            = arrayToObject(require AppEngineCore . "config/app.databases".XT);
-        $this->objCustomPlatform = new AppCustomPlatform();
+        $this->objDBs = arrayToObject(require APP_ENGINE_CORE . "config/app.databases".XT);
     }
 
     protected function assignWhiteLabel() : void
     {
-        if (empty($_SERVER["HTTP_HOST"]) || $_SERVER["HTTP_HOST"] === "localhost:3010")
+        $assignDomain = new DomainAssignmentManager(
+            $this,
+            new Companies(),
+            new CompanySettings(),
+            new CardDomains(),
+            new Cards(),
+            $_SERVER);
+
+        if ($assignDomain->assignCustomPlatform() || $assignDomain->assignDomainName())
         {
-            $this->assignRegisteredWhiteLabelLocalhost();
-            return;
+            $this->objCustomPlatform = $assignDomain->getCustomPlatform();
+            $this->objActiveDomain = $assignDomain->getActiveDomain();
+            $this->objPublicDomain = $assignDomain->getPublicDomain();
+            $this->objPortalDomain = $assignDomain->getPortalDomain();
+            $this->blnNoDomain = $assignDomain->checkForLocalhost();
+        }
+        else
+        {
+            // No Custom Platform or Domain Matching.
+            $this->blnNoDomain = true;
+            $assignDomain->loadCustomDefaultDomainFromDatabase();
         }
 
-        if (!$this->assignRegisteredWhiteLabel())
-        {
-            switch($this->objCustomPlatform->getCompany()->status ?? "inactive")
-            {
-                case "inactive":
-                case "cancelled":
-                case "disabled":
-                    $companyResult = (new Companies())->getById(0);
-                    $this->executeUrlRedirect(($companyResult->Data->First()->domain_portal_ssl == 1 ? "https" : "http") . "://" .$companyResult->Data->First()->domain_portal);
-                    break;
-                default:
-                    (new Website($this))->showComingSoonPage();
-                    break;
-            }
+        if ($this->blnNoDomain === false) {
+            $this->checkForNonActivePlatforms($assignDomain);
+            $this->setThemes();
         }
-
-        $websiteThemeId = $this->objCustomPlatform->getCompanySettings()->FindEntityByValue("label","website_theme");
-        $portalThemeId = $this->objCustomPlatform->getCompanySettings()->FindEntityByValue("label","portal_theme");
-        $this->strAssignedWebsiteTheme = (empty($websiteThemeId) ? "1" : $websiteThemeId->value);
-        $this->strAssignedPortalTheme = (empty($portalThemeId) ? "1" : $portalThemeId->value);
 
         if ($this->blnNoDomain === true || $this->objHttpRequest->PathFull === "health-check")
         {
             return;
         }
 
+        $this->checkForForwardedProto();
+    }
+
+    private function checkForForwardedProto() : void
+    {
         $sslScheme = $_SERVER["HTTP_X_FORWARDED_PROTO"] ?? $_SERVER["REQUEST_SCHEME"];
 
-        //dd($this->objCoreData["Website"]['DomainSsl']);
-
-        if ($this->objCoreData["Website"]['DomainSsl'] == 1 && $sslScheme !== "https")
+        if ($this->objActiveDomain->getSsl() && $sslScheme !== "https")
         {
             $urlPathAndParams = (!empty($this->objHttpRequest->PathFull) ? "/" . $this->objHttpRequest->PathFull : "");
-            $this->executeUrlRedirect($this->objCoreData["Website"]['FullUrl'] . $urlPathAndParams);
+            $this->executeUrlRedirect($this->objActiveDomain->getDomainFullWithSsl() . $urlPathAndParams);
         }
     }
 
-    private function assignRegisteredWhiteLabelLocalhost() : void
+    private function checkForNonActivePlatforms(DomainAssignmentManager $assignDomain) : void
     {
-        $domain = "localhost:3010";
-        $this->objAppSession["Core"]["App"]["Domain"]["Web"] = "localhost:3010";
-        $this->objAppSession["Core"]["App"]["Domain"]["WebFull"] = "http://" . $domain;
-        $this->objAppSession["Core"]["App"]["Domain"]["WebSSL"] = false;
-        $this->objAppSession["Core"]["App"]["Domain"]["WebTitle"] = "EZ Digital Local";
+        if ($assignDomain->isInactivePlatform())
+        {
+            $companyResult = (new Companies())->getById(0);
+            $this->executeUrlRedirect(($companyResult->getData()->first()->domain_portal_ssl == 1 ? "https" : "http") . "://" .$companyResult->getData()->first()->domain_portal);
+        }
 
-        $this->objAppSession["Core"]["App"]["Domain"]["Portal"] = "localhost:3010";
-        $this->objAppSession["Core"]["App"]["Domain"]["PortalFull"] = "http://" . $domain;
-        $this->objAppSession["Core"]["App"]["Domain"]["PortalSSL"] = false;
-        $this->objAppSession["Core"]["App"]["Domain"]["PortalTitle"] = "EZ Digital Local";
-
-        $this->objCoreData["Website"]['MetaTitleName'] = $this->objAppSession["Core"]["App"]["Domain"]["WebTitle"];
-        $this->objCoreData["Website"]['DomainName'] = $domain;
-        $this->objCoreData["Website"]['DomainSsl'] = $this->objAppSession["Core"]["App"]["Domain"]["WebSSL"];
-        $this->objCoreData["Website"]['FullUrl'] = $this->objAppSession["Core"]["App"]["Domain"]["WebFull"];
-        $this->objCoreData["Website"]['WhiteLabel'] = $this->objAppSession["Core"]["App"]["WhiteLabel"] ?? null;
-
-        $this->objCoreData["Website"]['SameDomain'] = true;
-
-        $this->blnSameDomain     = true;
-        $this->objCustomPlatform = new AppCustomPlatform(env("DEFAULT_COMPANY_ID"), env("DEFAULT_COMPANY_ID"), $this->activeDomain, $this->blnSameDomain, $this->objAppSession["Core"]["App"]["Domain"], $this->objCoreData["Website"]);
+        if ($assignDomain->isComingSoonPlatform())
+        {
+            (new Website($this))->showComingSoonPage();
+        }
     }
 
-    private function assignRegisteredWhiteLabel() : bool
+    private function setThemes() : void
     {
-        $domainWeb = $this->objAppSession["Core"]["App"]["Domain"]["Web"] ?? "";
-        $domainPortal = $this->objAppSession["Core"]["App"]["Domain"]["Portal"] ?? "";
-        $this->objCoreData["Website"]['SameDomain'] = false;
+        $websiteThemeId = $this->objCustomPlatform->getCompanySettings()->FindEntityByValue("label","website_theme") ?? 1;
+        $portalThemeId = $this->objCustomPlatform->getCompanySettings()->FindEntityByValue("label","portal_theme") ?? 1;
 
-        if (!empty($domainWeb) && $domainWeb === $_SERVER["HTTP_HOST"])
-        {
-            $this->activeDomain = $domainWeb;
-            $this->objCoreData["Website"]['MetaTitleName'] = $this->objAppSession["Core"]["App"]["Domain"]["WebTitle"];
-            $this->objCoreData["Website"]['DomainName'] = $domainWeb;
-            $this->objCoreData["Website"]['DomainSsl'] = $this->objAppSession["Core"]["App"]["Domain"]["WebSSL"];
-            $this->objCoreData["Website"]['FullUrl'] = $this->objAppSession["Core"]["App"]["Domain"]["WebFull"];
-            $this->objCoreData["Website"]['WhiteLabel'] = $this->objAppSession["Core"]["App"]["WhiteLabel"];
-
-            if ($domainPortal === $_SERVER["HTTP_HOST"])
-            {
-                $this->objCoreData["Website"]['SameDomain'] = true;
-                $this->blnSameDomain = true;
-            }
-
-            $this->objCustomPlatform = new AppCustomPlatform($this->objAppSession["Core"]["App"]["WhiteLabel"]->company_id, $this->objAppSession["Core"]["App"]["WhiteLabel"]->parent_id, $this->activeDomain, $this->blnSameDomain, $this->objAppSession["Core"]["App"]["Domain"], $this->objCoreData["Website"]);
-            $this->objCustomPlatform->addCompany($this->objAppSession["Core"]["App"]["WhiteLabel"]);
-
-            if ($this->objCustomPlatform->getCompany()->status !== "active")
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        if (!empty($domainPortal) && $domainPortal === $_SERVER["HTTP_HOST"])
-        {
-            $this->activeDomain = $domainPortal;
-            $this->objCoreData["Website"]['MetaTitleName'] = $this->objAppSession["Core"]["App"]["Domain"]["PortalTitle"];
-            $this->objCoreData["Website"]['DomainName'] = $domainPortal;
-            $this->objCoreData["Website"]['DomainSsl'] = $this->objAppSession["Core"]["App"]["Domain"]["PortalSSL"];
-            $this->objCoreData["Website"]['FullUrl'] = $this->objAppSession["Core"]["App"]["Domain"]["PortalFull"];
-            $this->objCoreData["Website"]['WhiteLabel'] = $this->objAppSession["Core"]["App"]["WhiteLabel"];
-
-            $this->objCustomPlatform = new AppCustomPlatform($this->objAppSession["Core"]["App"]["WhiteLabel"]->company_id, $this->objAppSession["Core"]["App"]["WhiteLabel"]->parent_id, $this->activeDomain, $this->blnSameDomain, $this->objAppSession["Core"]["App"]["Domain"], $this->objCoreData["Website"]);
-            $this->objCustomPlatform->addCompany($this->objAppSession["Core"]["App"]["WhiteLabel"]);
-
-            if ($this->objCustomPlatform->getCompany()->status !== "active")
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        $companies = new Companies();
-        $companyResult = $companies->getWhere([["domain_public" => $_SERVER["HTTP_HOST"]], "OR", ["domain_portal" => $_SERVER["HTTP_HOST"]]]);
-
-        if ($companyResult->Result->Count === 0)
-        {
-            $this->blnNoDomain = true;
-            return true;
-        }
-
-        $company = $companyResult->Data->First();
-
-        $this->objAppSession["Core"]["App"]["WhiteLabel"] = $company;
-
-        $this->objAppSession["Core"]["App"]["Domain"]["Web"] = $company->domain_public;
-        $this->objAppSession["Core"]["App"]["Domain"]["WebFull"] = $this->getSsl($company, "domain_public_ssl") . $company->domain_public;
-        $this->objAppSession["Core"]["App"]["Domain"]["WebSSL"] = $company->domain_public_ssl;
-        $this->objAppSession["Core"]["App"]["Domain"]["WebTitle"] = $company->domain_public_name;
-
-        $this->objAppSession["Core"]["App"]["Domain"]["Portal"] = $company->domain_portal;
-        $this->objAppSession["Core"]["App"]["Domain"]["PortalFull"] = $this->getSsl($company, "domain_portal_ssl") . $company->domain_portal;
-        $this->objAppSession["Core"]["App"]["Domain"]["PortalSSL"] = $company->domain_portal_ssl;
-        $this->objAppSession["Core"]["App"]["Domain"]["PortalTitle"] = $company->domain_portal_name;
-
-        if ($_SERVER["HTTP_HOST"] === $company->domain_public)
-        {
-            $this->activeDomain = $company->domain_public;
-            $this->objCoreData["Website"]["MetaTitleName"] = $company->domain_public_name;
-            $this->objCoreData["Website"]['DomainName'] = $company->domain_public;
-            $this->objCoreData["Website"]['DomainSsl'] = $this->objAppSession["Core"]["App"]["Domain"]["WebSSL"];
-            $this->objCoreData["Website"]['FullUrl'] = $this->objAppSession["Core"]["App"]["Domain"]["WebFull"];
-
-            if ($_SERVER["HTTP_HOST"] === $company->domain_portal)
-            {
-                $this->objCoreData["Website"]['SameDomain'] = true;
-                $this->objAppSession["Core"]["App"]['SameDomain'] = true;
-                $this->blnSameDomain = true;
-            }
-
-            $this->objCustomPlatform = new AppCustomPlatform($company->company_id, $company->parent_id, $this->activeDomain, $this->blnSameDomain, $this->objAppSession["Core"]["App"]["Domain"], $this->objCoreData["Website"]);
-            $this->objCustomPlatform->addCompany($company);
-
-            if ($this->objCustomPlatform->getCompany()->status !== "active")
-            {
-                return false;
-            }
-
-            return true;
-        }
-        elseif ($_SERVER["HTTP_HOST"] === $company->domain_portal)
-        {
-            $this->activeDomain = $company->domain_portal;
-            $this->objCoreData["Website"]["MetaTitleName"] = $company->domain_portal_name;
-            $this->objCoreData["Website"]['DomainName'] = $company->domain_portal;
-            $this->objCoreData["Website"]['DomainSsl'] = $this->objAppSession["Core"]["App"]["Domain"]["PortalSSL"];
-            $this->objCoreData["Website"]['FullUrl'] = $this->objAppSession["Core"]["App"]["Domain"]["PortalFull"];
-
-            $this->objCustomPlatform = new AppCustomPlatform($company->company_id,$company->parent_id, $this->activeDomain, $this->blnSameDomain, $this->objAppSession["Core"]["App"]["Domain"], $this->objCoreData["Website"]);
-            $this->objCustomPlatform->addCompany($company);
-
-            if ($this->objCustomPlatform->getCompany()->status !== "active")
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        $this->blnNoDomain = true;
-
-        return true;
+        $this->strAssignedWebsiteTheme = (empty($websiteThemeId) ? "1" : $websiteThemeId->value);
+        $this->strAssignedPortalTheme = (empty($portalThemeId) ? "1" : $portalThemeId->value);
     }
 
     private function getSsl($company, $field) : string
@@ -882,27 +776,27 @@ class App
 
     private function loadModuleRouting() : void
     {
-        if ($this->blnModuleCache === true && is_file(AppStorage . "core/modules.json"))
+        if (env("MODULE_CASH") === true && is_file(APP_STORAGE . "core/modules.json"))
         {
-            $this->objAppEntities = json_decode(file_get_contents(AppStorage . "core/modules.json"),true);
+            $this->objAppEntities = json_decode(file_get_contents(APP_STORAGE . "core/modules.json"),true);
             return;
         }
 
         $objActiveApplets = $this->buildModules();
 
-        if (!is_dir(AppStorage . "core") && !mkdir(AppStorage . "core"))
+        if (!is_dir(APP_STORAGE . "core") && !mkdir(APP_STORAGE . "core"))
         {
             // Expception
         }
 
-        file_put_contents(AppStorage . "core/modules.json", json_encode($objActiveApplets));
+        file_put_contents(APP_STORAGE . "core/modules.json", json_encode($objActiveApplets));
 
         $this->objAppEntities = $objActiveApplets;
     }
 
     private function buildModules()
     {
-        $objModulesDir = glob(AppEntities . "*" , GLOB_ONLYDIR);
+        $objModulesDir = glob(APP_HTTP_ENTITIES . "*" , GLOB_ONLYDIR);
 
         $objActiveAppEntities = [];
 
@@ -963,7 +857,7 @@ class App
     private function getClassesFromModule($arAppModule) : array
     {
         $arModuleClasses = [];
-        $strClassesPath = AppEntities . $arAppModule["ModulePath"] . "/classes/*" . XT;
+        $strClassesPath = APP_ENTITIES . $arAppModule["ModulePath"] . "/classes/*" . XT;
         $arModuleClassPaths = glob($strClassesPath);
 
         foreach($arModuleClassPaths as $currModuleClassPath)
@@ -1015,7 +909,7 @@ class App
     private function getModelsFromModule($arAppModule) : array
     {
         $arModuleModels = [];
-        $strModelsPath = AppEntities . $arAppModule["ModulePath"] . "/models/*Model" . XT;
+        $strModelsPath = APP_ENTITIES . $arAppModule["ModulePath"] . "/models/*Model" . XT;
         $arModuleModelPaths = glob($strModelsPath);
 
         foreach($arModuleModelPaths as $currModuleModelPath)
@@ -1036,7 +930,8 @@ class App
     private function getCommandsFromModule($arAppModule) : array
     {
         $arModuleCommands = [];
-        $strModelsPath = AppEntities . $arAppModule["ModulePath"] . "/commands/*" . XT;
+
+        $strModelsPath = APP_ENTITIES . $arAppModule["ModulePath"] . "/commands/*" . XT;
 
         $arModuleCommandPaths = glob($strModelsPath);
 
@@ -1129,38 +1024,38 @@ class App
     {
         $objActiveLogins = [];
 
-        $strBrowserCookie = $this->objAppSession["Core"]["Session"]["Browser"];
+        $strBrowserCookie = $_COOKIE["instance"];
         $strBrowserIp = $this->objAppSession["Core"]["Session"]["IpAddress"];
         $objBrowserCookieResult = (new VisitorBrowser())->getWhere(["browser_cookie" => $strBrowserCookie]);
 
-        if ($objBrowserCookieResult->Result->Count === 0)
+        if ($objBrowserCookieResult->result->Count === 0)
         {
             $objNewBrowserCookie = new VisitorBrowserModel();
             $objNewBrowserCookie->browser_cookie = $strBrowserCookie;
             $objNewBrowserCookie->browser_ip = $strBrowserIp;
             $objNewBrowserCookie->created_at = date("Y-m-d H:i:s");
-            $result = VisitorBrowser::createNew($objNewBrowserCookie);
+            $result = (new VisitorBrowser())->createNew($objNewBrowserCookie);
 
             return $objActiveLogins;
         }
 
-        $objBrowserCookie = $objBrowserCookieResult->Data->First();
+        $objBrowserCookie = $objBrowserCookieResult->getData()->first();
 
         if (!empty($objBrowserCookie->user_id) && !empty($objBrowserCookie->logged_in_at) && strtotime($objBrowserCookie->logged_in_at) > strtotime("-336 hours"))
         {
             $objLoggedInUserResult = (new Users())->getWhere(["user_id" => $objBrowserCookie->user_id], 1);
 
-            if ($objLoggedInUserResult->Result->Count === 0)
+            if ($objLoggedInUserResult->result->Count === 0)
             {
                 logText("active-logins/".date("Y-m-d").".NoActiveLoginsByCookie.Process.log", "No user id found with {$objBrowserCookie->browser_cookie} cookie. Returning null active logins list.");
 
                 return $objActiveLogins;
             }
 
-            $objActiveLogins[] = $objLoggedInUserResult->Data->First();
-            $this->setActiveLoggedInUser($objLoggedInUserResult->Data->First());
+            $objActiveLogins[] = $objLoggedInUserResult->getData()->first();
+            $this->setActiveLoggedInUser($objLoggedInUserResult->getData()->first());
 
-            logText("active-logins/".date("Y-m-d").".ActiveLoginsByCookie.".$objLoggedInUserResult->Data->First()->user_id.".log", "User id {$objLoggedInUserResult->Data->First()->user_id} found with {$objBrowserCookie->browser_cookie} cookie. Returning active login.");
+            logText("active-logins/".date("Y-m-d").".ActiveLoginsByCookie.".$objLoggedInUserResult->getData()->first()->user_id.".log", "User id {$objLoggedInUserResult->getData()->first()->user_id} found with {$objBrowserCookie->browser_cookie} cookie. Returning active login.");
 
             $intRandomId = rand(1000,9999);
 
@@ -1176,11 +1071,11 @@ class App
     private function updateVisitorBrowserRecord($intLoggedInUserId) : void
     {
         $strBrowserCookie = $this->objAppSession["Core"]["Session"]["Browser"];
-        $objVisitorBrowserResult = (new VisitorBrowser())->getWhere([["user_id" => $intLoggedInUserId, "logged_in_at" => ExcellNull], ["||"], ["browser_cookie" => $strBrowserCookie]], "visitor_browser_id.DESC");
+        $objVisitorBrowserResult = (new VisitorBrowser())->getWhere([["user_id" => $intLoggedInUserId, "logged_in_at" => EXCELL_NULL], ["||"], ["browser_cookie" => $strBrowserCookie]], "visitor_browser_id.DESC");
 
         $strBrowserIp = $this->objAppSession["Core"]["Session"]["IpAddress"];
 
-        if ($objVisitorBrowserResult->Result->Count === 0)
+        if ($objVisitorBrowserResult->result->Count === 0)
         {
             $objNewBrowserCookie = new VisitorBrowserModel();
             $objNewBrowserCookie->browser_cookie = $strBrowserCookie;
@@ -1192,7 +1087,7 @@ class App
             return;
         }
 
-        $objNewBrowserCookie = $objVisitorBrowserResult->Data->First();
+        $objNewBrowserCookie = $objVisitorBrowserResult->getData()->first();
 
         $strBrowserIp = $this->objAppSession["Core"]["Session"]["IpAddress"];
         $objNewBrowserCookie->browser_ip = $strBrowserIp;
@@ -1213,7 +1108,7 @@ class App
         }
 
         $objImpersonationCheckResult = new ExcellTransaction();
-        $objImpersonationCheckResult->Result->Success = false;
+        $objImpersonationCheckResult->result->Success = false;
 
         return $objImpersonationCheckResult;
     }
@@ -1235,9 +1130,9 @@ class App
             $intLoggedInUserId = $this->objAppSession["Core"]["Account"]["Primary"];
             $objImpersonationUserCheckResult = static::checkForImpersonationUser($intLoggedInUserId);
 
-            if ($objImpersonationUserCheckResult->Result->Success === false)
+            if ($objImpersonationUserCheckResult->result->Success === false)
             {
-                $objActiveUser = (new Users())->getRelations(["browser"])->getWhere(["user_id" => $intLoggedInUserId], 1)->Data->First();
+                $objActiveUser = (new Users())->getRelations(["browser"])->getWhere(["user_id" => $intLoggedInUserId], 1)->getData()->first();
 
                 //logText("active-logins/".date("Y-m-d").".ActiveLoginsBySession.{$intLoggedInUserId}.log", "{$intLoggedInUserId} is primary in user session number " . $objActiveUser->browser);
 
@@ -1248,10 +1143,10 @@ class App
             }
             else
             {
-                $intImpersionationUserId = $objImpersonationUserCheckResult->Data->First()->user_id;
+                $intImpersionationUserId = $objImpersonationUserCheckResult->getData()->first()->user_id;
                 //logText("active-logins/".date("Y-m-d").".ActiveLoginsBySession.{$intImpersionationUserId}.log", "IMPERSONATION {$intImpersionationUserId} as {$intLoggedInUserId}.");
-                $objImpersonationUserCheckResult->Data->First()->user_id;
-                $objActiveLogins[] = (new Users())->getRelations(["browser"])->getWhere(["user_id" => $intImpersionationUserId], 1)->Data->First();
+                $objImpersonationUserCheckResult->getData()->first()->user_id;
+                $objActiveLogins[] = (new Users())->getRelations(["browser"])->getWhere(["user_id" => $intImpersionationUserId], 1)->getData()->first();
 
                 $this->updateVisitorBrowserRecord($intImpersionationUserId);
                 return $objActiveLogins;
@@ -1266,11 +1161,11 @@ class App
                 {
                     $objLoggedInUser = (new Users())->getRelations(["browser"])->getWhere(["user_id" => $objData["user_id"]],1);
 
-                    if ( $objLoggedInUser->Result->Success === true)
+                    if ( $objLoggedInUser->result->Success === true)
                     {
                         //logText("active-logins/".date("Y-m-d").".ActiveLoginsBySession.".$objData["user_id"].".log", "Found ".$objData["user_id"]." in Active login list for user and loging them in as them.");
 
-                        foreach ($objLoggedInUser->Data as $objUsers)
+                        foreach ($objLoggedInUser->data as $objUsers)
                         {
                             $objActiveLogins[] = $objUsers;
                         }
@@ -1287,14 +1182,14 @@ class App
         $objUsers = new Users();
         $userResult = $objUsers->getByUuid($user);
 
-        if ($userResult->Result->Count !== 1)
+        if ($userResult->result->Count !== 1)
         {
             return false;
         }
 
-        $user = $userResult->Data->First();
+        $user = $userResult->getData()->first();
 
-        $objBrowserCookie = (new VisitorBrowser())->getWhere(["browser_cookie" => $instance])->Data->First();
+        $objBrowserCookie = (new VisitorBrowser())->getWhere(["browser_cookie" => $instance])->getData()->first();
 
         if (empty($objBrowserCookie->logged_in_at) || $objBrowserCookie->logged_in_at < date("Y-m-d H:i:s", strtotime("-36 hours")))
         {
@@ -1321,16 +1216,16 @@ class App
         }
         else
         {
-            $objWhereClause = "SELECT usr.*, vb.browser_cookie FROM ezdigital_v2_main.user usr LEFT JOIN ezdigital_v2_traffic.visitor_browser vb ON vb.user_id = usr.user_id WHERE usr.sys_row_id = '{$this->objHttpRequest->UserName}' && vb.browser_cookie = '{$this->objHttpRequest->Password}' ORDER BY vb.created_on DESC;";
+            $objWhereClause = "SELECT usr.*, vb.browser_cookie FROM excell_main.user usr LEFT JOIN excell_traffic.visitor_browser vb ON vb.user_id = usr.user_id WHERE usr.sys_row_id = '{$this->objHttpRequest->UserName}' && vb.browser_cookie = '{$this->objHttpRequest->Password}' ORDER BY vb.created_on DESC;";
             $objUsers = Database::getSimple($objWhereClause,"card_id");
-            $objUsers->Data->HydrateModelData(UserModel::class, true);
+            $objUsers->getData()->HydrateModelData(UserModel::class, true);
 
-            if ($objUsers->Result->Count === 0)
+            if ($objUsers->result->Count === 0)
             {
                 return  false;
             }
 
-            $user = $objUsers->Data->First();
+            $user = $objUsers->getData()->first();
             $this->setActiveLoggedInUser($user);
             $instanceId = $user->browser_cookie;
         }
@@ -1372,7 +1267,7 @@ class App
                     }
                     else
                     {
-                        $objUser = (new Users())->getFks(["user_email","user_phone"])->getById($objRegisteredLogins["user_id"])->Data->First();
+                        $objUser = (new Users())->getFks(["user_email","user_phone"])->getById($objRegisteredLogins["user_id"])->getData()->first();
 
                         if ($objUser === null)
                         {
@@ -1409,59 +1304,23 @@ class App
         $strCardMainImage = "/_ez/images/users/defaultAvatar.jpg";
         $strCardThumbImage = "/_ez/images/users/defaultAvatar.jpg";
 
-        $userSettings = (new UserSettings())->getByUserId($objUser->user_id)->Data;
+        $userSettings = (new UserSettings())->getByUserId($objUser->user_id)->getData();
         $colUsers = new ExcellCollection();
         $colUsers->Add($objUser);
         $colUsers->HydrateChildModelData("__settings", ["user_id" => "user_id"], $userSettings, false, ["label" => "value"]);
 
         /* @var $objUser UserModel */
-        $objUser = $colUsers->First();
+        $objUser = $colUsers->first();
 
         $objImageResult = (new Images())->noFks()->getWhere(["entity_id" => $objUser->user_id, "image_class" => "user-avatar", "entity_name" => "user"],"image_id.DESC");
-        if ($objImageResult->Result->Success === true && $objImageResult->Result->Count > 0)
+        if ($objImageResult->result->Success === true && $objImageResult->result->Count > 0)
         {
-            $strCardMainImage = $objImageResult->Data->First()->url;
-            $strCardThumbImage = $objImageResult->Data->First()->thumb;
+            $strCardMainImage = $objImageResult->getData()->first()->url;
+            $strCardThumbImage = $objImageResult->getData()->first()->thumb;
         }
 
-        $objUserClassResult = (new UserClass())->getFks()->getWhere(["user_id" => $objUser->user_id]);
-        if ($objUserClassResult->Result->Success === true && $objUserClassResult->Result->Count > 0)
-        {
-            $objUser->AddUnvalidatedValue("Roles", $objUserClassResult->Data);
-        }
-
-        $companyDepartmentResult = (new Departments())->getByUserId($objUser->user_id);
-        if ($companyDepartmentResult->Result->Success === true && $objUserClassResult->Result->Count > 0)
-        {
-            $objUser->AddUnvalidatedValue("Departments", $companyDepartmentResult->Data);
-
-            $ticketQueues = new DepartmentTicketQueues();
-            $ticketQueueResult = $ticketQueues->getByUserAndDepartmentIds($objUser->user_id, $objUser->Departments->FieldsToArray(["company_department_id"]));
-
-            if ($ticketQueueResult->Result->Count > 0)
-            {
-                $objUser->Departments->Foreach(function($currDepartment) use ($ticketQueueResult)
-                {
-                    foreach($ticketQueueResult->Data as $currTicketQueue)
-                    {
-                        if ($currTicketQueue->company_department_id === $currDepartment->company_department_id)
-                        {
-
-                            if (!is_a($currDepartment->ticketQueue, ExcellCollection::class))
-                            {
-                                $currDepartment->AddUnvalidatedValue("ticketQueue", new ExcellCollection());
-                            }
-
-                            $currDepartment->ticketQueue->Add($currTicketQueue);
-                        }
-                    }
-
-                    return $currDepartment;
-                });
-
-                $objUser->AddUnvalidatedValue("departmentTicketQueuesCount", $ticketQueueResult->Result->Count);
-            }
-        }
+        $objUser->loadRoles();
+        $objUser->loadDepartments();
 
         $objUser->AddUnvalidatedValue("main_image", $strCardMainImage);
         $objUser->AddUnvalidatedValue("main_thumb", $strCardThumbImage);
@@ -1482,6 +1341,10 @@ class App
     //------------------------------------------------ HELPER METHODS
     public function executeUrlRedirect($strNewUrlLocation) : void
     {
+        if (empty($strNewUrlLocation)) {
+            header("Location: /login");
+            exit;
+        }
         header("Location: ".$strNewUrlLocation);
         exit;
     }
@@ -1502,12 +1365,12 @@ class App
         $objCompany = new Companies();
         $companyResult = $objCompany->getById($objCard->redirect_to);
 
-        if ($companyResult->Result->Count === 0)
+        if ($companyResult->result->Count === 0)
         {
             return;
         }
 
-        $company = $companyResult->Data->First();
+        $company = $companyResult->getData()->first();
 
         $customPlatformPublicDomain = ($company->domain_public_ssl == 0 ? 'http' : 'https') . "://" . $company->domain_public;
 
@@ -1522,17 +1385,17 @@ class App
 
     public function logCoreError($strMessage, $strErrorId = "General") : void
     {
-        if ( !is_dir(PublicData . "logs") && !mkdir(PublicData . "logs"))
+        if ( !is_dir(PUBLIC_DATA . "logs") && !mkdir(PUBLIC_DATA . "logs"))
         {
             // Exception
         }
 
-        if ( !is_dir(PublicData . "logs/core") && !mkdir(PublicData . "logs/core"))
+        if ( !is_dir(PUBLIC_DATA . "logs/core") && !mkdir(PUBLIC_DATA . "logs/core"))
         {
             // Exception
         }
 
-        file_put_contents(PublicData."logs/core/" . date("Y-m-d") . "_error.log",date("Y-m-d H:i:s") . " - Core Error [" . $strErrorId . "]: " . $strMessage, FILE_APPEND);
+        file_put_contents(PUBLIC_DATA."logs/core/" . date("Y-m-d") . "_error.log",date("Y-m-d H:i:s") . " - Core Error [" . $strErrorId . "]: " . $strMessage, FILE_APPEND);
     }
 
     public function isUserLoggedIn() : bool
@@ -1542,7 +1405,7 @@ class App
 
     public function isAdminUrlRequest() : bool
     {
-        if ($this->blnSameDomain === false && $this->isPublicWebsite())
+        if ($this->objCustomPlatform->isSameDomain() === false && $this->isPublicWebsite())
         {
             return false;
         }
@@ -1559,14 +1422,20 @@ class App
 
     public function isAuthorizedAdminUrlRequest() : bool
     {
-        if ($this->blnSameDomain === false && $this->isPublicWebsite())
+        if ($this->objCustomPlatform->isSameDomain() === false && $this->isPublicWebsite())
         {
+
             return false;
         }
 
         $blnMatchingUrlRequest = substr($this->objHttpRequest->PathUri, 0 , strlen($this->strActivePortalBinding)) === $this->strActivePortalBinding;
 
-        if(! $blnMatchingUrlRequest || ! $this->blnLoggedIn)
+        if(! $blnMatchingUrlRequest)
+        {
+            return false;
+        }
+
+        if(! $this->blnLoggedIn)
         {
             return false;
         }
@@ -1634,12 +1503,12 @@ class App
 
     private function parseEnvFile() : void
     {
-        if (!is_file(AppCore . ".env"))
+        if (!is_file(APP_CORE . ".env"))
         {
             return;
         }
 
-        $strEnvContents = file_get_contents(AppCore . ".env");
+        $strEnvContents = file_get_contents(APP_CORE . ".env");
         $arEnvContents = explode(PHP_EOL, $strEnvContents);
 
         if (count($arEnvContents) === 0)
@@ -1673,7 +1542,7 @@ class App
 
     public function isPortalWebsite()
     {
-        if ( $this->blnSameDomain === false && getPortalUrl() !== $this->activeDomain)
+        if ( $this->objCustomPlatform->isSameDomain() === false && getPortalUrl() !== $this->objActiveDomain->getDomain())
         {
             return false;
         }
@@ -1683,11 +1552,42 @@ class App
 
     public function isPublicWebsite()
     {
-        if ($this->blnSameDomain === false && getPublicUrl() !== $this->activeDomain)
+        if ($this->objCustomPlatform->isSameDomain() === false && getPublicUrl() !== $this->objActiveDomain->getDomain())
         {
             return false;
         }
 
         return true;
+    }
+
+    public function setAppSession(array $session) : self
+    {
+        $this->objAppSession = $session;
+
+        if (!empty($_SESSION)) {
+            $_SESSION['_zgexcell'] = $session;
+        }
+        return $this;
+    }
+
+    public function getAppSession() : array
+    {
+        return $this->objAppSession;
+    }
+
+    public function setCustomPlatform(AppCustomPlatform $platform) : self
+    {
+        $this->objCustomPlatform = $platform;
+        return $this;
+    }
+
+    public function getCustomPlatform() : ?AppCustomPlatform
+    {
+        return $this->objCustomPlatform ?? null;
+    }
+
+    public function getActiveDomain() : ?AppCustomDomain
+    {
+        return $this->objActiveDomain ?? null;
     }
 }

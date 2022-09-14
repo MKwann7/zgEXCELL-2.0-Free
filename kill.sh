@@ -1,15 +1,16 @@
 #! /bin/bash
 
 project_path="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-echo "project_path = ${project_path}"
+echo "Uninstalling project at path: ${project_path}"
 
-docker-compose -f docker/docker-compose.local.yml down
+docker-compose -f docker/docker-compose.local.yml down --volumes
 
-docker container rm -f $(docker container ls -a -q)
-docker rmi -f $(docker images -a -q)
-docker volume rm -f $(docker volume ls -q)
-docker system prune --volumes
+echo "Removing database: ${project_path}/docker/mysql-data/*"
+sudo chmod -R 777 docker/mysql-data
+sudo rm -rf docker/mysql-data/*
 
-rm -rf "${project_path}/docker/mysql-data/*"
+docker rm excell-api excell-app excell-process excell-socket excell-db excell-pg
+docker rmi excell_api excell_process excell_socket excell_app
+echo "y" | docker system prune --volumes -a
 
-echo "excell application removed"
+echo "excell application removed!"

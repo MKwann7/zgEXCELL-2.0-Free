@@ -23,6 +23,7 @@
 <script src="/website/js/jquery/jquery-ui.min.js"></script>
 <script src="/website/js/jquery/jquery.signature.js"></script>
 <script src="/website/js/main.js?_ez<?php echo rand(1000,9999); ?>"></script>
+<script src="/portal/js/core.js?page=view-cards-admin-page" type="text/javascript"></script>
 <script src="/website/js/bootstrap/bootstrap.min.js"></script>
 <script src="/website/js/owl/owl.carousel.js"></script>
 <script src="/website/js/archmenu/arch.menu.js"></script>

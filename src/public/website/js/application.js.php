@@ -1,9 +1,9 @@
 <?php
 
-require PublicWidgets . "js/application.js.php";
-require PublicWidgets . "js/modal.js.php";
-require PublicWidgets . "js/ajax.js.php";
-require PublicWidgets . "js/loadWidget.js.php";
+require PUBLIC_WIDGETS . "js/application.js.php";
+require PUBLIC_WIDGETS . "js/modal.new.js.php";
+require PUBLIC_WIDGETS . "js/ajax.new.js.php";
+require PUBLIC_WIDGETS . "js/loadWidget.js.php";
 
 ?>
 

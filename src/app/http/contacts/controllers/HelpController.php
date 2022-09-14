@@ -1,9 +1,9 @@
 <?php
 
-namespace Entities\Contacts\Controllers;
+namespace Http\Contacts\Controllers;
 
 use App\Utilities\Excell\ExcellHttpModel;
-use Entities\Contacts\Classes\Base\ContactController;
+use Http\Contacts\Controllers\Base\ContactController;
 
 class HelpController extends ContactController
 {

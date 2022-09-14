@@ -192,8 +192,8 @@ class Event
         if (isset($data['url'])) {
             $event->setUrl($data['url']);
         }
-        if (isset($data['storage'])) {
-            $event->setStorage($data['storage']);
+        if (isset($data['list'])) {
+            $event->setStorage($data['list']);
         }
 
         return $event;

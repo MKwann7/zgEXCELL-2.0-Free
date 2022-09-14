@@ -8,7 +8,7 @@ use Entities\Cards\Models\CardPageModel;
 
 class ManageCardPageWidget extends VueComponent
 {
-    protected $id = "f27392d3-b370-423c-865f-8018592a5984";
+    protected string $id = "f27392d3-b370-423c-865f-8018592a5984";
     protected $htmlComponent;
 
     public function __construct(array $components = [])
@@ -67,21 +67,21 @@ class ManageCardPageWidget extends VueComponent
             this.engageModalLoadingSpinner();
             let self = this;
 
-            ajax.Send("cards/card-data/get-card-tab?card_tab_id=" + this.entity.card_tab_id, null, function(result)
+            ajax.Get("cards/card-data/get-card-tab?card_tab_id=" + this.entity.card_tab_id, null, function(result)
             {
-                if (result.success === false || typeof result.data === "undefined" || result.data.length === 0) 
+                if (result.success === false || typeof result.response.data === "undefined" || result.response.data.length === 0) 
                 { 
                     // Throw Error?
                 }
                 
                 const cardData = {
-                    cardPageId: result.data[0].card_tab_id, 
-                    cardPageType: result.data[0].card_tab_type_id, 
-                    title: result.data[0].title, 
-                    html: atob(result.data[0].content), 
-                    url: result.data[0].url, 
-                    visibility: result.data[0].visibility, 
-                    library: result.data[0].library_tab 
+                    cardPageId: result.response.data[0].card_tab_id, 
+                    cardPageType: result.response.data[0].card_tab_type_id, 
+                    title: result.response.data[0].title, 
+                    html: atob(result.response.data[0].content), 
+                    url: result.response.data[0].url, 
+                    visibility: result.response.data[0].visibility, 
+                    library: result.response.data[0].library_tab 
                 };
                 '. $this->activateRegisteredComponentByIdInModal(ManageCardPageHtmlWidget::getStaticId(), "edit", false,  "self.entity", "self.entities",["card" => "cardData"],"self").';
                 self.disableModalLoadingSpinner();  

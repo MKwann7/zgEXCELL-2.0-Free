@@ -11,7 +11,7 @@ header('Content-Type:text/css');
 
 $objCardResult = (new Cards())->getFks()->getById($this->app->objHttpRequest->Data->Params['card_id']);
 
-$objCard = $objCardResult->Data->First();
+$objCard = $objCardResult->getData()->first();
 
 ?>
 @font-face {
@@ -41,7 +41,7 @@ body{font-size:3vw;background-color:#fff}.heading1{font-size:7vw;color:<?php ech
 /* EZcard Responsive */
 @media (min-width:769px){body{font-size:14px}.wrapper{margin:0 auto;}.heading1{font-size:18px;color:<?php echo $objCard->card_data->style->card->color->main; ?>}.heading2{font-size:14px}.heading3{color:<?php echo $objCard->card_data->style->card->color->main; ?>;font-weight:700;font-size:14px}.spacer3vw{height:6px}.paragraphText{font-size:14px}.mainButtons li{background-color:<?php echo $objCard->card_data->style->card->color->main; ?>;width:21%;float:left;padding:4% 0;text-align:center;color:#fff;font-size:30px;border-radius:10px;margin:0 2%}.mainButtons{margin:6px 0}.tabs{margin:4px 0 0}.tabTitle{background:#434dd8;background:-moz-linear-gradient(top,#434dd8 0%,<?php echo $objCard->card_data->style->card->color->main; ?> 100%);background:-webkit-linear-gradient(top,#434dd8 0%,<?php echo $objCard->card_data->style->card->color->main; ?> 100%);background:linear-gradient(to bottom,#434dd8 0%,<?php echo $objCard->card_data->style->card->color->main; ?> 100%);filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#434dd8',endColorstr='<?php echo $objCard->card_data->style->card->color->main; ?>',GradientType=0);color:#fff;font-size:19px;padding:15px 4px;text-align:center;cursor:pointer}.tabContent{padding:14px 12px;font-size:14px;display:none}.saveCardButtons li{width:48%;border-radius:4px;text-align:center;float:left;background-color:<?php echo $objCard->card_data->style->card->color->main; ?>;margin:0 1%;padding:3%;color:#fff;cursor:pointer}.saveCardContent{margin:8px 0 0;padding:0 16px;display:none}.saveCardTitle{font-weight:700;font-size:18px}ol{margin:10px 16px 0}.saveCardTitle img{border:1px solid <?php echo $objCard->card_data->style->card->color->main; ?>}.smallPrint{font-size:8px;line-height:8px}.saveCardTitle li{border-bottom:1px solid <?php echo $objCard->card_data->style->card->color->main; ?>;padding:0 0 10px;margin:0 0 10px}.saveCardTitle li:last-child{border-bottom:none}.phoneIcon{text-align:center;font-size:60px}.shareCardButtons li{width:30%;border-radius:4px;text-align:center;float:left;background-color:<?php echo $objCard->card_data->style->card->color->main; ?>;margin:0 1%;padding:3%;color:#fff;cursor:pointer;font-size:14px}.shareCardButtons.four-column-share li{width:23%!important;padding:3% 1%!important}.shareCardButtons a{color:#fff;text-decoration:none}.shareCardContent{margin:10px;display:none;font-size:14px}#email{width:100%}.submitSendEmail{background-color:<?php echo $objCard->card_data->style->card->color->main; ?>;color:#fff;border:none;border-radius:4px;padding:4px 10px}.footer{margin:8px 0 0;background-color:gray;color:#fff;text-align:center;padding:4px;font-size:6px;border-top:0}.footerTop{margin:0 0 4px}.footerImage{width:50%;margin:0 auto}.footerBottom{margin:4px 0 0}.mainImage{width:100%}.mainImage img{width:100%}#shareCardContentQRCode{width:300px;margin:0 auto}.inactiveCard{text-align:center;font-size:28px;margin:10px 0}.display-user-full-name{position:absolute;bottom:12px;width:100%;text-align:center;font-size:30px}}
 
-<?php include(PublicDefault . "css/default.css"); ?>
+<?php include(PUBLIC_DEFAULT . "css/default.css"); ?>
 
 .admin-edit-bar {
     background:#000;
@@ -53,12 +53,12 @@ body{font-size:3vw;background-color:#fff}.heading1{font-size:7vw;color:<?php ech
 .admin-edit-search-input-fix { top: 2px; position: relative; margin-left: 4px; }
 
 <?php
-require AppVendors . "froala/main/v2.9.3/min/froala_style.min.css";
+require APP_VENDORS . "froala/main/v2.9.3/min/froala_style.min.css";
 
 $userRoleClass = $objLoggedInUser->Roles !== null ? ($objLoggedInUser->Roles->FindEntityByKey("user_class_type_id")->user_class_type_id ?? null) : null;
 
 if (userIsCustomPlatform($userRoleClass)) {
-    require AppVendors . "jquery/ui/v1.12.1/min/jquery.ui.min.css";
+    require APP_VENDORS . "jquery/ui/v1.12.1/min/jquery.ui.min.css";
 }
 
 ?>

@@ -32,9 +32,9 @@ header('Content-Type:text/css');
     max-height: 100vh;
 }
 .app-card {
-    width: 500px;
+    /*width: 500px;*/
     display: block;
-    height: 890px;
+    /*height: 890px;*/
     position: relative;
 }
 .app-main-comp-header {
@@ -117,10 +117,6 @@ header('Content-Type:text/css');
 }
 .vue-app-body {
     overflow:hidden;
-}
-.app-page-content {
-    overflow-y: auto;
-    height: 830px;
 }
 .app-section {
     overflow: hidden;
@@ -480,11 +476,6 @@ header('Content-Type:text/css');
 body.theme_shade_light div.universal-float-shield {
     background: url(/website/images/LoadingIcon2.gif) no-repeat left 50% center / auto 35px,rgba(255,255,255,.4) ;
 }
-.zgpopup-dialog-box {
-    border-radius: 0px;
-    max-width: calc(100vw - 50px);
-    min-width: 250px;
-}
 .theme_shade_light .zgpopup-dialog-box {
     background: #ffffff;
     background: linear-gradient(to bottom, #fff 0%, #eaeaea 100%);
@@ -680,7 +671,7 @@ body.theme_shade_light div.universal-float-shield {
     padding:15px 15pc 15px 5px;
 }
 .social-media-icon {
-    background: url(<?php echo $this->app->objCustomPlatform->getFullPortalDomain(); ?>/_ez/images/social-media-icon.svg) no-repeat center center / 100% auto;
+    background: url(<?php echo $this->app->objCustomPlatform->getFullPortalDomainName(); ?>/_ez/images/social-media-icon.svg) no-repeat center center / 100% auto;
     width: 38px;
     height: 38px;
     display: block;
@@ -815,14 +806,6 @@ body.theme_shade_light div.universal-float-shield {
     .handed-right .app-kabob-float {
         right: -190px;
     }
-    body div.universal-float-shield {
-        display: flex;
-        width: 100%;
-        height: 100%;
-    }
-    .handed-left .app-main-comp-pages {
-        padding-right: 15px;
-    }
     .handed-right .app-main-comp-pages {
         padding-left: 15px;
     }
@@ -887,9 +870,5 @@ body.theme_shade_light div.universal-float-shield {
     .app-kabob-menu li span span {
         width: 50px;
         font-size: 30px;
-    }
-    .app-page-content {
-        overflow-y: auto;
-        height: calc(100% - 63px);
     }
 }

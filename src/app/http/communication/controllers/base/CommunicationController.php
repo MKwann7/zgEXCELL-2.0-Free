@@ -1,6 +1,6 @@
 <?php
 
-namespace Entities\Communication\Classes\Base;
+namespace Http\Communication\Controllers\Base;
 
 use App\Core\AppController;
 use App\Utilities\Excell\ExcellHttpModel;
@@ -24,7 +24,7 @@ class CommunicationController extends AppController
             $userId = $user->toArray(["sys_row_id"])["sys_row_id"];
         }
 
-        if ($objData->UserName === $userId && $objData->Password === $this->app->objAppSession["Core"]["Session"]["Browser"])
+        if ($objData->UserName === $userId && $objData->Password === $_COOKIE['instance'])
         {
             return true;
         }

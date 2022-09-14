@@ -79,7 +79,7 @@ class AppController extends ExcellIterator
         die($view);
     }
 
-    protected function renderReturnJson($blnSuccess = false, $objData = null, $strMessage = "", $code = 200, $strDataLabel = "data", $end = null) : void
+    protected function renderReturnJson($blnSuccess = false, $objData = null, $strMessage = "Hello world.", $code = 200, $strDataLabel = "data", $end = null) : bool
     {
         $objTransaction = [
             "success" => $blnSuccess,
@@ -103,6 +103,7 @@ class AppController extends ExcellIterator
 
         echo json_encode($objTransaction);
         die;
+        return false;
     }
 
     protected function renderReturnCachedJson($blnSuccess = false, $objData = null, $strMessage = "", $code = 200, $strDataLabel = "data", $end = null) : void

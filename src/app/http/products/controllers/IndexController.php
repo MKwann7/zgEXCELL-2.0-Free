@@ -1,12 +1,12 @@
 <?php
 
-namespace Entities\Products\Controllers;
+namespace Http\Products\Controllers;
 
 use App\Utilities\Database;
 use App\Utilities\Excell\ExcellHttpModel;
 use Entities\Cards\Classes\Cards;
 use Entities\Cards\Models\CardModel;
-use Entities\Products\Classes\Base\ProductController;
+use Http\Products\Controllers\Base\ProductController;
 use Entities\Products\Classes\Products;
 use Entities\Products\Components\Vue\MyProductsApp;
 use Entities\Products\Components\Vue\ProductsWidget\ManageMyProductsWidget;
@@ -63,10 +63,10 @@ class IndexController extends ProductController
 
         foreach($objActivePackages->Data as $currPackageId => $currPackageData)
         {
-            $objActivePackages->Data->{$currPackageId}->last_updated = date("m/d/Y",strtotime($currPackageData->last_updated));
+            $objActivePackages->getData()->{$currPackageId}->last_updated = date("m/d/Y",strtotime($currPackageData->last_updated));
         }
 
-        require AppEntities . "cards/classes/main.class" . XT;
+        require APP_ENTITIES . "cards/classes/main.class" . XT;
 
         $objPackage = null;
         $colPackageCards = null;
@@ -74,8 +74,8 @@ class IndexController extends ProductController
         if ( $strApproach === "view")
         {
             $intPackageId = $objData->Data->Params["id"] ?? 0;
-            $objPackage = $this->AppEntity->getFks()->getById($intPackageId)->Data->First();
-            $colPackageCards = (new Cards())->getFks()->getWhere("product_id", "=", $intPackageId)->Data;
+            $objPackage = $this->AppEntity->getFks()->getById($intPackageId)->getData()->first();
+            $colPackageCards = (new Cards())->getFks()->getWhere("product_id", "=", $intPackageId)->getData();
         }
 
         $this->AppEntity->renderAppPage("admin_view_all_packages", $this->app->strAssignedPortalTheme, [
@@ -104,20 +104,20 @@ class IndexController extends ProductController
         }
 
         $objWhereClause = "SELECT card.*,
-            (SELECT platform_name FROM `ezdigital_v2_main`.`company` WHERE company.company_id = card.company_id LIMIT 1) AS platform, 
-            (SELECT url FROM `ezdigital_v2_media`.`image` WHERE image.entity_id = card.card_id AND image.entity_name = 'card' AND image_class = 'main-image' ORDER BY image_id DESC LIMIT 1) AS banner, 
-            (SELECT thumb FROM `ezdigital_v2_media`.`image` WHERE image.entity_id = card.card_id AND image.entity_name = 'card' AND image_class = 'favicon-image' ORDER BY image_id DESC LIMIT 1) AS favicon,
-            (SELECT CONCAT(user.first_name, ' ', user.last_name) FROM `ezdigital_v2_main`.`user` WHERE user.user_id = card.owner_id LIMIT 1) AS card_owner_name,
-            (SELECT CONCAT(user.first_name, ' ', user.last_name) FROM `ezdigital_v2_main`.`user` WHERE user.user_id = card.card_user_id LIMIT 1) AS card_user_name,
-            (SELECT title FROM `ezdigital_v2_main`.`product` WHERE product.product_id = card.product_id LIMIT 1) AS product, 
-            (SELECT COUNT(*) FROM `ezdigital_v2_main`.`mobiniti_contact_group_rel` mcgr WHERE mcgr.card_id = card.card_id) AS card_contacts
-            FROM ezdigital_v2_main.card ";
+            (SELECT platform_name FROM `excell_main`.`company` WHERE company.company_id = card.company_id LIMIT 1) AS platform, 
+            (SELECT url FROM `excell_media`.`image` WHERE image.entity_id = card.card_id AND image.entity_name = 'card' AND image_class = 'main-image' ORDER BY image_id DESC LIMIT 1) AS banner, 
+            (SELECT thumb FROM `excell_media`.`image` WHERE image.entity_id = card.card_id AND image.entity_name = 'card' AND image_class = 'favicon-image' ORDER BY image_id DESC LIMIT 1) AS favicon,
+            (SELECT CONCAT(user.first_name, ' ', user.last_name) FROM `excell_main`.`user` WHERE user.user_id = card.owner_id LIMIT 1) AS card_owner_name,
+            (SELECT CONCAT(user.first_name, ' ', user.last_name) FROM `excell_main`.`user` WHERE user.user_id = card.card_user_id LIMIT 1) AS card_user_name,
+            (SELECT title FROM `excell_main`.`product` WHERE product.product_id = card.product_id LIMIT 1) AS product, 
+            (SELECT COUNT(*) FROM `excell_main`.`mobiniti_contact_group_rel` mcgr WHERE mcgr.card_id = card.card_id) AS card_contacts
+            FROM excell_main.card ";
 
         if ($filterEntity !== null)
         {
-            $objWhereClause .= "LEFT JOIN `ezdigital_v2_main`.`user` cowner ON cowner.user_id = card.owner_id ";
-            $objWhereClause .= "LEFT JOIN `ezdigital_v2_main`.`user` cuser ON cuser.user_id = card.card_user_id ";
-            $objWhereClause .= "LEFT JOIN `ezdigital_v2_main`.`card_rel` ON card_rel.card_id = card.card_id ";
+            $objWhereClause .= "LEFT JOIN `excell_main`.`user` cowner ON cowner.user_id = card.owner_id ";
+            $objWhereClause .= "LEFT JOIN `excell_main`.`user` cuser ON cuser.user_id = card.card_user_id ";
+            $objWhereClause .= "LEFT JOIN `excell_main`.`card_rel` ON card_rel.card_id = card.card_id ";
         }
 
         $objWhereClause .= "WHERE card.company_id = {$this->app->objCustomPlatform->getCompanyId()} AND card.status != 'Deleted' ";
@@ -137,18 +137,18 @@ class IndexController extends ProductController
 
         $objCards = Database::getSimple($objWhereClause, "card_id");
 
-        if ($objCards->Data->Count() < $batchCount)
+        if ($objCards->getData()->Count() < $batchCount)
         {
             $strEnd = "true";
         }
 
-        $objCards->Data->HydrateModelData(CardModel::class, true);
+        $objCards->getData()->HydrateModelData(CardModel::class, true);
 
         $arUserDashboardInfo = array(
-            "list" => $objCards->Data->FieldsToArray($arFields),
+            "list" => $objCards->getData()->FieldsToArray($arFields),
             "query" => $objWhereClause,
         );
 
-        return $this->renderReturnJson(true, $arUserDashboardInfo, "We found " . $objCards->Data->Count() . " cards in this batch.", 200, "data", $strEnd);
+        return $this->renderReturnJson(true, $arUserDashboardInfo, "We found " . $objCards->getData()->Count() . " cards in this batch.", 200, "data", $strEnd);
     }
 }

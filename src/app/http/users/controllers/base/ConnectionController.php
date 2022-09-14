@@ -1,6 +1,6 @@
 <?php
 
-namespace Entities\Users\Classes\Base;
+namespace Http\Users\Controllers\Base;
 
 use App\Core\AppController;
 use Entities\Users\Classes\Connections;

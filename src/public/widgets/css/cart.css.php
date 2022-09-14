@@ -2,9 +2,9 @@
 
 header('Content-Type:text/css');
 
-require PublicWebsite . "css/style.css";
-require PublicDefault . "css/default.css";
-require PublicPortal . "css/core.css.php";
-require PublicPortal . "css/libraries.css.php";
+require PUBLIC_WEBSITE . "css/style.css";
+require PUBLIC_DEFAULT . "css/default.css";
+require PUBLIC_PORTAL . "css/core.css.php";
+require PUBLIC_PORTAL . "css/libraries.css.php";
 
 ?>

@@ -6,9 +6,9 @@ use App\Website\Vue\Classes\Base\VueComponent;
 
 class ManageNotesWidget extends VueComponent
 {
-    protected $id = "d0cc2044-a7e3-43b9-9f84-1a4b379b0d0a";
-    protected $title = "Note Dashboard";
-    protected $endpointUriAbstract = "note-dashboard/{id}";
+    protected string $id = "d0cc2044-a7e3-43b9-9f84-1a4b379b0d0a";
+    protected string $title = "Note Dashboard";
+    protected string $endpointUriAbstract = "note-dashboard/{id}";
 
     public function __construct(array $components = [])
     {
@@ -56,7 +56,7 @@ class ManageNotesWidget extends VueComponent
                     noteData["note_id"] = this.entity.note_id;
                 }
                 
-                ajax.Send(url, noteData, function(result)
+                ajax.Post(url, noteData, function(result)
                 {
                     modal.CloseFloatShield();
                     
@@ -74,7 +74,7 @@ class ManageNotesWidget extends VueComponent
                     
                     if (self.action === "add")
                     {
-                        self.entities.push(result.data.note);
+                        self.entities.push(result.response.data.note);
                     }
 
                     let vue = self.findApp(self);

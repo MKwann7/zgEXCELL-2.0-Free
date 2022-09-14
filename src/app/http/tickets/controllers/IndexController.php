@@ -1,9 +1,9 @@
 <?php
 
-namespace Entities\Tickets\Controllers;
+namespace Http\Tickets\Controllers;
 
 use App\Utilities\Excell\ExcellHttpModel;
-use Entities\Tickets\Classes\Base\TicketsController;
+use Http\Tickets\Controllers\Base\TicketsController;
 use Entities\Tickets\Classes\Tickets;
 use Entities\Tickets\Components\Vue\TicketsAdminApp;
 use Entities\Tickets\Components\Vue\TicketsMainApp;

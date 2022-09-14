@@ -1,6 +1,6 @@
 <?php
 
-namespace Entities\Orders\Classes\Base;
+namespace Http\Orders\Controllers\Base;
 
 use App\Core\AppController;
 use Entities\Orders\Classes\OrderLines;
