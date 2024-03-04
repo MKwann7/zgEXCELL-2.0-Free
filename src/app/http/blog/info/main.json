@@ -1,0 +1,44 @@
+{
+  "tasks": {
+    "Routes": {
+      "tasks": {
+        "Alias:": "tasks"
+      }
+    },
+    "ModulePath": "tasks",
+    "Main": {
+      "Name": "Tasks",
+      "Icon": "task-main.png"
+    },
+    "Permissions": {
+      "Create": ["admin","webmaster","editor"],
+      "Update": ["admin","webmaster","editor"],
+      "Delete": ["admin","webmaster","editor"]
+    },
+    "PublicRouting": {
+      "page-css": {
+        "models":["Task"],
+        "verbs":["GET"],
+        "returnType":"AJAX"
+      },
+      "page-js": {
+        "models":["Task"],
+        "verbs":["GET"],
+        "returnType":"AJAX"
+      },
+      "page-ajax": {
+        "model":["Task"],
+        "verbs":["GET","POST","DELETE","CREATE"],
+        "returnType":"AJAX"
+      },
+      "widget-ajax": {
+        "models":["Task"],
+        "verbs":["GET","POST","DELETE","CREATE"],
+        "returnType":"AJAX"
+      }
+    },
+    "Widgets": {
+      "page_task": ["admin","webmaster","editor","user","public"]
+    }
+  }
+}

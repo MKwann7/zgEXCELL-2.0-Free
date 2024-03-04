@@ -1,0 +1,9 @@
+{
+  "controllers": {
+    "index": {
+      "models":["Gallery"],
+      "verb":"ALL",
+      "returnType":"DEFAULT"
+    }
+  }
+}

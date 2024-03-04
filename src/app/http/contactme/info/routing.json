@@ -1,0 +1,19 @@
+{
+  "controllers": {
+    "index": {
+      "models":["ShareSave"],
+      "verb":"GET",
+      "returnType":"DEFAULT"
+    },
+    "directory_data": {
+      "models":["ShareSave"],
+      "verb":"POST",
+      "returnType":"AJAX"
+    },
+    "report_issue": {
+      "models":["ShareSave"],
+      "verb":"GET",
+      "returnType":"DEFAULT"
+    }
+  }
+}

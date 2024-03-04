@@ -1,0 +1,44 @@
+{
+  "gallery": {
+    "Routes": {
+      "gallery": {
+        "Alias:": "gallery"
+      }
+    },
+    "ModulePath": "gallery",
+    "Main": {
+      "Name": "Gallery",
+      "Icon": "gallery-main.png"
+    },
+    "Permissions": {
+      "Create": ["admin","webmaster","editor"],
+      "Update": ["admin","webmaster","editor"],
+      "Delete": ["admin","webmaster","editor"]
+    },
+    "PublicRouting": {
+      "page-css": {
+        "models":["Gallery"],
+        "verbs":["GET"],
+        "returnType":"AJAX"
+      },
+      "page-js": {
+        "models":["Gallery"],
+        "verbs":["GET"],
+        "returnType":"AJAX"
+      },
+      "page-ajax": {
+        "model":["Gallery"],
+        "verbs":["GET","POST","DELETE","CREATE"],
+        "returnType":"AJAX"
+      },
+      "widget-ajax": {
+        "models":["Gallery"],
+        "verbs":["GET","POST","DELETE","CREATE"],
+        "returnType":"AJAX"
+      }
+    },
+    "Widgets": {
+      "page_task": ["admin","webmaster","editor","user","public"]
+    }
+  }
+}

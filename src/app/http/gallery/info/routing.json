@@ -1,0 +1,9 @@
+{
+  "controllers": {
+    "index": {
+      "models":["Blog"],
+      "verb":"ALL",
+      "returnType":"DEFAULT"
+    }
+  }
+}

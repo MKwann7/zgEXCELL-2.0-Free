@@ -1,0 +1,19 @@
+{
+  "talktome": {
+    "Routes": {
+      "talktome": {
+        "Alias:": "talktome"
+      }
+    },
+    "ModulePath": "talktome",
+    "Main": {
+      "Name": "TalkToMe",
+      "Icon": "talktome-main.png"
+    },
+    "PublicRouting": {
+    },
+    "Widgets": {
+      "page_card": ["admin","webmaster","editor","user","public"]
+    }
+  }
+}

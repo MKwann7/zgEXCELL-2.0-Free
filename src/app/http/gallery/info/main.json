@@ -1,0 +1,44 @@
+{
+  "blog": {
+    "Routes": {
+      "blog": {
+        "Alias:": "blog"
+      }
+    },
+    "ModulePath": "blog",
+    "Main": {
+      "Name": "Blog",
+      "Icon": "blog-main.png"
+    },
+    "Permissions": {
+      "Create": ["admin","webmaster","editor"],
+      "Update": ["admin","webmaster","editor"],
+      "Delete": ["admin","webmaster","editor"]
+    },
+    "PublicRouting": {
+      "page-css": {
+        "models":["Blog"],
+        "verbs":["GET"],
+        "returnType":"AJAX"
+      },
+      "page-js": {
+        "models":["Blog"],
+        "verbs":["GET"],
+        "returnType":"AJAX"
+      },
+      "page-ajax": {
+        "model":["Blog"],
+        "verbs":["GET","POST","DELETE","CREATE"],
+        "returnType":"AJAX"
+      },
+      "widget-ajax": {
+        "models":["Blog"],
+        "verbs":["GET","POST","DELETE","CREATE"],
+        "returnType":"AJAX"
+      }
+    },
+    "Widgets": {
+      "page_task": ["admin","webmaster","editor","user","public"]
+    }
+  }
+}
