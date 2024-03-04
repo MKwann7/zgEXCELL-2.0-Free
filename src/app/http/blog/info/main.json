@@ -1,14 +1,14 @@
 {
-  "tasks": {
+  "blog": {
     "Routes": {
-      "tasks": {
-        "Alias:": "tasks"
+      "blog": {
+        "Alias:": "blog"
       }
     },
-    "ModulePath": "tasks",
+    "ModulePath": "blog",
     "Main": {
-      "Name": "Tasks",
-      "Icon": "task-main.png"
+      "Name": "Blog",
+      "Icon": "blog-main.png"
     },
     "Permissions": {
       "Create": ["admin","webmaster","editor"],
@@ -17,22 +17,22 @@
     },
     "PublicRouting": {
       "page-css": {
-        "models":["Task"],
+        "models":["Blog"],
         "verbs":["GET"],
         "returnType":"AJAX"
       },
       "page-js": {
-        "models":["Task"],
+        "models":["Blog"],
         "verbs":["GET"],
         "returnType":"AJAX"
       },
       "page-ajax": {
-        "model":["Task"],
+        "model":["Blog"],
         "verbs":["GET","POST","DELETE","CREATE"],
         "returnType":"AJAX"
       },
       "widget-ajax": {
-        "models":["Task"],
+        "models":["Blog"],
         "verbs":["GET","POST","DELETE","CREATE"],
         "returnType":"AJAX"
       }

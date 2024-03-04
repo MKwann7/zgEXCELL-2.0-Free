@@ -14,24 +14,24 @@ namespace Stripe\Util;
  */
 class CaseInsensitiveArray implements \ArrayAccess, \Countable, \IteratorAggregate
 {
-    private $container = [];
+    private mixed $container = [];
 
     public function __construct($initial_array = [])
     {
         $this->container = \array_change_key_case($initial_array, \CASE_LOWER);
     }
 
-    public function count()
+    public function count(): int
     {
         return \count($this->container);
     }
 
-    public function getIterator()
+    public function getIterator(): \ArrayIterator
     {
         return new \ArrayIterator($this->container);
     }
 
-    public function offsetSet($offset, $value)
+    public function offsetSet($offset, $value): void
     {
         $offset = static::maybeLowercase($offset);
         if (null === $offset) {
@@ -41,27 +41,27 @@ class CaseInsensitiveArray implements \ArrayAccess, \Countable, \IteratorAggrega
         }
     }
 
-    public function offsetExists($offset)
+    public function offsetExists($offset): bool
     {
         $offset = static::maybeLowercase($offset);
 
         return isset($this->container[$offset]);
     }
 
-    public function offsetUnset($offset)
+    public function offsetUnset($offset): void
     {
         $offset = static::maybeLowercase($offset);
         unset($this->container[$offset]);
     }
 
-    public function offsetGet($offset)
+    public function offsetGet($offset): mixed
     {
         $offset = static::maybeLowercase($offset);
 
-        return isset($this->container[$offset]) ? $this->container[$offset] : null;
+        return $this->container[$offset] ?? null;
     }
 
-    private static function maybeLowercase($v)
+    private static function maybeLowercase($v): string
     {
         if (\is_string($v)) {
             return \strtolower($v);

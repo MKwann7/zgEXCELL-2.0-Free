@@ -24,7 +24,7 @@ class ApplePayDomain extends ApiResource
      * @return string The class URL for this resource. It needs to be special
      *    cased because it doesn't fit into the standard resource pattern.
      */
-    public static function classUrl()
+    public static function classUrl(): string
     {
         return '/v1/apple_pay/domains';
     }

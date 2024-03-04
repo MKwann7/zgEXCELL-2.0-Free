@@ -4,7 +4,7 @@ use App\Utilities\Database;
 use Entities\Users\Classes\Users;
 
 $this->CurrentPage->BodyId            = "password-reset-page";
-$this->CurrentPage->BodyClasses       = ["page", "login-page", "no-columns"];
+$this->CurrentPage->BodyClasses       = ["page", "loginwidget-page", "no-columns"];
 $this->CurrentPage->Meta->Title       = "Reset Your Password | " . $this->app->objCustomPlatform->getPortalDomainName();
 $this->CurrentPage->Meta->Description = "Your digital card is one step away. Login now to manage it!";
 $this->CurrentPage->Meta->Keywords    = "Digital Cards, Online Business Cards, Greg Sanders";

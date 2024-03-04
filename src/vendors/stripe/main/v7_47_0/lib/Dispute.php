@@ -71,7 +71,7 @@ class Dispute extends ApiResource
      * @return \Stripe\Dispute the closed dispute
      */
     // TODO: add $params to standardize signature
-    public function close($opts = null)
+    public function close($opts = null): static
     {
         $url = $this->instanceUrl() . '/close';
         list($response, $opts) = $this->_request('post', $url, null, $opts);

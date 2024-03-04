@@ -14,7 +14,9 @@ $arActiveJavaScriptLibraries = [
         ],
         "lodash" => true,
         "modernizr" => true,
-        "vue" => true
+        "slim" => true,
+        "vue" => true,
+        "grapick" => true,
     )
 ];
 

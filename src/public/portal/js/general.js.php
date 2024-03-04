@@ -123,12 +123,10 @@ function classListGlobal(className, callback)
 
 function classList(element, className, callback)
 {
-    if (typeof callback === "function")
-    {
+    if (typeof callback === "function") {
         let elm = element.getElementsByClassName(className);
 
-        for (let currElm of Array.from(elm))
-        {
+        for (let currElm of Array.from(elm)) {
             callback(currElm);
         }
 
@@ -140,12 +138,10 @@ function classList(element, className, callback)
 
 function globalClassList(className, callback)
 {
-    if (typeof callback === "function")
-    {
+    if (typeof callback === "function") {
         let elm = document.getElementsByClassName(className);
 
-        for (let currElm of Array.from(elm))
-        {
+        for (let currElm of Array.from(elm)) {
             callback(currElm);
         }
 
@@ -159,18 +155,14 @@ function createNode(type, parameters, text)
 {
     let node  = document.createElement(type);
 
-    for (let currParameter of Array.from(parameters))
-    {
-        if (currParameter.substr(0,1) === ".")
-        {
+    for (let currParameter of Array.from(parameters)) {
+        if (currParameter.substr(0,1) === ".") {
             node.classList.add(currParameter.substr(1, currParameter.length))
         }
-        if (currParameter.substr(0,1) === "#")
-        {
+        if (currParameter.substr(0,1) === "#") {
             node.id = currParameter.substr(1, currParameter.length)
         }
-        if (currParameter.includes("="))
-        {
+        if (currParameter.includes("=")) {
             const customParameter = currParameter.split("=");
             node.setAttribute(customParameter[0], customParameter[1])
         }
@@ -184,12 +176,10 @@ function createNode(type, parameters, text)
 
 function classListById(id, className, callback)
 {
-    if (typeof callback === "function")
-    {
+    if (typeof callback === "function") {
         let elm = elm(id).getElementsByClassName(className);
 
-        for (let currElm of Array.from(elm))
-        {
+        for (let currElm of Array.from(elm)) {
             callback(currElm);
         }
 
@@ -460,6 +450,10 @@ function eachInList( obj, callback )
 
 function slideUp(target, duration = 250, callback)
 {
+    if (target.style.display === "none" && typeof callback === "function") {
+        callback();
+    }
+
     target.style.transitionProperty = 'height, margin, padding';
     target.style.transitionDuration = duration + 'ms';
     target.style.boxSizing = 'border-box';
@@ -472,8 +466,7 @@ function slideUp(target, duration = 250, callback)
     target.style.marginTop = 0;
     target.style.marginBottom = 0;
 
-    window.setTimeout( () =>
-    {
+    window.setTimeout( () => {
         target.style.display = 'none';
         target.style.removeProperty('height');
         target.style.removeProperty('padding-top');
@@ -484,8 +477,7 @@ function slideUp(target, duration = 250, callback)
         target.style.removeProperty('transition-duration');
         target.style.removeProperty('transition-property');
 
-        if (typeof callback === "function")
-        {
+        if (typeof callback === "function") {
             callback();
         }
     }, duration);
@@ -553,6 +545,7 @@ function slideOver(direction, target, duration = 250, callback)
     vueWrapper.style.transform = "translateX(-" + componentWidth + "px)";
 
     window.setTimeout( function() {
+        _.el.style.overflowX = "visible";
         if (typeof callback === "function") {
             callback();
         }
@@ -584,6 +577,26 @@ function validateEmail(email)
 {
     const re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     return re.test(email);
+}
+
+function imageServerUrl()
+{
+    return "<?php echo $app->getCustomPlatform()->getFullMediaDomainName(false); ?>";
+}
+
+function apiServerUrl()
+{
+    return "<?php echo $app->getCustomPlatform()->getFullApiDomainName(false); ?>";
+}
+
+function socketServerUrl()
+{
+    return "<?php echo $app->getCustomPlatform()->getFullSocketDomainName(false); ?>";
+}
+
+function processServerUrl()
+{
+    return "<?php echo $app->getCustomPlatform()->getFullProcessDomainName(false); ?>";
 }
 
 String.prototype.pick = function(min, max) {

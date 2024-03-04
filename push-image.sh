@@ -30,7 +30,9 @@
 echo "Building new maxr_app image."
 ./image.sh
 
-echo "Tagging and pushing maxr_app to gcr.io/pristine-coda-320122."
+echo "Tagging and pushing maxr_app to 996453635710.dkr.ecr.us-east-2.amazonaws.com/maxr_app."
 
-docker tag excell_app:latest gcr.io/pristine-coda-320122/maxr_app:v1
-docker push gcr.io/pristine-coda-320122/maxr_app:v1
+#docker tag excell_app:latest gcr.io/pristine-coda-320122/maxr_app:v1
+#docker push gcr.io/pristine-coda-320122/maxr_app:v1
+docker tag excell_app:latest 996453635710.dkr.ecr.us-east-2.amazonaws.com/maxr_app:v1
+docker push 996453635710.dkr.ecr.us-east-2.amazonaws.com/maxr_app:v1

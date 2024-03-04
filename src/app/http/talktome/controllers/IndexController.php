@@ -1,11 +1,11 @@
 <?php
 
-namespace Http\Sharesave\Controllers;
+namespace Http\Talktome\Controllers;
 
 use App\Utilities\Excell\ExcellHttpModel;
-use Http\Sharesave\Controllers\Base\ShareSaveController;
+use Http\Talktome\Controllers\Base\TalkToMeController;
 
-class IndexController extends ShareSaveController
+class IndexController extends TalkToMeController
 {
     public function index(ExcellHttpModel $objData): bool
     {

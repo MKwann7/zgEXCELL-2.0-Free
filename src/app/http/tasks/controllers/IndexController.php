@@ -18,7 +18,7 @@ use Entities\Cards\Models\CardPageModel;
 use Entities\Cards\Models\CardPageRelModel;
 use Entities\Media\Classes\Images;
 use Entities\Mobiniti\Models\MobinitiContactModel;
-use Http\Tasks\Controllers\Base\TaskController;
+use Http\Tasks\Controllers\Base\BlogController;
 use Entities\Users\Classes\Connections;
 use Entities\Users\Classes\UserAddress;
 use Entities\Users\Classes\UserClass;
@@ -28,15 +28,8 @@ use Entities\Users\Models\UserClassModel;
 use stdClass;
 use Vendors\Mobiniti\Main\V100\Classes\MobinitiContactsApiModule;
 
-class IndexController extends TaskController
+class IndexController extends BlogController
 {
-    public function testIpAddress() : bool
-    {
-        $headers = apache_request_headers();
-        dump($headers);
-        dd($_SERVER);
-    }
-
     public function index(ExcellHttpModel $objData) : bool
     {
         if(!$this->app->isAuthorizedAdminUrlRequest())
@@ -92,8 +85,6 @@ class IndexController extends TaskController
         $pageOffset = (($objData->Data->Params["offset"] ?? 1 )-1) * $pageLimit;
 
         $objCardPageRelDataResult = (new CardPageRels())->getWhere(["card_tab_id" => 193854, "rel_visibility" => false]);
-
-        dump($objCardPageRelDataResult->result);
 
         $arCardsHiddenSaveShareTabs = [];
         $arRevisedCardsWithDuplicateSaveShareTabs = [];

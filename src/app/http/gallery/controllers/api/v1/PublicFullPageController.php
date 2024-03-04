@@ -1,8 +1,10 @@
 <?php
 
-namespace http\blog\controllers\api\v1;
+namespace Http\Gallery\Controllers\Api\V1;
 
-class PublicFullPageController extends \Http\Blog\Controllers\Base\BlogController
+use Http\Gallery\Controllers\Base\GalleryController;
+
+class PublicFullPageController extends GalleryController
 {
 
 }

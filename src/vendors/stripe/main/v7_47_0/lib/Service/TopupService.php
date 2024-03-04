@@ -4,19 +4,23 @@
 
 namespace Stripe\Service;
 
-class TopupService extends \Stripe\Service\AbstractService
+use Stripe\StripeObject;
+use Stripe\Topup;
+use Stripe\Util\RequestOptions;
+
+class TopupService extends AbstractService
 {
     /**
      * Returns a list of top-ups.
      *
-     * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
-     *
-     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     * @param array|null $params
+     * @param RequestOptions|array|null $opts
      *
      * @return \Stripe\Collection
+     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     *
      */
-    public function all($params = null, $opts = null)
+    public function all(array $params = null, RequestOptions|array $opts = null): \Stripe\Collection
     {
         return $this->requestCollection('get', '/v1/topups', $params, $opts);
     }
@@ -25,29 +29,29 @@ class TopupService extends \Stripe\Service\AbstractService
      * Cancels a top-up. Only pending top-ups can be canceled.
      *
      * @param string $id
-     * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param array|null $params
+     * @param array|RequestOptions|null $opts
      *
+     * @return StripeObject|Topup
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\Topup
      */
-    public function cancel($id, $params = null, $opts = null)
+    public function cancel(string $id, array $params = null, RequestOptions|array $opts = null): StripeObject|Topup
     {
         return $this->request('post', $this->buildPath('/v1/topups/%s/cancel', $id), $params, $opts);
     }
 
     /**
-     * Top up the balance of an account.
+     * Top up the balance of an account.AbstractServiceAlias
      *
-     * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param array|null $params
+     * @param array|RequestOptions|null $opts
      *
+     * @return StripeObject|Topup
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\Topup
      */
-    public function create($params = null, $opts = null)
+    public function create(array $params = null, RequestOptions|array $opts = null): StripeObject|Topup
     {
         return $this->request('post', '/v1/topups', $params, $opts);
     }
@@ -58,14 +62,14 @@ class TopupService extends \Stripe\Service\AbstractService
      * return the corresponding top-up information.
      *
      * @param string $id
-     * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param array|null $params
+     * @param array|RequestOptions|null $opts
      *
+     * @return StripeObject|Topup
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\Topup
      */
-    public function retrieve($id, $params = null, $opts = null)
+    public function retrieve(string $id, array $params = null, RequestOptions|array $opts = null): StripeObject|Topup
     {
         return $this->request('get', $this->buildPath('/v1/topups/%s', $id), $params, $opts);
     }
@@ -75,14 +79,14 @@ class TopupService extends \Stripe\Service\AbstractService
      * design.
      *
      * @param string $id
-     * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param array|null $params
+     * @param array|RequestOptions|null $opts
      *
+     * @return StripeObject|Topup
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\Topup
      */
-    public function update($id, $params = null, $opts = null)
+    public function update(string $id, array $params = null, RequestOptions|array $opts = null): StripeObject|Topup
     {
         return $this->request('post', $this->buildPath('/v1/topups/%s', $id), $params, $opts);
     }

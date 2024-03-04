@@ -8,13 +8,11 @@ namespace Stripe\Util;
  */
 class DefaultLogger implements LoggerInterface
 {
-    /** @var int */
-    public $messageType = 0;
+    public int $messageType = 0;
 
-    /** @var null|string */
-    public $destination;
+    public string|null $destination;
 
-    public function error($message, array $context = [])
+    public function error(string $message, array $context = []): void
     {
         if (\count($context) > 0) {
             throw new \Stripe\Exception\BadMethodCallException('DefaultLogger does not currently implement context. Please implement if you need it.');

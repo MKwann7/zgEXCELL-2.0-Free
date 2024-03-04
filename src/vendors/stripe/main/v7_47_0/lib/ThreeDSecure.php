@@ -30,7 +30,7 @@ class ThreeDSecure extends ApiResource
     /**
      * @return string the endpoint URL for the given class
      */
-    public static function classUrl()
+    public static function classUrl(): string
     {
         return '/v1/3d_secure';
     }

@@ -6,13 +6,11 @@ use App\Utilities\Database;
 use App\Utilities\Excell\ExcellCollection;
 use App\Utilities\Excell\ExcellHttpModel;
 use Entities\Cart\Classes\CartTicketProcess;
+use Entities\Cart\Classes\Factories\CartProcessOptions;
+use Entities\Cart\Classes\Factories\CartPurchaseFactory;
 use Entities\Cart\Components\Vue\MarketplaceApp;
 use Entities\Cards\Classes\Cards;
 use Entities\Cards\Models\CardModel;
-use Entities\Companies\Classes\Departments\Departments;
-use Entities\Companies\Classes\Departments\DepartmentTicketQueues;
-use Entities\Packages\Classes\Packages;
-use Entities\Users\Classes\UserClass;
 use Http\Cart\Controllers\Base\CartController;
 use Entities\Cart\Classes\CartEmails;
 use Entities\Cart\Classes\CartProcess;
@@ -140,8 +138,7 @@ class IndexController extends CartController
         if (!$this->validate($objPost, [
             "package_ids" => "required",
             "user_id"     => "required|integer",
-            "promo_code"  => "required|integer",
-            "cart_type"   => "required",
+            "promo_code"  => "required|integer"
         ]
         ))
         {
@@ -149,45 +146,30 @@ class IndexController extends CartController
         }
 
         $userId           = (int) $objPost->user_id;
-        $paymentAccountId = (int) $objPost->payment_id;
-        $parentEntity     = null;
+        $paymentAccountId = !empty($objPost->payment_id) ? (int) $objPost->payment_id : 0;
 
-        if ($objPost->cart_type !== "card" && $objPost->parent_entity_type === "card")
-        {
-            $parentEntity = (new Cards())->getById($objPost->parent_entity_id)->getData()->first();
+        $cartPurchaseFactory = new CartPurchaseFactory(
+            new CartProcess(),
+            new ProductProcessor(),
+            new CartTicketProcess(),
+            new CartEmails(),
+            new Cards()
+        );
+
+        $newCartOptions = new CartProcessOptions();
+        $newCartOptions->parent_entity_type = $objPost->parent_entity_type;
+        $newCartOptions->parent_entity_id = $objPost->parent_entity_id;
+
+        $purchaseResult = $cartPurchaseFactory->processShoppingCart($objPost->package_ids, $objPost->promo_code, $userId, $paymentAccountId, $newCartOptions);
+
+        if ($purchaseResult->getResult()->Success === false) {
+            return $this->renderReturnJson(false, $cartPurchaseFactory->getErrors(), $cartPurchaseFactory->getMessage());
         }
-
-        $cartProcess = new CartProcess($objPost->package_ids, $userId, $paymentAccountId, $this->app);
-
-        if ($objPost->promo_code !== 0)
-        {
-            $cartProcess->processPromoCode($objPost->promo_code);
-        }
-
-        $cartProcessTransaction = $cartProcess->processCheckout();
-
-        if ($cartProcessTransaction->getTransaction()->result->Success !== true)
-        {
-            return $this->renderReturnJson(false, ["errors" => $cartProcessTransaction->getErrors()->ToPublicArray()], $cartProcessTransaction->getTransaction()->result->Message);
-        }
-
-        $productProcessor = new ProductProcessor($cartProcessTransaction);
-
-        if (!$productProcessor->processLoadedProducts($parentEntity))
-        {
-            return $this->renderReturnJson(false, ["errors" => $productProcessor->generateProductCreationErrors()], "There was an error processing your order.");
-        }
-
-        $ticketProcess = new CartTicketProcess($productProcessor, $this->app);
-        $ticketProcess->registerTickets();
-
-        $cartEmails = new CartEmails($productProcessor, $this->app);
-        $cartEmails->sendEmails();
 
         $cardItems = new ExcellCollection();
 
         /** @var CartProductCapsule $currCartItem */
-        foreach ($productProcessor->cartItems as $currCartItem)
+        foreach ($cartPurchaseFactory->getProductProcessor()->cartItems as $currCartItem)
         {
             $cardResult = (new Cards())->getByUuid($currCartItem->getProductInstantiation()->sys_row_id);
 
@@ -475,6 +457,27 @@ class IndexController extends CartController
         return $this->renderReturnJson(($userResult->result->Count === 1 ? true : false), $arUserList, "We found this.");
     }
 
+    public function getUserInformationByUuid(ExcellHttpModel $objData) : bool
+    {
+        $objParams = $this->app->objHttpRequest->Data->Params;
+
+        if (!$this->validate($objParams, [
+            "uuid" => "required|uuid",
+        ]))
+        {
+            return $this->renderReturnJson(false, $this->validationErrors, "Validation errors.");
+        }
+
+        $objUsers = new Users();
+        $userResult = $objUsers->getFks()->getByUuid($objParams["uuid"]);
+
+        $arUserList = array(
+            "user" => $userResult->getData()->First()->ToPublicArray(["name_prefix", "first_name", "last_name", "name_sufx", "user_phone", "user_email", "user_id", "sys_row_id"]),
+        );
+
+        return $this->renderReturnJson(($userResult->getResult()->Count === 1 ? true : false), $arUserList, "We found this.");
+    }
+
     public function getAllUsers(ExcellHttpModel $objData) : bool
     {
         // TODO - Make sure Custom Platform Data is handed out
@@ -551,7 +554,7 @@ class IndexController extends CartController
         return $this->renderReturnJson(($userResult->result->Count > 0 ? true : false), $arUserList, "We found this.");
     }
 
-    public function getPackageByIdForCart(ExcellHttpModel $objData) : bool
+    public function getPackageByVariationIdForCart(ExcellHttpModel $objData) : bool
     {
         $objParams= $this->app->objHttpRequest->Data->Params;
 
@@ -562,15 +565,48 @@ class IndexController extends CartController
             return $this->renderReturnJson(false, $this->validationErrors, "Validation errors.");
         }
 
-        $objPackages = (new Packages())->getById($objParams["id"]);
+        $customPlatformId = $this->app->objCustomPlatform->getCompany()->company_id;
 
-        if ($objPackages->result->Count !== 1)
+        $onlyEndUser = "";
+
+        if (!userCan("manage-platforms"))
+        {
+            $onlyEndUser = " AND p.enduser_id = 1";
+        }
+
+        $objWhereClause = "
+            SELECT 
+                pv.package_variation_id,
+                pv.name as package_variation_name, 
+                pv.description as variation_desc, 
+                pv.type as variation_type, 
+                pv.promo_price as promo_price, 
+                pv.regular_price as regular_price, 
+                pv.image as variation_image_url, 
+                pv.order as variation_order,
+                CONCAT(p.order, '.', pv.order) as sortable_order,
+                p.*, 
+                peu.enduser_label, 
+                peu.description as enduser_desc
+            FROM excell_main.package_class pc
+            LEFT JOIN excell_main.package_class_rel pcr ON pc.package_class_id = pcr.package_class_id
+            LEFT JOIN excell_main.package p ON pcr.package_id = p.package_id
+            LEFT JOIN excell_main.package_variation pv ON p.package_id = pv.package_id
+            LEFT JOIN excell_main.product_enduser peu ON peu.product_enduser_id = p.enduser_id ";
+
+        $objWhereClause .= "WHERE p.company_id = {$customPlatformId} AND pv.package_variation_id = ".$objParams["id"]."$onlyEndUser";
+        $objWhereClause .= " ORDER BY sortable_order ASC";
+
+        $objPackageVariations = Database::getSimple($objWhereClause,"package_variation_id");
+        $objPackageVariations->getData()->HydrateModelData(PackageModel::class, true);
+
+        if ($objPackageVariations->result->Count !== 1)
         {
             return $this->renderReturnJson(true, null, "Package not found by id.");
         }
 
-        $objPackageList = ( new PackageLines())->getWhereIn("package_id", $objPackages->getData()->FieldsToArray(["package_id"]));
-        $objPackages->getData()->HydrateChildModelData("line", ["package_id" => "package_id"], $objPackageList->data, false);
+        $objPackageList = ( new PackageLines())->getWhereIn("package_variation_id", $objPackageVariations->getData()->FieldsToArray(["package_variation_id"]));
+        $objPackageVariations->getData()->HydrateChildModelData("line", ["package_variation_id" => "package_variation_id"], $objPackageList->data, false);
 
         $productIds = [];
         $objPackageList->getData()->Each(static function(PackageLineModel $currPackageLine) use (&$productIds) {
@@ -584,7 +620,7 @@ class IndexController extends CartController
         $objProducts = new Products();
         $productResult = $objProducts->getWhereIn("product_id", $productIds);
 
-        $objPackages->getData()->Foreach(static function(PackageModel $currPackage) use ($productResult) {
+        $objPackageVariations->getData()->Foreach(static function(PackageModel $currPackage) use ($productResult) {
 
             if (empty($currPackage->line)) { return; }
 
@@ -609,7 +645,7 @@ class IndexController extends CartController
         });
 
         $arPackageList = array(
-            "package" => $objPackages->getData()->first()->ToArray(),
+            "package" => $objPackageVariations->getData()->first()->ToArray(),
         );
 
         return $this->renderReturnJson(true, $arPackageList, "We found this.");
@@ -638,10 +674,23 @@ class IndexController extends CartController
         }
 
         $objWhereClause = "
-            SELECT p.*, peu.enduser_label, peu.description as enduser_desc
+            SELECT 
+                pv.package_variation_id,
+                pv.name as package_variation_name, 
+                pv.description as variation_desc, 
+                pv.type as variation_type, 
+                pv.promo_price as promo_price, 
+                pv.regular_price as regular_price, 
+                pv.image as variation_image_url, 
+                pv.order as variation_order,
+                CONCAT(p.order, '.', pv.order) as sortable_order,
+                p.*, 
+                peu.enduser_label, 
+                peu.description as enduser_desc
             FROM excell_main.package_class pc
             LEFT JOIN excell_main.package_class_rel pcr ON pc.package_class_id = pcr.package_class_id
             LEFT JOIN excell_main.package p ON pcr.package_id = p.package_id
+            LEFT JOIN excell_main.package_variation pv ON p.package_id = pv.package_id
             LEFT JOIN excell_main.product_enduser peu ON peu.product_enduser_id = p.enduser_id ";
 
         if (in_array($this->app->getActiveLoggedInUser()->user_id, [1002, 1003, 70726, 73837, 90999, 91003, 91015, 91014]))
@@ -653,13 +702,13 @@ class IndexController extends CartController
             $objWhereClause .= "WHERE p.company_id = {$customPlatformId} AND pc.name = '{$className}'$onlyEndUser";
         }
 
-        $objWhereClause .= " ORDER BY p.order ASC";
+        $objWhereClause .= " ORDER BY sortable_order ASC";
 
-        $objPackages = Database::getSimple($objWhereClause,"package_id");
+        $objPackages = Database::getSimple($objWhereClause,"package_variation_id");
         $objPackages->getData()->HydrateModelData(PackageModel::class, true);
 
-        $objPackageList = ( new PackageLines())->getWhereIn("package_id", $objPackages->getData()->FieldsToArray(["package_id"]));
-        $objPackages->getData()->HydrateChildModelData("line", ["package_id" => "package_id"], $objPackageList->data, false);
+        $objPackageList = ( new PackageLines())->getWhereIn("package_variation_id", $objPackages->getData()->FieldsToArray(["package_variation_id"]));
+        $objPackages->getData()->HydrateChildModelData("line", ["package_variation_id" => "package_variation_id"], $objPackageList->data, false);
 
         $productIds = [];
         $objPackageList->getData()->Each(static function(PackageLineModel $currPackageLine) use (&$productIds) {

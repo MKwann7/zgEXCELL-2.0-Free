@@ -1,10 +1,10 @@
 <?php
 
-namespace Http\Sharesave\Controllers\Api\V1;
+namespace Http\Talktome\Controllers\Api\V1;
 
-use Http\Sharesave\Controllers\Base\ShareSaveController;
+use Http\Talktome\Controllers\Base\TalkToMeController;
 
-class PublicFullPageController extends ShareSaveController
+class PublicFullPageController extends TalkToMeController
 {
 
 }

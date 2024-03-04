@@ -4,6 +4,8 @@
 
 namespace Stripe;
 
+use Stripe\Exception\ApiErrorException;
+
 /**
  * <code>ApplicationJs Fee Refund</code> objects allow you to refund an application
  * fee that has previously been created but not yet refunded. Funds will be
@@ -33,7 +35,7 @@ class ApplicationFeeRefund extends ApiResource
     /**
      * @return string the API URL for this Stripe refund
      */
-    public function instanceUrl()
+    public function instanceUrl(): string
     {
         $id = $this['id'];
         $fee = $this['fee'];
@@ -58,8 +60,9 @@ class ApplicationFeeRefund extends ApiResource
      * @param null|array|string $opts
      *
      * @return ApplicationFeeRefund the saved refund
+     * @throws ApiErrorException
      */
-    public function save($opts = null)
+    public function save($opts = null): ApplicationFeeRefund
     {
         return $this->_save($opts);
     }

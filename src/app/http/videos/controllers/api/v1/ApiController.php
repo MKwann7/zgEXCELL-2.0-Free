@@ -1,11 +1,11 @@
 <?php
 
-namespace Http\Gallery\Controllers\Api\V1;
+namespace Http\Videos\Controllers\Api\V1;
 
 use App\Utilities\Excell\ExcellHttpModel;
-use Http\Gallery\Controllers\Base\GalleryController;
+use Http\Videos\Controllers\Base\VideosController;
 
-class ApiController extends GalleryController
+class ApiController extends VideosController
 {
     public function configMain(ExcellHttpModel $objData) : bool
     {

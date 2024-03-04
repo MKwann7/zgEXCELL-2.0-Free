@@ -19,7 +19,7 @@ class AlipayAccount extends ApiResource
      * @return string The instance URL for this resource. It needs to be special
      *    cased because it doesn't fit into the standard resource pattern.
      */
-    public function instanceUrl()
+    public function instanceUrl(): string
     {
         if ($this['customer']) {
             $base = Customer::classUrl();
@@ -38,14 +38,14 @@ class AlipayAccount extends ApiResource
 
     /**
      * @param array|string $_id
-     * @param null|array|string $_opts
+     * @param array|string|null $_opts
      *
      * @throws \Stripe\Exception\BadMethodCallException
      *
      * @deprecated Alipay accounts are deprecated. Please use the sources API instead.
      * @see https://stripe.com/docs/sources/alipay
      */
-    public static function retrieve($_id, $_opts = null)
+    public static function retrieve(array|string $_id, array|string $_opts = null)
     {
         $msg = 'Alipay accounts cannot be retrieved without a customer ID. ' .
                'Retrieve an Alipay account using `Customer::retrieveSource(' .
@@ -55,16 +55,16 @@ class AlipayAccount extends ApiResource
     }
 
     /**
-     * @param string $_id
-     * @param null|array $_params
-     * @param null|array|string $_options
+     * @param string $id
+     * @param null|array $params
+     * @param null|array|string $options
      *
      * @throws \Stripe\Exception\BadMethodCallException
      *
      * @deprecated Alipay accounts are deprecated. Please use the sources API instead.
      * @see https://stripe.com/docs/sources/alipay
      */
-    public static function update($_id, $_params = null, $_options = null)
+    public static function update(string $id, array $params = null, array|string $options = null)
     {
         $msg = 'Alipay accounts cannot be updated without a customer ID. ' .
                'Update an Alipay account using `Customer::updateSource(' .

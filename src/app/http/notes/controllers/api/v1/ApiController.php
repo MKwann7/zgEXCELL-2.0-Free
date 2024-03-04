@@ -228,7 +228,7 @@ class ApiController extends NotesController
         return $this->requestNoteData($objWhereClause, $batchCount, $arFields, $strEnd);
     }
 
-    private function requestNoteData($whereclause, $batchCount, $arFields = [], $strEnd) : bool
+    private function requestNoteData(string $whereclause, int $batchCount, array $arFields = [], string $strEnd = "false") : bool
     {
         $appInstanceResult = Database::getSimple($whereclause, "note_id");
 

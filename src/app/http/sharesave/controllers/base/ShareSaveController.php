@@ -1,8 +1,10 @@
 <?php
 
-namespace http\sharesave\controllers\base;
+namespace Http\Sharesave\Controllers\Base;
 
-class ShareSaveController
+use App\Core\AppController;
+
+class ShareSaveController extends AppController
 {
 
 }

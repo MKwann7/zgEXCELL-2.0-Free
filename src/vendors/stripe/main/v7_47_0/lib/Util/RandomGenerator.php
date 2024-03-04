@@ -15,7 +15,7 @@ class RandomGenerator
      *
      * @return float
      */
-    public function randFloat($max = 1.0)
+    public function randFloat($max = 1.0): float
     {
         return \mt_rand() / \mt_getrandmax() * $max;
     }
@@ -25,7 +25,7 @@ class RandomGenerator
      *
      * @return string
      */
-    public function uuid()
+    public function uuid(): string
     {
         $arr = \array_values(\unpack('N1a/n4b/N1c', \openssl_random_pseudo_bytes(16)));
         $arr[2] = ($arr[2] & 0x0fff) | 0x4000;

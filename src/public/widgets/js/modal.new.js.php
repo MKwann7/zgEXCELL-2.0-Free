@@ -40,8 +40,9 @@ function ModalApp()
             let floatShield = _.getLastFloatShield();
             if (floatShield !== null)
             {
-                fadeNodeTo(floatShield, 150, 0, function(node) {
-                    node.parentNode.removeChild(node);
+                floatShield.classList.remove("activeModal")
+                fadeNodeTo(floatShield, 200, 0, function(node) {
+                    floatShield.remove()
                     let htmlTag = document.querySelectorAll("html")[0];
                     htmlTag.classList.remove('html-no-scroll');
                     if (typeof objCallback === 'function') {
@@ -52,64 +53,12 @@ function ModalApp()
         }, intTimeOutLength);
     }
 
-    this.EngagePopUpDialog = function (objDialogData, width, height, close, method, active, widget, callback)
-    {
-        if (!method) {
-            method = "default";
-        }
-
-        if (!objDialogData.html) {
-            objDialogData.html = ""; }
-
-        let intRandDomId = randomIntFromInterval(1000, 9999);
-        let closeActionVisibility = "display:none;";
-        if (typeof close === 'undefined' || close == null || close == true) {
-            closeActionVisibility = 'display:block;';
-        }
-
-        let closeAction = '<div style="right:16px;top:16px !important;' + closeActionVisibility + '" id="general-dialog-close" class="general-dialog-close" onclick="modal.CloseFloatShield(null);" title="Close Pop-Up Editor"></div>';;
-
-        let floatShield = _.getLastFloatShield();
-        let floatShieldInner = getChildOfNode(floatShield, ".vue-float-shield-inner");
-
-        let dialogBox = createNode("div", [".zgpopup-dialog-box", ("#zgpopup-dialog-box_" + intRandDomId), ("data-popupid=" + method), ("data-width=" + width)], '<div id="zgpopup-dialog-box-inner_' + intRandDomId + '" class="zgpopup-dialog-box-inner" data-popupid="' + method + '_inner" ><div class="zgpopup-dialog-header" data-popupid="' + method + '_header" ><h2 class="offset-slidedown-box pop-up-dialog-main-title"><span class="pop-up-dialog-main-title-text">' + objDialogData.title + '</span>' + closeAction + '</h2></div><div id="zgpopup-dialog-body" class="zgpopup-dialog-body" data-popupid="' + method + '_body"><div class="zgpopup-dialog-body-inner">' + objDialogData.html + '</div><div class="zgpopup-dialog-body-widget"><component ref="refDialogWidgetComponent" :is="dialogWidgetComponent"></component></div></div></div>');
-        dialogBox.style.width = width + "px";
-        dialogBox.style.position = "relative";
-        appendToNode(floatShieldInner, dialogBox)
-        if (active) {
-            setTimeout(function() {
-                floatShield.classList.add("activeModal");
-            },200);
-        }
-        if (typeof widget !== "undefined") {
-            const bodyWidget = getChildOfNode(dialogBox, ".zgpopup-dialog-body-widget")
-            const bodyWidgetId = "widget_" + intRandDomId;
-            bodyWidget.id = bodyWidgetId;
-            let vueModalWidget = new Vue({
-                el: '#' + bodyWidgetId,
-                data() {
-                    return {
-                        dialogWidgetComponent: null
-                    }
-                }
-            });
-            vueModalWidget.dialogWidgetComponent = widget.rawInstance;
-            if (typeof callback === "function") {
-                callback(dialogBox, widget, vueModalWidget);
-            }
-        } else {
-            if (typeof callback === "function") {
-                callback(dialogBox, widget);
-            }
-        }
-    }
-
-    this.EngagePopUpConfirmation = function(objDialogData, fnConfirm, width, height,  method)
+    this.EngagePopUpConfirmation = function(objDialogData, fnConfirm, width, height, method)
     {
         let intRandConfirmId = randomIntFromInterval(100, 999);
         let intRandCancelId = randomIntFromInterval(100, 999);
         objDialogData.html += '<div class="zgpopup-dialog-body-inner-append-fullwidth"><table style="width:100%;margin-top:10px;"><tbody><tr><td><button id="' + intRandConfirmId+'" class="btn btn-primary" style="width: 100%;">Continue</button></td><td style="width:5px;"></td><td><button id="'+intRandCancelId+'" class="btn" style="width: 100%;">Cancel</button></div></td></tr></tbody></table>';
-        _.EngagePopUpDialog(objDialogData, width, height, false, method);
+        _.EngagePopUpDialog(objDialogData, width, height, false, method, true);
 
         let touchEvent = 'ontouchstart' in window ? 'touchend' : 'click';
         elm(intRandConfirmId).addEventListener(touchEvent, function(event){ fnConfirm(event); });
@@ -126,10 +75,110 @@ function ModalApp()
         }
 
         objDialogData.html += '<div class="zgpopup-dialog-body-inner-append-fullwidth"><table style="width:100%;margin-top:10px;"><tbody><tr><td><button id="'+intRandConfirmId+'" class="btn btn-primary" style="width: 100%;">' + strContinueText +'</button></td></tr></tbody></table>';
-        _.EngagePopUpDialog(objDialogData, width, height, false, method);
+        _.EngagePopUpDialog(objDialogData, width, height, false, method, true);
 
         let touchEvent = 'ontouchstart' in window ? 'touchend' : 'click';
         elm(intRandConfirmId).addEventListener(touchEvent, function(event){ fnConfirm(event); });
+    }
+
+    this.EngagePopUpDialog = function (objDialogData, width, height, close, method, active, component, widget, callback)
+    {
+        if (!method) {
+            method = "default";
+        }
+
+        if (!objDialogData.html) {
+            objDialogData.html = ""; }
+
+        if (!objDialogData.class) {
+            objDialogData.class = "default"; }
+
+        let intRandDomId = randomIntFromInterval(1000, 9999);
+        let closeActionVisibility = "display:none;";
+        if (typeof close === 'undefined' || close == null || close == true) {
+            closeActionVisibility = 'display:block;';
+        }
+
+        let closeAction = '<div style="right:16px;top:16px !important;' + closeActionVisibility + '" id="general-dialog-close" class="general-dialog-close" onclick="modal.CloseFloatShield(null);" title="Close Pop-Up Editor"></div>';;
+
+        let floatShield = _.getLastFloatShield();
+        let floatShieldInner = getChildOfNode(floatShield, ".vue-float-shield-inner");
+
+        let dialogBox = createNode("div", [".zgpopup-dialog-box", ".dialog-theme-" + objDialogData.class, ("#zgpopup-dialog-box_" + intRandDomId), ("data-popupid=" + method), ("data-width=" + width)], '<div id="zgpopup-dialog-box-inner_' + intRandDomId + '" class="zgpopup-dialog-box-inner" data-popupid="' + method + '_inner" ><div class="zgpopup-dialog-header" data-popupid="' + method + '_header" ><h2 class="offset-slidedown-box pop-up-dialog-main-title"><span class="pop-up-dialog-main-title-text">' + objDialogData.title + '</span>' + closeAction + '</h2></div><div id="zgpopup-dialog-body" class="zgpopup-dialog-body" data-popupid="' + method + '_body"><div class="zgpopup-dialog-body-inner">' + objDialogData.html + '</div><div class="zgpopup-dialog-body-widget"><component ref="refDialogWidgetComponent" :is="dialogWidgetComponent"></component></div></div></div>');
+        dialogBox.style.width = width + "px";
+        dialogBox.style.position = "relative";
+        appendToNode(floatShieldInner, dialogBox)
+        if (active) {
+            setTimeout(function() {
+                floatShield.classList.add("activeModal");
+            },200);
+        }
+        if (typeof component !== "undefined") {
+            const bodyWidget = getChildOfNode(dialogBox, ".zgpopup-dialog-body-widget")
+            const bodyWidgetId = "widget_" + intRandDomId;
+
+            bodyWidget.id = bodyWidgetId;
+
+            let vueModalWidget = new Vue({
+                el: '#' + bodyWidgetId,
+                data() {
+                    return {
+                        dialogWidgetComponent: null
+                    }
+                }
+            });
+
+            vueModalWidget.dialogWidgetComponent = component.rawInstance
+            runPopUpCallback(dialogBox, vueModalWidget, widget, component, callback)
+
+        } else {
+            if (typeof callback === "function") {
+                callback(dialogBox, component)
+            }
+        }
+    }
+
+    const runPopUpCallback = function(dialogBox, vueModalWidget, widget, component, callback)
+    {
+        if (typeof vueModalWidget.$refs.refDialogWidgetComponent === "undefined") {
+            setTimeout(function() {
+                runPopUpCallback(dialogBox, vueModalWidget, widget, component, callback)
+            },10)
+            return;
+        }
+
+        let props = [];
+        if (widget) {
+            props = (widget.__props) ? widget.__props : widget._props;
+        }
+
+        if (widget && typeof vueModalWidget.$refs.refDialogWidgetComponent.hydrateComponent === "function") {
+            let propsCount = 0;
+            for (const key in props) {
+                propsCount++
+            }
+            if (propsCount > 0) {
+                for (const currPropLabel in props) {
+                    vueModalWidget.$refs.refDialogWidgetComponent[currPropLabel] = props[currPropLabel];
+                }
+                if (component.rawInstance) {
+                    if (!component.rawInstance.props) component.rawInstance.props = []
+                    for (let currPropLabel in props) {
+                        component.rawInstance.props[currPropLabel] = props[currPropLabel];
+                    }
+                }
+            }
+
+            if (component.rawInstance && component.rawInstance.props) {
+                for (let currPropLabel in component.rawInstance.props) {
+                    vueModalWidget.$refs.refDialogWidgetComponent[currPropLabel] = component.rawInstance.props[currPropLabel];
+                }
+            }
+            vueModalWidget.$refs.refDialogWidgetComponent.hydrateComponent(props, true)
+        }
+        if (typeof callback === "function") {
+            callback(dialogBox, component, vueModalWidget);
+        }
     }
 
     this.ShowCloseDialogOnLastModal = function()

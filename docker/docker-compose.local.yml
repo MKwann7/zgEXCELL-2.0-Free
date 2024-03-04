@@ -93,7 +93,6 @@ services:
       links:
          - db
    media:
-      hostname: media.excell.docker
       container_name: excell-media
       #image: excell_process:v1
       build:

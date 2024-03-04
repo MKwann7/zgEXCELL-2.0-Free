@@ -73,7 +73,7 @@ class Subscription extends ApiResource
         delete as protected _delete;
       }
 
-    public static function getSavedNestedResources()
+    public static function getSavedNestedResources(): ?Util\Set
     {
         static $savedNestedResources = null;
         if (null === $savedNestedResources) {
@@ -86,27 +86,27 @@ class Subscription extends ApiResource
     }
 
     /**
-     * @param null|array $params
-     * @param null|array|string $opts
-     *
-     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     * @param array|null $params
+     * @param array|string|null $opts
      *
      * @return \Stripe\Subscription the deleted subscription
+     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     *
      */
-    public function cancel($params = null, $opts = null)
+    public function cancel(array $params = null, array|string $opts = null): Subscription
     {
         return $this->_delete($params, $opts);
     }
 
     /**
-     * @param null|array $params
+     * @param array|null $params
      * @param null|array|string $opts
      *
+     * @return \Stripe\Subscription the updated subscription
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\Subscription the updated subscription
      */
-    public function deleteDiscount($params = null, $opts = null)
+    public function deleteDiscount(array $params = null, $opts = null): Subscription
     {
         $url = $this->instanceUrl() . '/discount';
         list($response, $opts) = $this->_request('delete', $url, $params, $opts);

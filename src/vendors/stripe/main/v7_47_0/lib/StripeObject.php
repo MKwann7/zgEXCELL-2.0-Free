@@ -2,37 +2,45 @@
 
 namespace Stripe;
 
+use Stripe\Util\Set;
+
 /**
  * Class StripeObject.
  */
 class StripeObject implements \ArrayAccess, \Countable, \JsonSerializable
 {
-    /** @var Util\RequestOptions */
-    protected $_opts;
+    protected Util\RequestOptions $_opts;
 
-    /** @var array */
-    protected $_originalValues;
+    protected array $_originalValues;
 
-    /** @var array */
-    protected $_values;
+    protected array $_values;
 
-    /** @var Util\Set */
-    protected $_unsavedValues;
+    protected Util\Set $_unsavedValues;
 
-    /** @var Util\Set */
-    protected $_transientValues;
+    protected Util\Set $_transientValues;
 
-    /** @var null|array */
-    protected $_retrieveOptions;
+    protected null|array $_retrieveOptions;
 
-    /** @var null|ApiResponse */
-    protected $_lastResponse;
+    protected null|ApiResponse $_lastResponse;
+
+    public function __construct($id = null, $opts = null)
+    {
+        list($id, $this->_retrieveOptions) = Util\Util::normalizeId($id);
+        $this->_opts = Util\RequestOptions::parse($opts);
+        $this->_originalValues = [];
+        $this->_values = [];
+        $this->_unsavedValues = new Util\Set();
+        $this->_transientValues = new Util\Set();
+        if (null !== $id) {
+            $this->_values['id'] = $id;
+        }
+    }
 
     /**
-     * @return Util\Set Attributes that should not be sent to the API because
+     * @return Set|null Attributes that should not be sent to the API because
      *    they're not updatable (e.g. ID).
      */
-    public static function getPermanentAttributes()
+    public static function getPermanentAttributes(): Util\Set|null
     {
         static $permanentAttributes = null;
         if (null === $permanentAttributes) {
@@ -93,9 +101,9 @@ class StripeObject implements \ArrayAccess, \Countable, \JsonSerializable
      * and lets us behave correctly where appropriate when serializing
      * parameters to be sent.
      *
-     * @return Util\Set Set of additive parameters
+     * @return Set|null Set of additive parameters
      */
-    public static function getAdditiveParams()
+    public static function getAdditiveParams(): Set|null
     {
         static $additiveParams = null;
         if (null === $additiveParams) {
@@ -113,21 +121,8 @@ class StripeObject implements \ArrayAccess, \Countable, \JsonSerializable
         return $additiveParams;
     }
 
-    public function __construct($id = null, $opts = null)
-    {
-        list($id, $this->_retrieveOptions) = Util\Util::normalizeId($id);
-        $this->_opts = Util\RequestOptions::parse($opts);
-        $this->_originalValues = [];
-        $this->_values = [];
-        $this->_unsavedValues = new Util\Set();
-        $this->_transientValues = new Util\Set();
-        if (null !== $id) {
-            $this->_values['id'] = $id;
-        }
-    }
-
     // Standard accessor magic methods
-    public function __set($k, $v)
+    public function __set($k, $v): void
     {
         if (static::getPermanentAttributes()->includes($k)) {
             throw new Exception\InvalidArgumentException(
@@ -149,11 +144,19 @@ class StripeObject implements \ArrayAccess, \Countable, \JsonSerializable
         $this->_unsavedValues->add($k);
     }
 
+    /**
+     * @param $k
+     * @return bool
+     */
     public function __isset($k)
     {
         return isset($this->_values[$k]);
     }
 
+    /**
+     * @param $k
+     * @return void
+     */
     public function __unset($k)
     {
         unset($this->_values[$k]);
@@ -161,6 +164,10 @@ class StripeObject implements \ArrayAccess, \Countable, \JsonSerializable
         $this->_unsavedValues->discard($k);
     }
 
+    /**
+     * @param $k
+     * @return mixed|null
+     */
     public function &__get($k)
     {
         // function should return a reference, using $nullval to return a reference to null
@@ -188,44 +195,76 @@ class StripeObject implements \ArrayAccess, \Countable, \JsonSerializable
     }
 
     // Magic method for var_dump output. Only works with PHP >= 5.6
+
+    /**
+     * @return array
+     */
     public function __debugInfo()
     {
         return $this->_values;
     }
 
     // ArrayAccess methods
-    public function offsetSet($k, $v)
+
+    /**
+     * @param $k
+     * @param $v
+     * @return void
+     */
+    public function offsetSet($k, $v): void
     {
         $this->{$k} = $v;
     }
 
-    public function offsetExists($k)
+    /**
+     * @param $k
+     * @return bool
+     */
+    public function offsetExists($k): bool
     {
         return \array_key_exists($k, $this->_values);
     }
 
-    public function offsetUnset($k)
+    /**
+     * @param $k
+     * @return void
+     */
+    public function offsetUnset($k): void
     {
         unset($this->{$k});
     }
 
-    public function offsetGet($k)
+    /**
+     * @param $k
+     * @return mixed
+     */
+    public function offsetGet($k): mixed
     {
         return \array_key_exists($k, $this->_values) ? $this->_values[$k] : null;
     }
 
     // Countable method
-    public function count()
+
+    /**
+     * @return int
+     */
+    public function count(): int
     {
         return \count($this->_values);
     }
 
-    public function keys()
+    /**
+     * @return array
+     */
+    public function keys(): array
     {
         return \array_keys($this->_values);
     }
 
-    public function values()
+    /**
+     * @return array
+     */
+    public function values(): array
     {
         return \array_values($this->_values);
     }
@@ -238,7 +277,7 @@ class StripeObject implements \ArrayAccess, \Countable, \JsonSerializable
      *
      * @return static the object constructed from the given values
      */
-    public static function constructFrom($values, $opts = null)
+    public static function constructFrom($values, $opts = null): static
     {
         $obj = new static(isset($values['id']) ? $values['id'] : null);
         $obj->refreshFrom($values, $opts);
@@ -253,7 +292,7 @@ class StripeObject implements \ArrayAccess, \Countable, \JsonSerializable
      * @param null|array|string|Util\RequestOptions $opts
      * @param bool $partial defaults to false
      */
-    public function refreshFrom($values, $opts, $partial = false)
+    public function refreshFrom(array $values, null|array|string|Util\RequestOptions $opts, bool $partial = false): void
     {
         $this->_opts = Util\RequestOptions::parse($opts);
 
@@ -290,7 +329,7 @@ class StripeObject implements \ArrayAccess, \Countable, \JsonSerializable
      * @param null|array|string|Util\RequestOptions $opts
      * @param bool $dirty defaults to true
      */
-    public function updateAttributes($values, $opts = null, $dirty = true)
+    public function updateAttributes(array $values, Util\RequestOptions|array|string $opts = null, bool $dirty = true): void
     {
         foreach ($values as $k => $v) {
             // Special-case metadata to always be cast as a StripeObject
@@ -315,7 +354,7 @@ class StripeObject implements \ArrayAccess, \Countable, \JsonSerializable
      * @return array a recursive mapping of attributes to values for this object,
      *    including the proper value for deleted attributes
      */
-    public function serializeParameters($force = false)
+    public function serializeParameters(bool $force = false): array
     {
         $updateParams = [];
 
@@ -343,16 +382,22 @@ class StripeObject implements \ArrayAccess, \Countable, \JsonSerializable
 
         // a `null` that makes it out of `serializeParamsValue` signals an empty
         // value that we shouldn't appear in the serialized form of the object
-        $updateParams = \array_filter(
+        return \array_filter(
             $updateParams,
             function ($v) {
                 return null !== $v;
             }
         );
-
-        return $updateParams;
     }
 
+    /**
+     * @param $value
+     * @param $original
+     * @param $unsaved
+     * @param $force
+     * @param $key
+     * @return array|string|ApiResource|void|null
+     */
     public function serializeParamsValue($value, $original, $unsaved, $force, $key = null)
     {
         // The logic here is that essentially any object embedded in another
@@ -407,7 +452,7 @@ class StripeObject implements \ArrayAccess, \Countable, \JsonSerializable
                 }
             } else {
                 // Associative array, i.e. a map
-                return Util\Util::convertToStripeObject($value, $this->_opts)->serializeParameters();
+                return Util\Util::convertToStripeObject($value, (array)$this->_opts)->serializeParameters();
             }
         } elseif ($value instanceof StripeObject) {
             $update = $value->serializeParameters($force);
@@ -421,7 +466,10 @@ class StripeObject implements \ArrayAccess, \Countable, \JsonSerializable
         }
     }
 
-    public function jsonSerialize()
+    /**
+     * @return array
+     */
+    public function jsonSerialize(): array
     {
         return $this->toArray();
     }
@@ -432,7 +480,7 @@ class StripeObject implements \ArrayAccess, \Countable, \JsonSerializable
      *
      * @return array the associative array
      */
-    public function toArray()
+    public function toArray(): array
     {
         $maybeToArray = function ($value) {
             if (null === $value) {
@@ -443,7 +491,7 @@ class StripeObject implements \ArrayAccess, \Countable, \JsonSerializable
         };
 
         return \array_reduce(\array_keys($this->_values), function ($acc, $k) use ($maybeToArray) {
-            if ('_' === \substr((string) $k, 0, 1)) {
+            if (str_starts_with((string)$k, '_')) {
                 return $acc;
             }
             $v = $this->_values[$k];
@@ -462,11 +510,14 @@ class StripeObject implements \ArrayAccess, \Countable, \JsonSerializable
      *
      * @return string the JSON representation of the Stripe object
      */
-    public function toJSON()
+    public function toJSON(): string
     {
         return \json_encode($this->toArray(), \JSON_PRETTY_PRINT);
     }
 
+    /**
+     * @return string
+     */
     public function __toString()
     {
         $class = \get_class($this);
@@ -480,7 +531,7 @@ class StripeObject implements \ArrayAccess, \Countable, \JsonSerializable
      * method is also recursive, so any StripeObjects contained as values or
      * which are values in a tenant array are also marked as dirty.
      */
-    public function dirty()
+    public function dirty(): void
     {
         $this->_unsavedValues = new Util\Set(\array_keys($this->_values));
         foreach ($this->_values as $k => $v) {
@@ -488,7 +539,11 @@ class StripeObject implements \ArrayAccess, \Countable, \JsonSerializable
         }
     }
 
-    protected function dirtyValue($value)
+    /**
+     * @param $value
+     * @return void
+     */
+    protected function dirtyValue($value): void
     {
         if (\is_array($value)) {
             foreach ($value as $v) {
@@ -504,8 +559,9 @@ class StripeObject implements \ArrayAccess, \Countable, \JsonSerializable
      * and StripeObjects.
      *
      * @param mixed $obj
+     * @return mixed
      */
-    protected static function deepCopy($obj)
+    protected static function deepCopy(mixed $obj): mixed
     {
         if (\is_array($obj)) {
             $copy = [];
@@ -530,8 +586,9 @@ class StripeObject implements \ArrayAccess, \Countable, \JsonSerializable
      * StripeObject.
      *
      * @param mixed $obj
+     * @return array
      */
-    public static function emptyValues($obj)
+    public static function emptyValues(mixed $obj): array
     {
         if (\is_array($obj)) {
             $values = $obj;
@@ -549,7 +606,7 @@ class StripeObject implements \ArrayAccess, \Countable, \JsonSerializable
     /**
      * @return null|ApiResponse The last response from the Stripe API
      */
-    public function getLastResponse()
+    public function getLastResponse(): ApiResponse|null
     {
         return $this->_lastResponse;
     }
@@ -559,7 +616,7 @@ class StripeObject implements \ArrayAccess, \Countable, \JsonSerializable
      *
      * @param ApiResponse $resp
      */
-    public function setLastResponse($resp)
+    public function setLastResponse(ApiResponse $resp): void
     {
         $this->_lastResponse = $resp;
     }
@@ -571,8 +628,8 @@ class StripeObject implements \ArrayAccess, \Countable, \JsonSerializable
      *
      * @return bool whether the resource is deleted
      */
-    public function isDeleted()
+    public function isDeleted(): bool
     {
-        return isset($this->_values['deleted']) ? $this->_values['deleted'] : false;
+        return $this->_values['deleted'] ?? false;
     }
 }

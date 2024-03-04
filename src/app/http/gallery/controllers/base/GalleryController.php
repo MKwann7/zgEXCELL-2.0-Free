@@ -1,10 +1,10 @@
 <?php
 
-namespace Http\Blog\Controllers\Base;
+namespace Http\Gallery\Controllers\Base;
 
 use App\Core\AppController;
 
-class BlogController extends AppController
+class GalleryController extends AppController
 {
     public function __construct($app)
     {

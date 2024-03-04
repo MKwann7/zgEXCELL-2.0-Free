@@ -4,6 +4,8 @@
 
 namespace Stripe;
 
+use Stripe\Exception\ApiErrorException;
+
 /**
  * A <code>Transfer</code> object is created when you move funds between Stripe
  * accounts as part of Connect.
@@ -52,14 +54,14 @@ class Transfer extends ApiResource
     const SOURCE_TYPE_FINANCING = 'financing';
 
     /**
-     * @param null|array $params
-     * @param null|array|string $opts
-     *
-     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     * @param array|null $params
+     * @param array|string|null $opts
      *
      * @return Transfer the canceled transfer
+     *@throws \Stripe\Exception\ApiErrorException if the request fails
+     *
      */
-    public function cancel($params = null, $opts = null)
+    public function cancel(array $params = null, array|string $opts = null): static
     {
         $url = $this->instanceUrl() . '/cancel';
         list($response, $opts) = $this->_request('post', $url, $params, $opts);
@@ -72,28 +74,27 @@ class Transfer extends ApiResource
 
     /**
      * @param string $id the ID of the transfer on which to retrieve the transfer reversals
-     * @param null|array $params
-     * @param null|array|string $opts
+     * @param null $params
+     * @param null $opts
      *
-     * @throws \Stripe\Exception\ApiErrorException if the request fails
-     *
-     * @return \Stripe\Collection the list of transfer reversals
+     * @return Collection|StripeObject the list of transfer reversals
+     * @throws ApiErrorException if the request fails
      */
-    public static function allReversals($id, $params = null, $opts = null)
+    public static function allReversals(string $id, $params = null, $opts = null): Collection|StripeObject
     {
         return self::_allNestedResources($id, static::PATH_REVERSALS, $params, $opts);
     }
 
     /**
      * @param string $id the ID of the transfer on which to create the transfer reversal
-     * @param null|array $params
-     * @param null|array|string $opts
+     * @param array|null $params
+     * @param array|string|null $opts
      *
-     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     * @return StripeObject|TransferReversal
+     *@throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\TransferReversal
      */
-    public static function createReversal($id, $params = null, $opts = null)
+    public static function createReversal(string $id, array $params = null, array|string $opts = null): StripeObject|TransferReversal
     {
         return self::_createNestedResource($id, static::PATH_REVERSALS, $params, $opts);
     }
@@ -101,14 +102,14 @@ class Transfer extends ApiResource
     /**
      * @param string $id the ID of the transfer to which the transfer reversal belongs
      * @param string $reversalId the ID of the transfer reversal to retrieve
-     * @param null|array $params
-     * @param null|array|string $opts
+     * @param array|null $params
+     * @param array|string|null $opts
      *
-     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     * @return StripeObject|TransferReversal
+     *@throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\TransferReversal
      */
-    public static function retrieveReversal($id, $reversalId, $params = null, $opts = null)
+    public static function retrieveReversal(string $id, string $reversalId, array $params = null, array|string $opts = null): StripeObject|TransferReversal
     {
         return self::_retrieveNestedResource($id, static::PATH_REVERSALS, $reversalId, $params, $opts);
     }
@@ -116,14 +117,14 @@ class Transfer extends ApiResource
     /**
      * @param string $id the ID of the transfer to which the transfer reversal belongs
      * @param string $reversalId the ID of the transfer reversal to update
-     * @param null|array $params
-     * @param null|array|string $opts
+     * @param array|null $params
+     * @param array|string|null $opts
      *
-     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     * @return StripeObject|TransferReversal
+     *@throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\TransferReversal
      */
-    public static function updateReversal($id, $reversalId, $params = null, $opts = null)
+    public static function updateReversal(string $id, string $reversalId, array $params = null, array|string $opts = null): StripeObject|TransferReversal
     {
         return self::_updateNestedResource($id, static::PATH_REVERSALS, $reversalId, $params, $opts);
     }

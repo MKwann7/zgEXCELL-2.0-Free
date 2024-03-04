@@ -1,11 +1,11 @@
 <?php
 
-namespace Http\Talktome\Controllers\Api\V1;
+namespace Http\Contactme\Controllers\Api\V1;
 
 use App\Utilities\Excell\ExcellHttpModel;
-use Http\Talktome\Controllers\Base\TalkToMeController;
+use Http\Contactme\Controllers\Base\ContactMeController;
 
-class ApiController extends TalkToMeController
+class ApiController extends ContactMeController
 {
     public function configMain(ExcellHttpModel $objData) : bool
     {

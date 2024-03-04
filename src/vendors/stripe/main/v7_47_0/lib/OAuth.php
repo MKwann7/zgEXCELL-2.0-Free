@@ -2,6 +2,8 @@
 
 namespace Stripe;
 
+use Stripe\Exception\AuthenticationException;
+
 abstract class OAuth
 {
     /**
@@ -11,8 +13,9 @@ abstract class OAuth
      * @param null|array $opts
      *
      * @return string the URL to Stripe's OAuth form
+     * @throws AuthenticationException
      */
-    public static function authorizeUrl($params = null, $opts = null)
+    public static function authorizeUrl($params = null, $opts = null): string
     {
         $params = $params ?: [];
 
@@ -31,14 +34,14 @@ abstract class OAuth
      * Use an authoriztion code to connect an account to your platform and
      * fetch the user's credentials.
      *
-     * @param null|array $params
-     * @param null|array $opts
-     *
-     * @throws \Stripe\Exception\OAuth\OAuthErrorException if the request fails
+     * @param array|null $params
+     * @param array|null $opts
      *
      * @return StripeObject object containing the response from the API
+     *@throws \Stripe\Exception\OAuth\OAuthErrorException|Exception\ApiErrorException if the request fails
+     *
      */
-    public static function token($params = null, $opts = null)
+    public static function token(array $params = null, array $opts = null): StripeObject
     {
         $base = ($opts && \array_key_exists('connect_base', $opts)) ? $opts['connect_base'] : Stripe::$connectBase;
         $requestor = new ApiRequestor(null, $base);
@@ -55,14 +58,14 @@ abstract class OAuth
     /**
      * Disconnects an account from your platform.
      *
-     * @param null|array $params
-     * @param null|array $opts
-     *
-     * @throws \Stripe\Exception\OAuth\OAuthErrorException if the request fails
+     * @param array|null $params
+     * @param array|null $opts
      *
      * @return StripeObject object containing the response from the API
+     * @throws \Stripe\Exception\OAuth\OAuthErrorException if the request fails
+     *
      */
-    public static function deauthorize($params = null, $opts = null)
+    public static function deauthorize(array $params = null, array $opts = null): StripeObject
     {
         $params = $params ?: [];
         $base = ($opts && \array_key_exists('connect_base', $opts)) ? $opts['connect_base'] : Stripe::$connectBase;
@@ -78,7 +81,7 @@ abstract class OAuth
         return Util\Util::convertToStripeObject($response->json, $opts);
     }
 
-    private static function _getClientId($params = null)
+    private static function _getClientId($params = null): mixed
     {
         $clientId = ($params && \array_key_exists('client_id', $params)) ? $params['client_id'] : null;
         if (null === $clientId) {

@@ -4,6 +4,8 @@
 
 namespace Stripe\Terminal;
 
+use Stripe\ApiOperations\Create;
+
 /**
  * A Connection Token is used by the Stripe Terminal SDK to connect to a reader.
  *
@@ -19,5 +21,5 @@ class ConnectionToken extends \Stripe\ApiResource
 {
     const OBJECT_NAME = 'terminal.connection_token';
 
-    use \Stripe\ApiOperations\Create;
+    use Create;
 }

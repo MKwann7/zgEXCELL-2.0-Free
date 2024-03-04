@@ -3,13 +3,30 @@
 namespace Http\Directories\Controllers\Api\V1;
 
 use App\Utilities\Database;
+use App\Utilities\Excell\ExcellCollection;
 use App\Utilities\Excell\ExcellHttpModel;
 use App\Utilities\Http\Http;
 use App\Utilities\Transaction\ExcellTransaction;
+use Entities\Cards\Classes\Cards;
+use Entities\Cards\Models\CardModel;
+use Entities\Cart\Classes\CartEmails;
+use Entities\Cart\Classes\CartProcess;
+use Entities\Cart\Classes\CartTicketProcess;
+use Entities\Cart\Classes\Factories\CartPurchaseFactory;
 use Entities\Directories\Classes\Directories;
 use Entities\Directories\Classes\DirectoryMemberRels;
+use Entities\Directories\Classes\DirectoryPackages;
+use Entities\Directories\Classes\DirectorySettings;
+use Entities\Directories\Classes\Factories\DirectoryMemberRelFactory;
+use Entities\Directories\Models\DirectoryMemberRelModel;
 use Entities\Emails\Classes\Emails;
 use Entities\Media\Classes\Images;
+use Entities\Products\Classes\ProductProcessor;
+use Entities\Users\Classes\Connections;
+use Entities\Users\Classes\Factories\PersonaFactory;
+use Entities\Users\Classes\Factories\UserFactory;
+use Entities\Users\Classes\Users;
+use Entities\Users\Models\UserModel;
 use Http\Directories\Controllers\Base\DirectoryController;
 
 class PublicFullPageController extends DirectoryController
@@ -184,7 +201,8 @@ class PublicFullPageController extends DirectoryController
                     $currField->file,
                     $currField->member_directory_record_id,
                     "ezcarddirectorymemberrecords",
-                    $currField->label . "_" . $currField->member_directory_column_id);
+                    $currField->label . "_" . $currField->member_directory_column_id
+                );
 
                 if ($objImageResult->getResult()->Success === false)
                 {
@@ -237,32 +255,42 @@ class PublicFullPageController extends DirectoryController
         return $recordColumn->type;
     }
 
-    public function getDirectoryRecords(ExcellHttpModel $objData) : bool
+    public function getDirectoryData(ExcellHttpModel $objData) : bool
     {
-        $objParamsForSync = $objData->Data->Params;
+        $objParams = $objData->Data->Params;
 
-        if (!$this->validate($objParamsForSync, [
+        if (!$this->validate($objParams, [
             "id" => "required|uuid"
         ]))
         {
             return $this->renderReturnJson(false, $this->validationErrors, "Validation errors.");
         }
 
-        $recordQuery = "SELECT emdr.* 
-            FROM ezdigital_v2_apps.ezcard_member_directory_record emdr 
-            LEFT JOIN ezdigital_v2_apps.ezcard_member_directory emd ON emd.member_directory_id = emdr.member_directory_id 
-            WHERE emd.instance_uuid = '" . $objParamsForSync["id"] . "';";
+        $directories = new Directories();
+        $directoryResult = $directories->getDirectoryPersonaRecordsByUuid($objParams["id"]);
 
-        $objDirectoryResult = Database::getSimple($recordQuery);
-
-        if ($objDirectoryResult->getResult()->Count === 0)
-        {
-            return $this->renderReturnJson(true, [], "No Rows Returned.");
+        if ($directoryResult->getResult()->Success === false) {
+            return $this->renderReturnJson(false, ["no_found" => "directory not found"], "No directory was found for this persona registration.");
         }
 
-        $objDirectoryResult->getData()->HydrateModelData(DirectoryMemberRels::class);
+        $personas = new ExcellCollection();
 
-        return $this->renderReturnJson(true, $objDirectoryResult->getData()->ToPublicArray(), "Here's what I got.");
+        if ($directoryResult->getData()->first()->personas !== null) {
+            /** @var ExcellCollection $personas */
+            $personas = $directoryResult->getData()->first()->personas->FindMatching(function(DirectoryMemberRelModel $currPersona) use ($objParams) {
+                if (strtolower($currPersona->status) === "active" || (strtolower($currPersona->status) === "pending" && $objParams["active"] == $currPersona->user_id)) {
+                    return $currPersona;
+                }
+            });
+        }
+
+        $directoryPackages = new DirectoryPackages();
+        $directoryPackageResult = $directoryPackages->getAllByDirectoryId($directoryResult->getData()->first()->directory_id);
+
+        $directorySettings = new DirectorySettings();
+        $directorySettingResult = $directorySettings->getWhere(["directory_id" => $directoryResult->getData()->first()->directory_id]);
+
+        return $this->renderReturnJson(true, ["personas" => $personas->ToPublicArray(), "packages" => $directoryPackageResult->getData()->ToPublicArray(), "settings" => $directorySettingResult->getData()->ToPublicArray(["label","value"])], "Here's what I got.");
     }
 
     public function createDirectoryRecord(ExcellHttpModel $objData) : bool
@@ -1003,33 +1031,6 @@ class PublicFullPageController extends DirectoryController
         );
     }
 
-    public function getDirectoryData(ExcellHttpModel $objData) : bool
-    {
-        $objParams = $objData->Data->Params;
-
-        if (!$this->validate($objParams, [
-            "id" => "required|uuid",
-        ]))
-        {
-            return $this->renderReturnJson(false, $this->validationErrors, "Validation errors.");
-        }
-
-        $objDirectoryResult = (new EzcardMemberDirectories())->getFullRecordByUuid($objParams["id"]);
-
-        $objDirectory = $objDirectoryResult->getData()->first();
-
-        return $this->renderReturnJson(true, [
-            "directoryName" => $objDirectory->defaults->FindEntityByValue("label", "directory_name")->value ?? "",
-            "directorySortBy" => $objDirectory->defaults->FindEntityByValue("label", "sort_by")->value ?? "first_name",
-            "directorySortOrder" => $objDirectory->defaults->FindEntityByValue("label", "sort_order")->value ?? "asc",
-            "directoryTemplate" => $objDirectory->template->member_directory_template_id ?? "1",
-            "directoryHeaderImage" => $objDirectory->defaults->FindEntityByValue("label", "header_image")->value ?? "",
-            "directoryHeaderText" => $objDirectory->defaults->FindEntityByValue("label", "header_html")->value ?? "",
-            "directoryFooterImage" => $objDirectory->defaults->FindEntityByValue("label", "footer_image")->value ?? "",
-            "directoryHexColor" => $objDirectory->defaults->FindEntityByValue("label", "main_color")->value ?? "",
-        ], "We got this.");
-    }
-
     public function saveDirectoryData(ExcellHttpModel $objData) : bool
     {
         $objParams = $objData->Data->Params;
@@ -1242,5 +1243,221 @@ class PublicFullPageController extends DirectoryController
         );
 
         return $this->renderReturnJson($objResult->getResult()->Success, $objResult->getData()->data, $objResult->getResult()->Message);
+    }
+
+    public function requestPasswordReset(ExcellHttpModel $objData) : bool
+    {
+        $objParams = $objData->Data->Params;
+
+        if (!$this->validate($objParams, [
+            "id" => "required|uuid",
+        ]))
+        {
+            return $this->renderReturnJson(false, $this->validationErrors, "Validation errors.");
+        }
+
+        $objResult = $this->callToEzcardApi("post", "/api/v1/modules/get-user-list", [
+                "module_id" => 12345,
+            ]
+        );
+
+        return $this->renderReturnJson($objResult->getResult()->Success, $objResult->getData()->data, $objResult->getResult()->Message);
+    }
+
+    public function createNewAccount(ExcellHttpModel $objData) : bool
+    {
+        if (!$this->validateRequestType('POST')) {
+            return false;
+        }
+
+        $objParams = $objData->Data->Params;
+        $objPost = $objData->Data->PostData;
+
+        if (!$this->validate($objParams, [
+            "id" => "required|uuid",
+        ]))
+        {
+            return $this->renderReturnJson(false, $this->validationErrors, "Validation errors.");
+        }
+
+        if (!$this->validate($objPost, [
+            "firstName" => "required",
+            "lastName" => "required",
+            "email" => "required",
+            "phone" => "required",
+            "password" => "required",
+        ]))
+        {
+            return $this->renderReturnJson(false, $this->validationErrors, "Validation errors.");
+        }
+
+        $directories = new Directories();
+        $directoryResult = $directories->getFullRecordByUuid($objParams["id"]);
+
+        if ($directoryResult->getResult()->Count === 0) {
+            return $this->renderReturnJson(false, ["not_found" => "directory not found."], "No directory by requested ID.");
+        }
+
+        $users = new Users();
+        $userEmailResult = $users->getByEmail($objPost->email);
+        $userPhoneResult = $users->getByPhone($objPost->phone);
+
+        if ($userEmailResult->getResult()->Count > 0) {
+            return $this->renderReturnJson(false, ["match_found" => "email"], "Email found for user.");
+        }
+
+        if ($userPhoneResult->getResult()->Count > 0) {
+            return $this->renderReturnJson(false, ["match_found" => "phone"], "Phone found for user.");
+        }
+
+        $userFactory = new UserFactory($this->app, new Users(), new Connections());
+        $objNewUserResult = $userFactory->createUserFromData(
+            $objPost->firstName,
+            $objPost->lastName,
+            $objPost->email,
+            $objPost->phone,
+            $objPost->username ?? $objPost->email,
+            $objPost->password,
+        );
+
+        if ($objNewUserResult->getResult()->Success === false) {
+            $this->renderReturnJson(false, $userFactory->getErrors(), $userFactory->getMessage());
+        }
+
+        $userFactory->processIntegrationsCreate($objNewUserResult->getData()->first());
+        $userArray = $userFactory->renderUserReturnArray($objNewUserResult->getData()->first(), $objPost->email, $objPost->phone);
+
+        return $this->renderReturnJson(true, ["user" => $userArray], $objNewUserResult->getResult()->Message);
+    }
+
+    public function registerForDirectory(ExcellHttpModel $objData) : bool
+    {
+        if (!$this->validateRequestType('POST')) {
+            return false;
+        }
+
+        $objParams = $objData->Data->Params;
+        $objPost = $objData->Data->PostData;
+
+        if (!$this->validate($objParams, [
+            "id" => "required|uuid",
+        ]))
+        {
+            return $this->renderReturnJson(false, $this->validationErrors, "Validation errors.");
+        }
+
+        if (!$this->validate($objPost, [
+            "email" => "required",
+            "password" => "required",
+        ]))
+        {
+            return $this->renderReturnJson(false, $this->validationErrors, "Validation errors.");
+        }
+
+        $users = new Users();
+        $userEmailResult = $users->getByEmailOrUserName($objPost->email, onlyAlphanumeric($objPost->email));
+
+        if ($userEmailResult->getResult()->Count === 0 || passwordCheck($objPost->password, $userEmailResult->getData()->first()->password) !== true) {
+            return $this->renderReturnJson(false, ["no_user_found" => "invalid email or username"], "No user by that email or username.");
+        }
+
+        $user = $userEmailResult->getData()->first();
+
+        $directories = new Directories();
+        $directoryResult = $directories->getFullRecordByUuid($objParams["id"]);
+
+        if ($directoryResult->getResult()->Count === 0) {
+            return $this->renderReturnJson(false, ["not_found" => "directory not found"], "No directory by requested ID.");
+        }
+
+        $userMatchRecord = $directories->findRegisteredUserId($user->user_id);
+
+        if ($userMatchRecord->getResult()->Count !== 0) {
+            $cards = new Cards();
+            $cardResult = $cards->getById($userMatchRecord->getData()->first()->persona_id);
+            /** @var CardModel $persona */
+            $persona = $cardResult->getData()->first();
+            $persona->LoadCardOwner();
+            $persona->LoadCardSettings();
+            return $this->renderReturnJson(
+                false,
+                [
+                    "already_registered" => "user is already registered",
+                    "user" => $user->ToPublicArray(),
+                    "persona" => $persona->ToArray(),
+                ],
+                "Your account is already registered for this directory."
+            );
+        }
+
+        $directoryRelFactory = new DirectoryMemberRelFactory($this->app, new Directories(), new DirectoryMemberRels());
+        //$directoryRelFactory->registerUser
+
+        $personaFactory = new PersonaFactory($this->app, new Users(), new Cards());
+        $personasResult = $personaFactory->getPersonasForDirectoryRegistration($user->user_id);
+
+        if ($personasResult->getResult()->Count === 0) {
+            $personaFactory->processFreePersonaPurchase($user->user_id, new CartPurchaseFactory(
+                new CartProcess(),
+                new ProductProcessor(),
+                new CartTicketProcess(),
+                new CartEmails(),
+                new Cards()
+            ));
+            $personasResult = $personaFactory->getPersonasForDirectoryRegistration($user->user_id);
+        }
+
+        $activePersonas = new ExcellCollection();
+        $personasResult->getData()->Foreach(function(CardModel $site) use (&$activePersonas) {
+            if ($site->status !== "Active" && $site->status !== "Build") {
+                return;
+            }
+            $site->LoadFullCard();
+            $activePersonas->Add($site);
+        });
+
+        return $this->renderReturnJson(true, ["personas" => $activePersonas->ToPublicArray(), "user" => $user->ToPublicArray()], $personasResult->getResult()->Message);
+    }
+
+    public function assignPersonaToDirectory(ExcellHttpModel $objData) : bool
+    {
+        if (!$this->validateRequestType('POST')) {
+            return false;
+        }
+
+        $objParams = $objData->Data->Params;
+
+        if (!$this->validate($objParams, [
+            "id" => "required|uuid",
+            "user" => "required|integer",
+            "persona" => "required|integer",
+        ]))
+        {
+            return $this->renderReturnJson(false, $this->validationErrors, "Validation errors.");
+        }
+
+        $directories = new Directories();
+        $directoryResult = $directories->getWhere(["instance_uuid" => $objParams["id"]]);
+
+        if ($directoryResult->getResult()->Count === 0) {
+            return $this->renderReturnJson(false, ["no_found" => "directory not found"], "No directory was found for this persona registration.");
+        }
+
+        $directoryRel = new DirectoryMemberRels();
+        $directoryRelResult = $directoryRel->getWhere(["persona_id" => $objParams["persona"]]);
+
+        if ($directoryRelResult->getResult()->Count !== 0) {
+            return $this->renderReturnJson(false, ["already_registered" => "persona is already registered"], "This persona is already registered.");
+        }
+
+        $directoryRelModel = new DirectoryMemberRelModel([
+            "user_id" => $objParams["user"],
+            "persona_id" => $objParams["persona"],
+            "directory_id" => $directoryResult->getData()->first()->directory_id,
+            "status" => "pending"
+        ]);
+        $result = $directoryRel->createNew($directoryRelModel);
+
+        return $this->renderReturnJson(true, [], "We did it.");
     }
 }

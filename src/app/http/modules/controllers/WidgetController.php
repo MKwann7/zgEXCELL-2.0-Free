@@ -49,7 +49,7 @@ class WidgetController extends ModulesController
 
         $configType = self::MainConfigType;
 
-        switch($objParams["type"])
+        switch($objParams["type"] ?? "page")
         {
             case "page":
                 $configType = self::PageConfigType; break;
@@ -72,6 +72,9 @@ class WidgetController extends ModulesController
 
         if (!empty($objParams["props"])) {
             $props = json_decode(base64_decode(str_replace("_","=", $objParams["props"])));
+            if ($props === false) {
+                $props = null;
+            }
         }
 
         if (!empty($objParams["site_id"])) {
@@ -89,15 +92,12 @@ class WidgetController extends ModulesController
         $localWidgets = (new LocalModuleWidgets())->getWidgets();
         $companyId = $this->app->objCustomPlatform->getCompanyId();
 
-        if ($this->getLocalWidgetCopy($moduleWidgetId, $userId, $companyId, $props))
-        {
+        if ($this->getLocalWidgetCopy($moduleWidgetId, $userId, $companyId, $props)) {
             return true;
         }
 
-        if (!empty($localWidgets[$moduleWidgetId]))
-        {
+        if (!empty($localWidgets[$moduleWidgetId])) {
             $moduleWidget = $localWidgets[$moduleWidgetId]->renderComponentForAjaxDelivery($props);
-
             $this->saveModuleWidgetInCash($moduleWidget, $moduleWidgetId, $userId, $companyId);
 
             return $this->getLocalWidgetConfiguration($moduleWidget);
@@ -108,44 +108,38 @@ class WidgetController extends ModulesController
 
     protected function saveModuleWidgetInCash($moduleWidget, $moduleWidgetId, $userId, $companyId)
     {
-        if (env("MODULE_WIDGET_CASH") === 'true' || env("MODULE_WIDGET_CASH") === 'refresh')
-        {
+        if (env("MODULE_WIDGET_CASH") === 'true' || env("MODULE_WIDGET_CASH") === 'refresh') {
             $storageLocation = APP_STORAGE . "modules/company/" . $companyId . "/user/" . $userId ."/" . $moduleWidgetId . ".widget";
 
             $fileStorageErrors = [];
 
-            if (!mkdir($concurrentDirectory = APP_STORAGE . "modules") && !is_dir($concurrentDirectory))
-            {
+            if (!is_dir($concurrentDirectory = APP_STORAGE . "modules") && !mkdir($concurrentDirectory)) {
                 logText("LocalWidgetRetrieval.log", "Unable to create Modules folder.");
                 $fileStorageErrors[] = "Unable to create Modules folder.";
             }
 
-            if (!mkdir($concurrentDirectory = APP_STORAGE . "modules/company") && !is_dir($concurrentDirectory))
-            {
+            if (!is_dir($concurrentDirectory = APP_STORAGE . "modules/company") && !mkdir($concurrentDirectory)) {
                 logText("LocalWidgetRetrieval.log", "Unable to create Modules/User folder.");
                 $fileStorageErrors[] = "Unable to create Modules/Company folder.";
             }
 
-            if (!mkdir($concurrentDirectory = APP_STORAGE . "modules/company/". $companyId) && !is_dir($concurrentDirectory))
-            {
+            if (!is_dir($concurrentDirectory = APP_STORAGE . "modules/company/". $companyId) && !mkdir($concurrentDirectory)) {
                 logText("LocalWidgetRetrieval.log", "Unable to create Modules/User folder.");
                 $fileStorageErrors[] = "Unable to create Modules/Company/Id folder.";
             }
 
-            if (!mkdir($concurrentDirectory = APP_STORAGE . "modules/company/". $companyId ."/user") && !is_dir($concurrentDirectory))
+            if (!is_dir($concurrentDirectory = APP_STORAGE . "modules/company/". $companyId ."/user") && !mkdir($concurrentDirectory))
             {
                 logText("LocalWidgetRetrieval.log", "Unable to create Modules/User folder.");
                 $fileStorageErrors[] = "Unable to create Modules/Company/Id/User folder.";
             }
 
-            if (!mkdir($concurrentDirectory = APP_STORAGE . "modules/company/". $companyId ."/user/" . $userId) && !is_dir($concurrentDirectory))
-            {
+            if (!is_dir($concurrentDirectory = APP_STORAGE . "modules/company/". $companyId ."/user/" . $userId) && !mkdir($concurrentDirectory)) {
                 logText("LocalWidgetRetrieval.log", "Unable to create Modules/User/UserId folder.");
                 $fileStorageErrors[] = "Unable to create Modules/Company/Id/User/UserId folder.";
             }
 
-            if (count($fileStorageErrors) === 0)
-            {
+            if (count($fileStorageErrors) === 0) {
                 $result = file_put_contents($storageLocation, base64_encode($moduleWidget));
             }
         }
@@ -174,12 +168,11 @@ class WidgetController extends ModulesController
     {
         $objConfigurationResults = $this->getConfigurationResults($moduleWidgetId, $type, $props);
 
-        if ($objConfigurationResults->getResult()->Success === false)
-        {
-            $this->renderReturnJson(false, $objConfigurationResults->result->Message);
+        if ($objConfigurationResults->getResult()->Success === false || $objConfigurationResults->getData()->first() === null) {
+            $this->renderReturnJson(false, $objConfigurationResults->getResult()->Message);
         }
 
-        return $this->renderReturnJson($objConfigurationResults->getResult()->Success ?? false, $objConfigurationResults->getData()->first()->widget, $objConfigurationResults->getResult()->Message ?? "Error", 200, "widget");
+        return $this->renderReturnJson($objConfigurationResults->getData()->first()->widget !== null ?? false, $objConfigurationResults->getData()->first()->widget, $objConfigurationResults->getData()->first()->widget !== null ? $objConfigurationResults->getResult()->Message : ($objConfigurationResults->getData()->first()), $objConfigurationResults->getData()->first()->widget !== null ? 200 : 500, "widget");
     }
 
     protected function getConfigurationResults($moduleWidgetId, $type, $props = null) : ExcellTransaction
@@ -187,8 +180,7 @@ class WidgetController extends ModulesController
         $objModuleApps = new ModuleApps();
         $objModuleWidgetResults = $objModuleApps->getLatestModuleAppsByUuid($moduleWidgetId);
 
-        if ($objModuleWidgetResults->result->Count === 0)
-        {
+        if ($objModuleWidgetResults->result->Count === 0) {
             return new ExcellTransaction(false, "Module Widget Not Found: " . $moduleWidgetId);
         }
 
@@ -234,7 +226,7 @@ class WidgetController extends ModulesController
 
         foreach($objCardWidgets->data as $moduleWidget)
         {
-            if (!in_array($moduleWidget->widget_instance_uuid, $moduleIds, true))
+            if (!in_array($moduleWidget->instance_uuid, $moduleIds, true))
             {
                 $this->renderReturnJson(false, "Error in module request.");
             }
@@ -255,7 +247,7 @@ class WidgetController extends ModulesController
                 $response->error = true;
                 $response->message = "Drat. There was an error loading this module: " . $objModuleWidgetResults->result->Message;
 
-                $modulesForCard->Add($moduleWidget->widget_instance_uuid, $response);
+                $modulesForCard->Add($moduleWidget->instance_uuid, $response);
 
                 continue;
             }
@@ -270,12 +262,12 @@ class WidgetController extends ModulesController
                 $response->error = true;
                 $response->message = "Oops! This module has no content to render!";
 
-                $modulesForCard->Add($moduleWidget->widget_instance_uuid, $response);
+                $modulesForCard->Add($moduleWidget->instance_uuid, $response);
 
                 continue;
             }
 
-            $modulesForCard->Add($moduleWidget->widget_instance_uuid, $response->data);
+            $modulesForCard->Add($moduleWidget->instance_uuid, $response->data);
         }
 
         return $this->renderReturnJson(true, $modulesForCard->ToPublicArray(null, true), "We did it!", 200);

@@ -14,11 +14,11 @@ abstract class Util
      * A list is defined as an array for which all the keys are consecutive
      * integers starting at 0. Empty arrays are considered to be lists.
      *
-     * @param array|mixed $array
+     * @param mixed $array
      *
      * @return bool true if the given object is a list
      */
-    public static function isList($array)
+    public static function isList(mixed $array): bool
     {
         if (!\is_array($array)) {
             return false;
@@ -36,18 +36,18 @@ abstract class Util
     /**
      * Converts a response from the Stripe API to the corresponding PHP object.
      *
-     * @param array $resp the response from the Stripe API
-     * @param array $opts
+     * @param array|string|null $resp the response from the Stripe API
+     * @param array|RequestOptions|null $opts
      *
-     * @return array|StripeObject
+     * @return StripeObject|array|string|null
      */
-    public static function convertToStripeObject($resp, $opts)
+    public static function convertToStripeObject(array|string|null $resp, array|null|RequestOptions $opts): StripeObject|array|string|null
     {
         $types = \Stripe\Util\ObjectTypes::mapping;
         if (self::isList($resp)) {
             $mapped = [];
             foreach ($resp as $i) {
-                \array_push($mapped, self::convertToStripeObject($i, $opts));
+                $mapped[] = self::convertToStripeObject($i, $opts);
             }
 
             return $mapped;
@@ -66,12 +66,12 @@ abstract class Util
     }
 
     /**
-     * @param mixed|string $value a string to UTF8-encode
+     * @param mixed $value a string to UTF8-encode
      *
-     * @return mixed|string the UTF8-encoded string, or the object passed in if
+     * @return mixed the UTF8-encoded string, or the object passed in if
      *    it wasn't a string
      */
-    public static function utf8($value)
+    public static function utf8(mixed $value): mixed
     {
         if (null === self::$isMbstringAvailable) {
             self::$isMbstringAvailable = \function_exists('mb_detect_encoding');
@@ -100,7 +100,7 @@ abstract class Util
      *
      * @return bool true if the strings are equal, false otherwise
      */
-    public static function secureCompare($a, $b)
+    public static function secureCompare(string $a, string $b): bool
     {
         if (null === self::$isHashEqualsAvailable) {
             self::$isHashEqualsAvailable = \function_exists('hash_equals');
@@ -130,7 +130,7 @@ abstract class Util
      *
      * @return mixed
      */
-    public static function objectsToIds($h)
+    public static function objectsToIds(mixed $h)
     {
         if ($h instanceof \Stripe\ApiResource) {
             return $h->id;
@@ -163,7 +163,7 @@ abstract class Util
      *
      * @return string
      */
-    public static function encodeParameters($params)
+    public static function encodeParameters(array $params): string
     {
         $flattenedParams = self::flattenParams($params);
         $pieces = [];
@@ -177,11 +177,11 @@ abstract class Util
 
     /**
      * @param array $params
-     * @param null|string $parentKey
+     * @param string|null $parentKey
      *
      * @return array
      */
-    public static function flattenParams($params, $parentKey = null)
+    public static function flattenParams(array $params, string $parentKey = null): array
     {
         $result = [];
 
@@ -228,7 +228,7 @@ abstract class Util
      *
      * @return string the URL-encoded string
      */
-    public static function urlEncode($key)
+    public static function urlEncode(string $key): string
     {
         $s = \urlencode((string) $key);
 
@@ -240,7 +240,7 @@ abstract class Util
         return \str_replace('%5D', ']', $s);
     }
 
-    public static function normalizeId($id)
+    public static function normalizeId(mixed $id): array
     {
         if (\is_array($id)) {
             $params = $id;
@@ -258,7 +258,7 @@ abstract class Util
      *
      * @return int current time in millis
      */
-    public static function currentTimeMillis()
+    public static function currentTimeMillis(): int
     {
         return (int) \round(\microtime(true) * 1000);
     }

@@ -32,9 +32,7 @@ header('Content-Type:text/css');
     max-height: 100vh;
 }
 .app-card {
-    /*width: 500px;*/
     display: block;
-    /*height: 890px;*/
     position: relative;
 }
 .app-main-comp-header {
@@ -113,7 +111,6 @@ header('Content-Type:text/css');
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 75px;
 }
 .vue-app-body {
     overflow:hidden;
@@ -325,6 +322,7 @@ header('Content-Type:text/css');
     height: 80px;
     width: 100%;
     justify-content: center;
+    white
 }
 
 .app-main-comp-nav ul li span.app-main-comp-nav-item {
@@ -476,7 +474,7 @@ header('Content-Type:text/css');
 body.theme_shade_light div.universal-float-shield {
     background: url(/website/images/LoadingIcon2.gif) no-repeat left 50% center / auto 35px,rgba(255,255,255,.4) ;
 }
-.theme_shade_light .zgpopup-dialog-box {
+.theme_shade_light .zgpopup-dialog-box.dialog-theme-default {
     background: #ffffff;
     background: linear-gradient(to bottom, #fff 0%, #eaeaea 100%);
     box-shadow: 0 0 10px #000000;
@@ -690,10 +688,6 @@ body.theme_shade_light div.universal-float-shield {
     height:100%;
 }
 
-.vue-app-body-component {
-    height:100%;
-}
-
 .app-page-content img {
     max-width:100%;
 }
@@ -737,9 +731,6 @@ body.theme_shade_light div.universal-float-shield {
     }
     .management-hub .app-main-comp-pages {
         max-height: calc(var(--vh) - (100vw * .565) - 70px);
-    }
-    .app-main-comp-footer {
-        height: 70px;
     }
     .app-main-comp-nav {
         padding: 5px 0;

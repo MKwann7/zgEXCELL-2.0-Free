@@ -1,44 +1,9 @@
 {
   "controllers": {
     "index": {
-      "models":["Task"],
+      "models":["Blog"],
       "verb":"ALL",
       "returnType":"DEFAULT"
-    },
-    "backup_existing_tab": {
-      "models":["Task"],
-      "verb":"POST",
-      "returnType":"AJAX"
-    },
-    "clone_card_connections": {
-      "models":["Task"],
-      "verb":"POST",
-      "returnType":"AJAX"
-    },
-    "clone_card_primary_image": {
-      "models":["Task"],
-      "verb":"POST",
-      "returnType":"AJAX"
-    },
-    "copy_all_tabs_to_card": {
-      "models":["Task"],
-      "verb":"POST",
-      "returnType":"AJAX"
-    },
-    "upgrade_customers_to_v2": {
-      "models":["Task"],
-      "verb":"POST",
-      "returnType":"AJAX"
-    },
-    "upgrade_cards_to_v2": {
-      "models":["Task"],
-      "verb":"POST",
-      "returnType":"AJAX"
-    },
-    "upgrade_connections_to_v2": {
-      "models":["Task"],
-      "verb":"GET",
-      "returnType":"DEFALT"
     }
   }
 }

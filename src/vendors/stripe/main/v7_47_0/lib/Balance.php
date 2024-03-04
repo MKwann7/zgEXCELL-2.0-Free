@@ -31,13 +31,13 @@ class Balance extends SingletonApiResource
     const OBJECT_NAME = 'balance';
 
     /**
-     * @param null|array|string $opts
-     *
-     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     * @param array|string|null $opts
      *
      * @return \Stripe\Balance
+     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     *
      */
-    public static function retrieve($opts = null)
+    public static function retrieve(array|string $opts = null): Balance
     {
         return self::_singletonRetrieve($opts);
     }

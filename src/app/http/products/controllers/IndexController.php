@@ -110,7 +110,7 @@ class IndexController extends ProductController
             (SELECT CONCAT(user.first_name, ' ', user.last_name) FROM `excell_main`.`user` WHERE user.user_id = card.owner_id LIMIT 1) AS card_owner_name,
             (SELECT CONCAT(user.first_name, ' ', user.last_name) FROM `excell_main`.`user` WHERE user.user_id = card.card_user_id LIMIT 1) AS card_user_name,
             (SELECT title FROM `excell_main`.`product` WHERE product.product_id = card.product_id LIMIT 1) AS product, 
-            (SELECT COUNT(*) FROM `excell_main`.`mobiniti_contact_group_rel` mcgr WHERE mcgr.card_id = card.card_id) AS card_contacts
+            (SELECT COUNT(*) FROM `excell_main`.`contact_card_rel` mcgr WHERE mcgr.card_id = card.card_id) AS card_contacts
             FROM excell_main.card ";
 
         if ($filterEntity !== null)

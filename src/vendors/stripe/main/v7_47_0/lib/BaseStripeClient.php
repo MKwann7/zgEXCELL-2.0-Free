@@ -2,6 +2,10 @@
 
 namespace Stripe;
 
+use Stripe\Exception\ApiErrorException;
+use Stripe\Exception\AuthenticationException;
+use Stripe\Util\RequestOptions;
+
 class BaseStripeClient implements StripeClientInterface
 {
     /** @var string default base URL for Stripe's API */
@@ -44,10 +48,10 @@ class BaseStripeClient implements StripeClientInterface
      * - files_base (string): the base URL for file creation requests. Defaults to
      *   {@link DEFAULT_FILES_BASE}.
      *
-     * @param array<string, mixed>|string $config the API key as a string, or an array containing
+     * @param string|array<string, mixed> $config the API key as a string, or an array containing
      *   the client configuration settings
      */
-    public function __construct($config = [])
+    public function __construct(array|string $config = [])
     {
         if (\is_string($config)) {
             $config = ['api_key' => $config];
@@ -71,7 +75,7 @@ class BaseStripeClient implements StripeClientInterface
      *
      * @return null|string the API key used by the client to send requests
      */
-    public function getApiKey()
+    public function getApiKey(): ?string
     {
         return $this->config['api_key'];
     }
@@ -81,7 +85,7 @@ class BaseStripeClient implements StripeClientInterface
      *
      * @return null|string the client ID used by the client in OAuth requests
      */
-    public function getClientId()
+    public function getClientId(): ?string
     {
         return $this->config['client_id'];
     }
@@ -91,7 +95,7 @@ class BaseStripeClient implements StripeClientInterface
      *
      * @return string the base URL for Stripe's API
      */
-    public function getApiBase()
+    public function getApiBase(): string
     {
         return $this->config['api_base'];
     }
@@ -101,7 +105,7 @@ class BaseStripeClient implements StripeClientInterface
      *
      * @return string the base URL for Stripe's OAuth API
      */
-    public function getConnectBase()
+    public function getConnectBase(): string
     {
         return $this->config['connect_base'];
     }
@@ -111,7 +115,7 @@ class BaseStripeClient implements StripeClientInterface
      *
      * @return string the base URL for Stripe's Files API
      */
-    public function getFilesBase()
+    public function getFilesBase(): string
     {
         return $this->config['files_base'];
     }
@@ -122,11 +126,13 @@ class BaseStripeClient implements StripeClientInterface
      * @param string $method the HTTP method
      * @param string $path the path of the request
      * @param array $params the parameters of the request
-     * @param array|\Stripe\Util\RequestOptions $opts the special modifiers of the request
+     * @param array|RequestOptions $opts the special modifiers of the request
      *
-     * @return \Stripe\StripeObject the object returned by Stripe's API
+     * @return StripeObject the object returned by Stripe's API
+     * @throws ApiErrorException
+     * @throws AuthenticationException
      */
-    public function request($method, $path, $params, $opts)
+    public function request($method, $path, $params, $opts): StripeObject
     {
         $opts = $this->defaultOpts->merge($opts, true);
         $baseUrl = $opts->apiBase ?: $this->getApiBase();
@@ -145,11 +151,13 @@ class BaseStripeClient implements StripeClientInterface
      * @param string $method the HTTP method
      * @param string $path the path of the request
      * @param array $params the parameters of the request
-     * @param array|\Stripe\Util\RequestOptions $opts the special modifiers of the request
+     * @param RequestOptions|array $opts the special modifiers of the request
      *
-     * @return \Stripe\Collection of ApiResources
+     * @return Collection of ApiResources
+     * @throws ApiErrorException
+     * @throws AuthenticationException
      */
-    public function requestCollection($method, $path, $params, $opts)
+    public function requestCollection(string $method, string $path, array $params, RequestOptions|array $opts): Collection
     {
         $obj = $this->request($method, $path, $params, $opts);
         if (!($obj instanceof \Stripe\Collection)) {
@@ -166,11 +174,11 @@ class BaseStripeClient implements StripeClientInterface
     /**
      * @param \Stripe\Util\RequestOptions $opts
      *
-     * @throws \Stripe\Exception\AuthenticationException
-     *
      * @return string
+     *@throws \Stripe\Exception\AuthenticationException
+     *
      */
-    private function apiKeyForRequest($opts)
+    private function apiKeyForRequest(RequestOptions $opts): string
     {
         $apiKey = $opts->apiKey ?: $this->getApiKey();
 
@@ -190,7 +198,7 @@ class BaseStripeClient implements StripeClientInterface
      *
      * @return array<string, mixed>
      */
-    private function getDefaultConfig()
+    private function getDefaultConfig(): array
     {
         return [
             'api_key' => null,
@@ -208,7 +216,7 @@ class BaseStripeClient implements StripeClientInterface
      *
      * @throws \Stripe\Exception\InvalidArgumentException
      */
-    private function validateConfig($config)
+    private function validateConfig(array $config)
     {
         // api_key
         if (null !== $config['api_key'] && !\is_string($config['api_key'])) {

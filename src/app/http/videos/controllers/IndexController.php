@@ -1,11 +1,11 @@
 <?php
 
-namespace Http\Gallery\Controllers;
+namespace Http\Videos\Controllers;
 
 use App\Utilities\Excell\ExcellHttpModel;
-use Http\Gallery\Controllers\Base\GalleryController;
+use Http\Videos\Controllers\Base\VideosController;
 
-class IndexController extends GalleryController
+class IndexController extends VideosController
 {
     public function index(ExcellHttpModel $objData) : bool
     {

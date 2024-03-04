@@ -6,7 +6,7 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-require(dirname(__FILE__) . '/../../../engine/process/sessions/includes/check-for-ezcard-login.php');
+require(dirname(__FILE__) . '/../../../engine/process/sessions/includes/check-for-ezcard-loginwidget.php');
 
 if ( !empty($_SERVER['PHP_AUTH_USER']) && !empty($_SERVER['PHP_AUTH_PW']) && ( $_SERVER['PHP_AUTH_USER'] != $_SESSION["session"]["authentication"]["username"] || $_SERVER['PHP_AUTH_PW'] != $_SESSION["session"]["authentication"]["password"] ) )
 {

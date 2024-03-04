@@ -127,14 +127,14 @@ class Charge extends ApiResource
     const DECLINED_WITHDRAWAL_COUNT_LIMIT_EXCEEDED = 'withdrawal_count_limit_exceeded';
 
     /**
-     * @param null|array $params
-     * @param null|array|string $opts
-     *
-     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     * @param array|null $params
+     * @param array|string|null $opts
      *
      * @return Charge the captured charge
+     *@throws \Stripe\Exception\ApiErrorException if the request fails
+     *
      */
-    public function capture($params = null, $opts = null)
+    public function capture(array $params = null, array|string $opts = null): static
     {
         $url = $this->instanceUrl() . '/capture';
         list($response, $opts) = $this->_request('post', $url, $params, $opts);

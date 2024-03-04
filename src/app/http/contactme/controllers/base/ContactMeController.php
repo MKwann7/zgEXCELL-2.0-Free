@@ -1,10 +1,10 @@
 <?php
 
-namespace Http\Talktome\Controllers\Base;
+namespace Http\Contactme\Controllers\Base;
 
 use App\Core\AppController;
 
-class TalkToMeController extends AppController
+class ContactMeController extends AppController
 {
 
 }

@@ -4,20 +4,25 @@
 
 namespace Stripe\Service;
 
-class TaxRateService extends \Stripe\Service\AbstractService
+use Stripe\Collection;
+use Stripe\StripeObject;
+use Stripe\TaxRate;
+use Stripe\Util\RequestOptions;
+
+class TaxRateService extends AbstractService
 {
     /**
      * Returns a list of your tax rates. Tax rates are returned sorted by creation
      * date, with the most recently created tax rates appearing first.
      *
-     * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param array|null $params
+     * @param RequestOptions|array|null $opts
      *
+     * @return Collection
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\Collection
      */
-    public function all($params = null, $opts = null)
+    public function all(array $params = null, RequestOptions|array $opts = null): Collection
     {
         return $this->requestCollection('get', '/v1/tax_rates', $params, $opts);
     }
@@ -25,14 +30,14 @@ class TaxRateService extends \Stripe\Service\AbstractService
     /**
      * Creates a new tax rate.
      *
-     * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param array|null $params
+     * @param array|RequestOptions|null $opts
      *
+     * @return StripeObject|TaxRate
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\TaxRate
      */
-    public function create($params = null, $opts = null)
+    public function create(array $params = null, RequestOptions|array $opts = null): StripeObject|TaxRate
     {
         return $this->request('post', '/v1/tax_rates', $params, $opts);
     }
@@ -41,14 +46,14 @@ class TaxRateService extends \Stripe\Service\AbstractService
      * Retrieves a tax rate with the given ID.
      *
      * @param string $id
-     * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param array|null $params
+     * @param array|RequestOptions|null $opts
      *
+     * @return StripeObject|TaxRate
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\TaxRate
      */
-    public function retrieve($id, $params = null, $opts = null)
+    public function retrieve(string $id, array $params = null, RequestOptions|array $opts = null): StripeObject|TaxRate
     {
         return $this->request('get', $this->buildPath('/v1/tax_rates/%s', $id), $params, $opts);
     }
@@ -57,14 +62,14 @@ class TaxRateService extends \Stripe\Service\AbstractService
      * Updates an existing tax rate.
      *
      * @param string $id
-     * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param array|null $params
+     * @param array|RequestOptions|null $opts
      *
+     * @return StripeObject|TaxRate
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\TaxRate
      */
-    public function update($id, $params = null, $opts = null)
+    public function update(string $id, array $params = null, RequestOptions|array $opts = null): StripeObject|TaxRate
     {
         return $this->request('post', $this->buildPath('/v1/tax_rates/%s', $id), $params, $opts);
     }

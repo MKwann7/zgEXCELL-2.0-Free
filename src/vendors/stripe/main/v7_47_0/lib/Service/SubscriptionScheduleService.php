@@ -4,19 +4,24 @@
 
 namespace Stripe\Service;
 
-class SubscriptionScheduleService extends \Stripe\Service\AbstractService
+use Stripe\Collection;
+use Stripe\StripeObject;
+use Stripe\SubscriptionSchedule;
+use Stripe\Util\RequestOptions;
+
+class SubscriptionScheduleService extends AbstractService
 {
     /**
      * Retrieves the list of your subscription schedules.
      *
-     * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param array|null $params
+     * @param RequestOptions|array|null $opts
      *
+     * @return Collection
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\Collection
      */
-    public function all($params = null, $opts = null)
+    public function all(array $params = null, RequestOptions|array $opts = null): Collection
     {
         return $this->requestCollection('get', '/v1/subscription_schedules', $params, $opts);
     }
@@ -28,14 +33,14 @@ class SubscriptionScheduleService extends \Stripe\Service\AbstractService
      * <code>active</code>.
      *
      * @param string $id
-     * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param array|null $params
+     * @param array|RequestOptions|null $opts
      *
+     * @return StripeObject|SubscriptionSchedule
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\SubscriptionSchedule
      */
-    public function cancel($id, $params = null, $opts = null)
+    public function cancel(string $id, array $params = null, RequestOptions|array $opts = null): StripeObject|SubscriptionSchedule
     {
         return $this->request('post', $this->buildPath('/v1/subscription_schedules/%s/cancel', $id), $params, $opts);
     }
@@ -44,14 +49,14 @@ class SubscriptionScheduleService extends \Stripe\Service\AbstractService
      * Creates a new subscription schedule object. Each customer can have up to 25
      * active or scheduled subscriptions.
      *
-     * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param array|null $params
+     * @param array|RequestOptions|null $opts
      *
+     * @return StripeObject|SubscriptionSchedule
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\SubscriptionSchedule
      */
-    public function create($params = null, $opts = null)
+    public function create(array $params = null, RequestOptions|array $opts = null): StripeObject|SubscriptionSchedule
     {
         return $this->request('post', '/v1/subscription_schedules', $params, $opts);
     }
@@ -65,14 +70,14 @@ class SubscriptionScheduleService extends \Stripe\Service\AbstractService
      * ID to the <code>released_subscription</code> property.
      *
      * @param string $id
-     * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param array|null $params
+     * @param array|RequestOptions|null $opts
      *
+     * @return StripeObject|SubscriptionSchedule
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\SubscriptionSchedule
      */
-    public function release($id, $params = null, $opts = null)
+    public function release(string $id, array $params = null, RequestOptions|array $opts = null): StripeObject|SubscriptionSchedule
     {
         return $this->request('post', $this->buildPath('/v1/subscription_schedules/%s/release', $id), $params, $opts);
     }
@@ -83,14 +88,14 @@ class SubscriptionScheduleService extends \Stripe\Service\AbstractService
      * subscription schedule creation.
      *
      * @param string $id
-     * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param array|null $params
+     * @param array|RequestOptions|null $opts
      *
+     * @return StripeObject|SubscriptionSchedule
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\SubscriptionSchedule
      */
-    public function retrieve($id, $params = null, $opts = null)
+    public function retrieve(string $id, array $params = null, RequestOptions|array $opts = null): StripeObject|SubscriptionSchedule
     {
         return $this->request('get', $this->buildPath('/v1/subscription_schedules/%s', $id), $params, $opts);
     }
@@ -99,14 +104,14 @@ class SubscriptionScheduleService extends \Stripe\Service\AbstractService
      * Updates an existing subscription schedule.
      *
      * @param string $id
-     * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param array|null $params
+     * @param array|RequestOptions|null $opts
      *
+     * @return StripeObject|SubscriptionSchedule
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\SubscriptionSchedule
      */
-    public function update($id, $params = null, $opts = null)
+    public function update(string $id, array $params = null, RequestOptions|array $opts = null): StripeObject|SubscriptionSchedule
     {
         return $this->request('post', $this->buildPath('/v1/subscription_schedules/%s', $id), $params, $opts);
     }

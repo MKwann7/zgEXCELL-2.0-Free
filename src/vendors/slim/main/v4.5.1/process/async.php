@@ -3,16 +3,20 @@
 // Uncomment if you want to allow posts from other domains
 // header('Access-Control-Allow-Origin: *');
 
-logText("Slim.Async.Process.log","START");
-
 require_once(__DIR__ . '/slim.php');
 
 $objLoggedInUser = $app->getActiveLoggedInUser();
 
+logText("Slim.SaveFile.Process.log","User: " . $objLoggedInUser->first_name ?? "");
+
+$slim = new Slim($app);
+
 // Get posted data, if something is wrong, exit
 try {
-    $images = Slim::getImages();
-    logText("Slim.Async.Process.log","images count = " . count($images));
+    $images = $slim
+        ->setFiles($_FILES)
+        ->setPost($_POST)
+        ->getImages();
 }
 catch (Exception $e) {
 
@@ -20,9 +24,7 @@ catch (Exception $e) {
     // ----------
     // Make sure you're running PHP version 5.6 or higher
 
-
-    logText("Slim.Async.Process.log","Error: " . $e);
-    Slim::outputJSON(array(
+    $slim->outputJSON(array(
         'status' => SlimStatus::FAILURE,
         'message' => 'Unknown'
     ));
@@ -38,7 +40,7 @@ if ($images === false) {
     // Make sure the name of the file input is "slim[]" or you have passed your custom
     // name to the getImages method above like this -> Slim::getImages("myFieldName")
 
-    Slim::outputJSON(array(
+    $slim->outputJSON(array(
         'status' => SlimStatus::FAILURE,
         'message' => 'No data posted'
     ));
@@ -49,8 +51,6 @@ if ($images === false) {
 // Should always be one image (when posting async), so we'll use the first on in the array (if available)
 $image = array_shift($images);
 
-logText("Slim.Async.Process.log","Image: " . $image["output"]["name"] ?? "");
-
 // Something was posted but no images were found
 if (!isset($image)) {
 
@@ -58,7 +58,7 @@ if (!isset($image)) {
     // ----------
     // Make sure you're running PHP version 5.6 or higher
 
-    Slim::outputJSON(array(
+    $slim->outputJSON(array(
         'status' => SlimStatus::FAILURE,
         'message' => 'No images found'
     ));
@@ -74,12 +74,10 @@ if (!isset($image['output']['data']) && !isset($image['input']['data'])) {
     // If you've set the data-post attribute make sure it contains the "output" value -> data-post="actions,output"
     // If you want to use the input data and have set the data-post attribute to include "input", replace the 'output' String above with 'input'
 
-    Slim::outputJSON(array(
+    $slim->outputJSON(array(
         'status' => SlimStatus::FAILURE,
         'message' => 'No image data'
     ));
-
-    logText("Slim.Async.Process.log","Image ERROR: No data for " . $image["output"]["name"] ?? "");
 
     return;
 }
@@ -110,7 +108,7 @@ if (isset($image['output']['data'])) {
     $intUserId = $objParams->user_id;
     $strClass = $objParams->class;
 
-    $input = Slim::saveFile($data, $name, $intEntityName, $intEntityId, $intUserId, $strClass, false);
+    $input = $slim->saveFile($data, $name, $intEntityName, $intEntityId, $intUserId, $strClass, false);
 }
 
 // if we've received input data (do the same as above but for input data)
@@ -137,7 +135,7 @@ if (isset($image['input']['data'])) {
     $intUserId = $objParams->user_id;
     $strClass = $objParams->class;
 
-    $input = Slim::saveFile($data, $name, $intEntityName, $intEntityId, $intUserId, $strClass, false);
+    $input = $slim->saveFile($data, $name, $intEntityName, $intEntityId, $intUserId, $strClass, false);
 }
 
 
@@ -172,6 +170,6 @@ else {
 
 
 // Return results as JSON String
-Slim::outputJSON($response);
+$slim->outputJSON($response);
 
 

@@ -1,10 +1,10 @@
 <?php
 
-namespace Http\Sharesave\Controllers\Base;
+namespace Http\Talktome\Controllers\Base;
 
 use App\Core\AppController;
 
-class ShareSaveController extends AppController
+class TalkToMeController extends AppController
 {
 
 }

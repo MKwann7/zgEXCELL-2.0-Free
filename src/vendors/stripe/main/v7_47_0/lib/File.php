@@ -52,29 +52,29 @@ class File extends ApiResource
         create as protected _create;
     }
 
-    public static function classUrl()
+    public static function classUrl(): string
     {
         return '/v1/files';
     }
 
     /**
      * @param null|array $params
-     * @param null|array|string $opts
-     *
-     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     * @param null|array|string $options
      *
      * @return \Stripe\File the created file
+     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     *
      */
-    public static function create($params = null, $opts = null)
+    public static function create(null|array $params = null, array|string $options = null): File
     {
-        $opts = \Stripe\Util\RequestOptions::parse($opts);
-        if (null === $opts->apiBase) {
-            $opts->apiBase = Stripe::$apiUploadBase;
+        $options = \Stripe\Util\RequestOptions::parse($options);
+        if (null === $options->apiBase) {
+            $options->apiBase = Stripe::$apiUploadBase;
         }
         // Manually flatten params, otherwise curl's multipart encoder will
         // choke on nested arrays.
         $flatParams = \array_column(\Stripe\Util\Util::flattenParams($params), 1, 0);
 
-        return static::_create($flatParams, $opts);
+        return static::_create($flatParams, $options);
     }
 }

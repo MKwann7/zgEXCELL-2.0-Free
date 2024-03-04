@@ -48,7 +48,7 @@ class CustomerBalanceTransaction extends ApiResource
     /**
      * @return string the API URL for this balance transaction
      */
-    public function instanceUrl()
+    public function instanceUrl(): string
     {
         $id = $this['id'];
         $customer = $this['customer'];
@@ -70,11 +70,11 @@ class CustomerBalanceTransaction extends ApiResource
 
     /**
      * @param array|string $_id
-     * @param null|array|string $_opts
+     * @param array|string|null $_opts
      *
      * @throws \Stripe\Exception\BadMethodCallException
      */
-    public static function retrieve($_id, $_opts = null)
+    public static function retrieve(array|string $_id, array|string $_opts = null)
     {
         $msg = 'Customer Balance Transactions cannot be retrieved without a ' .
                'customer ID. Retrieve a Customer Balance Transaction using ' .
@@ -86,12 +86,12 @@ class CustomerBalanceTransaction extends ApiResource
 
     /**
      * @param string $_id
-     * @param null|array $_params
-     * @param null|array|string $_options
+     * @param array|null $_params
+     * @param array|string|null $_options
      *
      * @throws \Stripe\Exception\BadMethodCallException
      */
-    public static function update($_id, $_params = null, $_options = null)
+    public static function update(string $_id, array $_params = null, array|string $_options = null)
     {
         $msg = 'Customer Balance Transactions cannot be updated without a ' .
                'customer ID. Update a Customer Balance Transaction using ' .

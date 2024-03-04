@@ -1,8 +1,10 @@
 <?php
 
-namespace http\blog\controllers\api\v1;
+namespace Http\Blog\Controllers\Api\V1;
 
-class PublicFullPageController extends \Http\Blog\Controllers\Base\BlogController
+use Http\Blog\Controllers\Base\BlogController;
+
+class PublicFullPageController extends BlogController
 {
 
 }

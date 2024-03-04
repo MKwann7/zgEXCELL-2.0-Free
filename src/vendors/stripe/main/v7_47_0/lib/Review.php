@@ -48,14 +48,14 @@ class Review extends ApiResource
     const REASON_RULE = 'rule';
 
     /**
-     * @param null|array $params
-     * @param null|array|string $opts
-     *
-     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     * @param array|null $params
+     * @param array|string|null $opts
      *
      * @return Review the approved review
+     *@throws \Stripe\Exception\ApiErrorException if the request fails
+     *
      */
-    public function approve($params = null, $opts = null)
+    public function approve(array $params = null, array|string $opts = null): static
     {
         $url = $this->instanceUrl() . '/approve';
         list($response, $opts) = $this->_request('post', $url, $params, $opts);

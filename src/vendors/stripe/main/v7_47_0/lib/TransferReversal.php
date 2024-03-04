@@ -44,7 +44,7 @@ class TransferReversal extends ApiResource
     /**
      * @return string the API URL for this Stripe transfer reversal
      */
-    public function instanceUrl()
+    public function instanceUrl(): string
     {
         $id = $this['id'];
         $transfer = $this['transfer'];
@@ -72,7 +72,7 @@ class TransferReversal extends ApiResource
      *
      * @return TransferReversal the saved reversal
      */
-    public function save($opts = null)
+    public function save($opts = null): TransferReversal
     {
         return $this->_save($opts);
     }

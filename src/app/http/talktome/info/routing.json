@@ -1,17 +1,17 @@
 {
   "controllers": {
     "index": {
-      "models":["ShareSave"],
+      "models":["TalkToMe"],
       "verb":"GET",
       "returnType":"DEFAULT"
     },
     "directory_data": {
-      "models":["ShareSave"],
+      "models":["TalkToMe"],
       "verb":"POST",
       "returnType":"AJAX"
     },
     "report_issue": {
-      "models":["ShareSave"],
+      "models":["TalkToMe"],
       "verb":"GET",
       "returnType":"DEFAULT"
     }

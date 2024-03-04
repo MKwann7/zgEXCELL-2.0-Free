@@ -1753,9 +1753,6 @@ body .fr-popup {
     height:100%;
 }
 
-.vue-app-body-component {
-    height:100%;
-}
 .pendingStatus {
     transform: rotate(-90deg);
     margin: 0px -10px 0px -10px;

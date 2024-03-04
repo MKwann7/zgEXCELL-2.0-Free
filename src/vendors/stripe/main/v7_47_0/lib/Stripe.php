@@ -2,68 +2,71 @@
 
 namespace Stripe;
 
+use Stripe\Util\DefaultLogger;
+use Stripe\Util\LoggerInterface;
+
 /**
  * Class Stripe.
  */
 class Stripe
 {
     /** @var string The Stripe API key to be used for requests. */
-    public static $apiKey;
+    public static string $apiKey;
 
     /** @var string The Stripe client_id to be used for Connect requests. */
-    public static $clientId;
+    public static string $clientId;
 
     /** @var string The base URL for the Stripe API. */
-    public static $apiBase = 'https://api.stripe.com';
+    public static string $apiBase = 'https://api.stripe.com';
 
     /** @var string The base URL for the OAuth API. */
-    public static $connectBase = 'https://connect.stripe.com';
+    public static string $connectBase = 'https://connect.stripe.com';
 
     /** @var string The base URL for the Stripe API uploads endpoint. */
-    public static $apiUploadBase = 'https://files.stripe.com';
+    public static string $apiUploadBase = 'https://files.stripe.com';
 
     /** @var null|string The version of the Stripe API to use for requests. */
-    public static $apiVersion = null;
+    public static ?string $apiVersion = null;
 
     /** @var null|string The account ID for connected accounts requests. */
-    public static $accountId = null;
+    public static ?string $accountId = null;
 
     /** @var string Path to the CA bundle used to verify SSL certificates */
-    public static $caBundlePath = null;
+    public static ?string $caBundlePath = null;
 
     /** @var bool Defaults to true. */
-    public static $verifySslCerts = true;
+    public static bool $verifySslCerts = true;
 
     /** @var array The application's information (name, version, URL) */
-    public static $appInfo = null;
+    public static ?array $appInfo = null;
 
     /**
      * @var null|Util\LoggerInterface the logger to which the library will
      *   produce messages
      */
-    public static $logger = null;
+    public static ?Util\LoggerInterface $logger = null;
 
     /** @var int Maximum number of request retries */
-    public static $maxNetworkRetries = 0;
+    public static int $maxNetworkRetries = 0;
 
     /** @var bool Whether client telemetry is enabled. Defaults to true. */
-    public static $enableTelemetry = true;
+    public static bool $enableTelemetry = true;
 
     /** @var float Maximum delay between retries, in seconds */
-    private static $maxNetworkRetryDelay = 2.0;
+    private static float $maxNetworkRetryDelay = 2.0;
 
     /** @var float Maximum delay between retries, in seconds, that will be respected from the Stripe API */
-    private static $maxRetryAfter = 60.0;
+    private static float $maxRetryAfter = 60.0;
 
     /** @var float Initial delay between retries, in seconds */
-    private static $initialNetworkRetryDelay = 0.5;
+    private static float $initialNetworkRetryDelay = 0.5;
 
     const VERSION = '7.47.0';
 
     /**
      * @return string the API key used for requests
      */
-    public static function getApiKey()
+    public static function getApiKey(): string
     {
         return self::$apiKey;
     }
@@ -71,16 +74,16 @@ class Stripe
     /**
      * @return string the client_id used for Connect requests
      */
-    public static function getClientId()
+    public static function getClientId(): string
     {
         return self::$clientId;
     }
 
     /**
-     * @return Util\LoggerInterface the logger to which the library will
+     * @return LoggerInterface|DefaultLogger|null the logger to which the library will
      *   produce messages
      */
-    public static function getLogger()
+    public static function getLogger(): Util\LoggerInterface|Util\DefaultLogger|null
     {
         if (null === self::$logger) {
             return new Util\DefaultLogger();
@@ -93,7 +96,7 @@ class Stripe
      * @param Util\LoggerInterface $logger the logger to which the library
      *   will produce messages
      */
-    public static function setLogger($logger)
+    public static function setLogger(LoggerInterface $logger): void
     {
         self::$logger = $logger;
     }
@@ -103,7 +106,7 @@ class Stripe
      *
      * @param string $apiKey
      */
-    public static function setApiKey($apiKey)
+    public static function setApiKey(string $apiKey): void
     {
         self::$apiKey = $apiKey;
     }
@@ -113,16 +116,16 @@ class Stripe
      *
      * @param string $clientId
      */
-    public static function setClientId($clientId)
+    public static function setClientId(string $clientId): void
     {
         self::$clientId = $clientId;
     }
 
     /**
-     * @return string The API version used for requests. null if we're using the
+     * @return string|null The API version used for requests. null if we're using the
      *    latest version.
      */
-    public static function getApiVersion()
+    public static function getApiVersion(): ?string
     {
         return self::$apiVersion;
     }
@@ -130,7 +133,7 @@ class Stripe
     /**
      * @param string $apiVersion the API version to use for requests
      */
-    public static function setApiVersion($apiVersion)
+    public static function setApiVersion(string $apiVersion): void
     {
         self::$apiVersion = $apiVersion;
     }

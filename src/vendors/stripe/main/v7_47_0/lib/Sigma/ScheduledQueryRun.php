@@ -4,6 +4,10 @@
 
 namespace Stripe\Sigma;
 
+use Stripe\ApiOperations\All;
+use Stripe\ApiOperations\Retrieve;
+use Stripe\ApiResource;
+
 /**
  * If you have <a href="https://stripe.com/docs/sigma/scheduled-queries">scheduled
  * a Sigma query</a>, you'll receive a
@@ -23,14 +27,14 @@ namespace Stripe\Sigma;
  * @property string $status The query's execution status, which will be <code>completed</code> for successful runs, and <code>canceled</code>, <code>failed</code>, or <code>timed_out</code> otherwise.
  * @property string $title Title of the query.
  */
-class ScheduledQueryRun extends \Stripe\ApiResource
+class ScheduledQueryRun extends ApiResource
 {
     const OBJECT_NAME = 'scheduled_query_run';
 
-    use \Stripe\ApiOperations\All;
-    use \Stripe\ApiOperations\Retrieve;
+    use All;
+    use Retrieve;
 
-    public static function classUrl()
+    public static function classUrl(): string
     {
         return '/v1/sigma/scheduled_query_runs';
     }

@@ -1,0 +1,19 @@
+{
+  "sharesave": {
+    "Routes": {
+      "sharesave": {
+        "Alias:": "sharesave"
+      }
+    },
+    "ModulePath": "sharesave",
+    "Main": {
+      "Name": "ShareSave",
+      "Icon": "sharesave-main.png"
+    },
+    "PublicRouting": {
+    },
+    "Widgets": {
+      "page_card": ["admin","webmaster","editor","user","public"]
+    }
+  }
+}

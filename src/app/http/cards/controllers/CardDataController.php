@@ -391,7 +391,7 @@ class CardDataController extends CardController
         $objTabControllerClass = $objCardPageRel->content;
 
         $arContentClass       = explode("_", $objTabControllerClass);
-        $intControllerRequest = buildUnderscoreLowercaseFromPascalCase(str_replace("Controller", "", $arContentClass[1]));
+        $intControllerRequest = buildSnakeCaseFromPascalCase(str_replace("Controller", "", $arContentClass[1]));
 
         $strControllerPath = PUBLIC_DATA . "_ez/tabs/v1/controllers/" . $intControllerRequest . "Controller" . XT;
 
@@ -455,7 +455,43 @@ class CardDataController extends CardController
         }
 
         $objWhereClause = (new Cards())->buildCardBatchWhereClause($filterIdField, $filterEntity);
+        $objWhereClause .= " LIMIT {$pageIndex}, {$batchCount}";
 
+        $objCards = Database::getSimple($objWhereClause, "card_id");
+
+        if ($objCards->getData()->Count() < $batchCount)
+        {
+            $strEnd = "true";
+        }
+
+        $objCards->getData()->HydrateModelData(CardModel::class, true);
+
+        $arUserDashboardInfo = array(
+            "list" => $objCards->getData()->FieldsToArray($arFields),
+            "query" => $objWhereClause,
+        );
+
+        return $this->renderReturnJson(true, $arUserDashboardInfo, "We found " . $objCards->getData()->Count() . " cards in this batch.", 200, "data", $strEnd);
+    }
+
+    public function getGroupNewBatches(ExcellHttpModel $objData) : bool
+    {
+        $pageIndex  = $objData->Data->Params["offset"] ?? 1;
+        $batchCount = $objData->Data->Params["batch"] ?? 500;
+        $filterEntity = $objData->Data->Params["filterEntity"] ?? null;
+        $pageIndex  = ($pageIndex - 1) * $batchCount;
+        $arFields   = explode(",", $objData->Data->Params["fields"]);
+        $strEnd     = "false";
+
+        $filterIdField = "user_id";
+
+        if ($filterEntity !== null && !isInteger($filterEntity))
+        {
+            $filterIdField = "sys_row_id";
+            $filterEntity = "'".$filterEntity."'";
+        }
+
+        $objWhereClause = (new Cards())->buildCardBatchWhereClause($filterIdField, $filterEntity, 3);
         $objWhereClause .= " LIMIT {$pageIndex}, {$batchCount}";
 
         $objCards = Database::getSimple($objWhereClause, "card_id");
@@ -492,7 +528,7 @@ class CardDataController extends CardController
             (SELECT CONCAT(user.first_name, ' ', user.last_name) FROM `excell_main`.`user` WHERE user.user_id = card.owner_id LIMIT 1) AS card_owner_name,
             (SELECT CONCAT(user.first_name, ' ', user.last_name) FROM `excell_main`.`user` WHERE user.user_id = card.card_user_id LIMIT 1) AS card_user_name,
             (SELECT title FROM `excell_main`.`product` WHERE product.product_id = card.product_id LIMIT 1) AS product, 
-            (SELECT COUNT(*) FROM `excell_main`.`mobiniti_contact_group_rel` mcgr WHERE mcgr.card_id = card.card_id) AS card_contacts
+            (SELECT COUNT(*) FROM `excell_main`.`contact_card_rel` mcgr WHERE mcgr.card_id = card.card_id) AS card_contacts
             FROM `card` ";
 
         $objWhereClause .= "WHERE card.company_id = {$filterEntity}";

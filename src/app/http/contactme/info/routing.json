@@ -1,17 +1,17 @@
 {
   "controllers": {
     "index": {
-      "models":["ShareSave"],
+      "models":["ContactMe"],
       "verb":"GET",
       "returnType":"DEFAULT"
     },
     "directory_data": {
-      "models":["ShareSave"],
+      "models":["ContactMe"],
       "verb":"POST",
       "returnType":"AJAX"
     },
     "report_issue": {
-      "models":["ShareSave"],
+      "models":["ContactMe"],
       "verb":"GET",
       "returnType":"DEFAULT"
     }

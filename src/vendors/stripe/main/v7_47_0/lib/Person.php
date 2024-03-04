@@ -57,7 +57,7 @@ class Person extends ApiResource
     /**
      * @return string the API URL for this Stripe account reversal
      */
-    public function instanceUrl()
+    public function instanceUrl(): string
     {
         $id = $this['id'];
         $account = $this['account'];
@@ -80,11 +80,11 @@ class Person extends ApiResource
 
     /**
      * @param array|string $_id
-     * @param null|array|string $_opts
+     * @param array|string|null $_opts
      *
      * @throws \Stripe\Exception\BadMethodCallException
      */
-    public static function retrieve($_id, $_opts = null)
+    public static function retrieve(array|string $_id, array|string $_opts = null)
     {
         $msg = 'Persons cannot be retrieved without an account ID. Retrieve ' .
                "a person using `Account::retrievePerson('account_id', " .
@@ -94,13 +94,13 @@ class Person extends ApiResource
     }
 
     /**
-     * @param string $_id
-     * @param null|array $_params
-     * @param null|array|string $_options
+     * @param string $id
+     * @param null|array $params
+     * @param null|array|string $opts
      *
      * @throws \Stripe\Exception\BadMethodCallException
      */
-    public static function update($_id, $_params = null, $_options = null)
+    public static function update(string $id, array $params = null, array|string $opts = null)
     {
         $msg = 'Persons cannot be updated without an account ID. Update ' .
                "a person using `Account::updatePerson('account_id', " .

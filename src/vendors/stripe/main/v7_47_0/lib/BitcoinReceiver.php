@@ -42,7 +42,7 @@ class BitcoinReceiver extends ApiResource
      * @return string The class URL for this resource. It needs to be special
      *    cased because it doesn't fit into the standard resource pattern.
      */
-    public static function classUrl()
+    public static function classUrl(): string
     {
         return '/v1/bitcoin/receivers';
     }
@@ -51,7 +51,7 @@ class BitcoinReceiver extends ApiResource
      * @return string The instance URL for this resource. It needs to be special
      *    cased because it doesn't fit into the standard resource pattern.
      */
-    public function instanceUrl()
+    public function instanceUrl(): string
     {
         if ($this['customer']) {
             $base = Customer::classUrl();

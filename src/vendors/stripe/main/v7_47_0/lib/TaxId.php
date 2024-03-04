@@ -68,7 +68,7 @@ class TaxId extends ApiResource
     /**
      * @return string the API URL for this tax id
      */
-    public function instanceUrl()
+    public function instanceUrl(): string
     {
         $id = $this['id'];
         $customer = $this['customer'];
@@ -89,11 +89,11 @@ class TaxId extends ApiResource
 
     /**
      * @param array|string $_id
-     * @param null|array|string $_opts
+     * @param array|string|null $_opts
      *
      * @throws \Stripe\Exception\BadMethodCallException
      */
-    public static function retrieve($_id, $_opts = null)
+    public static function retrieve(array|string $_id, array|string $_opts = null)
     {
         $msg = 'Tax IDs cannot be retrieved without a customer ID. Retrieve ' .
                "a tax ID using `Customer::retrieveTaxId('customer_id', " .

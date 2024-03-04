@@ -2,8 +2,15 @@
 
 namespace Http\Cards\Controllers;
 
+use Entities\Cards\Components\Vue\Maxtech\Groupwidget\ListMyGroupInactiveWidget;
+use Entities\Cards\Components\Vue\Maxtech\Purchase\PurchaseGroupWidget;
+use Entities\Cards\Components\Vue\Maxtech\Groupwidget\ListMyGroupWidget;
+use Entities\Cards\Components\Vue\Maxtech\Groupwidget\ManageGroupWidget;
+use Entities\Cards\Components\Vue\Maxtech\MyMaxGroupsApp;
+use Entities\Cards\Components\Vue\Maxtech\MaxGroupsApp;
 use App\Utilities\Excell\ExcellHttpModel;
 use App\Website\Vue\Classes\VueProps;
+use App\Website\Website;
 use Entities\Cards\Components\Vue\Maxtech\Purchase\PurchaseSiteWidget;
 use Entities\Cards\Classes\Cards;
 use Entities\Cards\Components\Vue\Maxtech\MySiteMainApp;
@@ -25,13 +32,31 @@ class IndexController extends CardController
 {
     public function index(ExcellHttpModel $objData) : bool
     {
+        if (!$this->app->isWhiteLabelAssigned()) {
+            // If a domain is assigned that we have no knowledge of....
+            (new Website($this->app))->showNotFoundPage();
+        }
+
         if($this->app->isAdminUrlRequest())
         {
             if($this->app->isUserLoggedIn())
             {
                 if($this->app->strActivePortalBinding === "account")
                 {
-                    $this->RenderCardDashboard($objData);
+                    switch ($this->AppEntity->strAliasName)
+                    {
+                        case "my-groups":
+                            $this->myGroups($objData);
+                            break;
+                        case "max-groups":
+                            $this->RenderMaxGroups($objData);
+                            break;
+                        default:
+                            $this->RenderCardDashboard($objData);
+                            break;
+                    }
+
+
                 }
                 elseif($this->app->strActivePortalBinding === "account/admin")
                 {
@@ -58,37 +83,69 @@ class IndexController extends CardController
             return false;
         }
 
-        switch($objData->Uri[2]) {
-            case "purchase":
-                $vueApp = (new MySiteMainApp("vueApp"))
-                    ->setDefaultComponentId(PurchaseSiteWidget::getStaticId())->setDefaultComponentAction("view")
-                    ->setDefaultComponentProps([
-                        new VueProps("productGroup", "string", "'card'"),
-                        new VueProps("inModal", "boolean", "false"),
-                        new VueProps("loggedInUserId", "number", $this->app->getActiveLoggedInUser()->user_id),
-                    ])
-                    ->setUriBase($objData->PathControllerBase);
-                break;
-            case "inactive":
-                $vueApp = (new MySiteMainApp("vueApp"))
-                    ->setDefaultComponentId(ListMySiteInactiveWidget::getStaticId())->setDefaultComponentAction("view")
-                    ->setUriBase($objData->PathControllerBase)
-                    ->registerComponentAbstracts([
-                        ManageSiteWidget::getStaticId() => ManageSiteWidget::getStaticUriAbstract(),
-                    ]);
-                break;
-            default:
-                $vueApp = (new MySiteMainApp("vueApp"))
-                    ->setDefaultComponentId(ListMySiteWidget::getStaticId())->setDefaultComponentAction("view")
-                    ->setUriBase($objData->PathControllerBase)
-                    ->registerComponentAbstracts([
-                        ManageSiteWidget::getStaticId() => ManageSiteWidget::getStaticUriAbstract(),
-                    ]);
-                break;
-        }
+        $vueApp = match ($objData->Uri[2] ?? "") {
+            "purchase" => (new MySiteMainApp("vueApp"))
+                ->setDefaultComponentId(PurchaseSiteWidget::getStaticId())->setDefaultComponentAction("view")
+                ->setDefaultComponentProps([
+                    new VueProps("productGroup", "string", "'card'"),
+                    new VueProps("inModal", "boolean", "false"),
+                    new VueProps("loggedInUserId", "number", $this->app->getActiveLoggedInUser()->user_id),
+                ])
+                ->setUriBase($objData->PathControllerBase),
+            "inactive" => (new MySiteMainApp("vueApp"))
+                ->setDefaultComponentId(ListMySiteInactiveWidget::getStaticId())->setDefaultComponentAction("view")
+                ->setUriBase($objData->PathControllerBase)
+                ->registerComponentAbstracts([
+                    ManageSiteWidget::getStaticId() => ManageSiteWidget::getStaticUriAbstract(),
+                ]),
+            default => (new MySiteMainApp("vueApp"))
+                ->setDefaultComponentId(ListMySiteWidget::getStaticId())->setDefaultComponentAction("view")
+                ->setUriBase($objData->PathControllerBase)
+                ->registerComponentAbstracts([
+                    ManageSiteWidget::getStaticId() => ManageSiteWidget::getStaticUriAbstract(),
+                ]),
+        };
 
         (new Cards())->renderApp(
             "admin.admin_view_all_cards",
+            $this->app->strAssignedPortalTheme,
+            $vueApp
+        );
+        return true;
+    }
+
+    public function myGroups(ExcellHttpModel $objData) : bool
+    {
+        if (!$this->app->isAdminUrlRequest() || !$this->app->isUserLoggedIn() || $this->app->strActivePortalBinding !== "account") {
+            $this->app->redirectToLogin();
+            return false;
+        }
+
+        $vueApp = match ($objData->Uri[2]) {
+            "purchase" => (new MyMaxGroupsApp("vueApp"))
+                ->setDefaultComponentId(PurchaseGroupWidget::getStaticId())->setDefaultComponentAction("view")
+                ->setDefaultComponentProps([
+                    new VueProps("productGroup", "string", "'group'"),
+                    new VueProps("inModal", "boolean", "false"),
+                    new VueProps("loggedInUserId", "number", $this->app->getActiveLoggedInUser()->user_id),
+                ])
+                ->setUriBase($objData->PathControllerBase),
+            "inactive" => (new MyMaxGroupsApp("vueApp"))
+                ->setDefaultComponentId(ListMyGroupInactiveWidget::getStaticId())->setDefaultComponentAction("view")
+                ->setUriBase($objData->PathControllerBase)
+                ->registerComponentAbstracts([
+                    ManageGroupWidget::getStaticId() => ManageGroupWidget::getStaticUriAbstract(),
+                ]),
+            default => (new MyMaxGroupsApp("vueApp"))
+                ->setDefaultComponentId(ListMyGroupWidget::getStaticId())->setDefaultComponentAction("view")
+                ->setUriBase($objData->PathControllerBase)
+                ->registerComponentAbstracts([
+                    ManageGroupWidget::getStaticId() => ManageGroupWidget::getStaticUriAbstract(),
+                ]),
+        };
+
+        (new Cards())->renderApp(
+            "user.view_my_groups",
             $this->app->strAssignedPortalTheme,
             $vueApp
         );
@@ -107,25 +164,20 @@ class IndexController extends CardController
 
     public function RenderCardDashboard(ExcellHttpModel $objData, $strApproach = "list") : void
     {
-        $vueApp = null;
 
-        switch ($this->app->objCustomPlatform->getApplicationType())
-        {
-            case Companies::APP_TYPE_MAXTECH:
-                $vueApp = (new MySiteMainApp("vueApp"))
-                    ->setUriBase($objData->PathControllerBase)
-                    ->registerComponentAbstracts([
-                        ManageSiteWidget::getStaticId() => ManageSiteWidget::getStaticUriAbstract(),
-                    ]);
-                break;
-            default:
-                $vueApp = (new MyCardMainApp("vueApp"))
-                    ->setUriBase($objData->PathControllerBase)
-                    ->registerComponentAbstracts([
-                        ManageCardWidget::getStaticId() => ManageCardWidget::getStaticUriAbstract(),
-                    ]);
-                break;
-        }
+        $vueApp = match ($this->app->objCustomPlatform->getApplicationType()) {
+            Companies::APP_TYPE_MAXTECH => (new MySiteMainApp("vueApp"))
+                ->setUriBase($objData->PathControllerBase)
+                ->registerComponentAbstracts([
+                    ManageSiteWidget::getStaticId() => ManageSiteWidget::getStaticUriAbstract(),
+                ]),
+            default => (new MySiteMainApp("vueApp"))
+                ->setDefaultComponentId(ListMySiteWidget::getStaticId())->setDefaultComponentAction("view")
+                ->setUriBase($objData->PathControllerBase)
+                ->registerComponentAbstracts([
+                    ManageSiteWidget::getStaticId() => ManageSiteWidget::getStaticUriAbstract(),
+                ]),
+        };
 
         (new Cards())->renderApp(
             "user.view_my_cards",
@@ -134,25 +186,35 @@ class IndexController extends CardController
         );
     }
 
+    public function RenderMaxGroups(ExcellHttpModel $objData, $strApproach = "list") : void
+    {
+        $vueApp = (new MaxGroupsApp("vueApp"))
+            ->setUriBase($objData->PathControllerBase)
+            ->registerComponentAbstracts([
+                ManageSiteWidget::getStaticId() => ManageSiteWidget::getStaticUriAbstract(),
+            ]);
+
+        (new Cards())->renderApp(
+            "admin.view_max_groups",
+            $this->app->strAssignedPortalTheme,
+            $vueApp
+        );
+    }
+
     public function RenderCardAdminDashboard(ExcellHttpModel $objData) : void
     {
-        switch ($this->app->objCustomPlatform->getApplicationType())
-        {
-            case Companies::APP_TYPE_MAXTECH:
-                $vueApp = (new SiteMainApp("vueApp"))
-                    ->setUriBase($objData->PathControllerBase)
-                    ->registerComponentAbstracts([
-                        ManageSiteWidget::getStaticId() => ManageSiteWidget::getStaticUriAbstract(),
-                    ]);
-                break;
-            default:
-                $vueApp = (new CardMainApp("vueApp"))
-                    ->setUriBase($objData->PathControllerBase)
-                    ->registerComponentAbstracts([
-                        ManageCardWidget::getStaticId() => ManageCardWidget::getStaticUriAbstract(),
-                    ]);
-                break;
-        }
+        $vueApp = match ($this->app->objCustomPlatform->getApplicationType()) {
+            Companies::APP_TYPE_MAXTECH => (new SiteMainApp("vueApp"))
+                ->setUriBase($objData->PathControllerBase)
+                ->registerComponentAbstracts([
+                    ManageSiteWidget::getStaticId() => ManageSiteWidget::getStaticUriAbstract(),
+                ]),
+            default => (new CardMainApp("vueApp"))
+                ->setUriBase($objData->PathControllerBase)
+                ->registerComponentAbstracts([
+                    ManageCardWidget::getStaticId() => ManageCardWidget::getStaticUriAbstract(),
+                ]),
+        };
 
         (new Cards())->renderApp(
             "admin.admin_view_all_cards",
@@ -166,22 +228,19 @@ class IndexController extends CardController
         if (
             (!empty($objData->Uri[0]) ||
             $this->app->getActiveDomain()->getType() !== "app") &&
-            !in_array($objData->Uri[0], ["api", "process", "module-widget"])
+            !in_array($objData->Uri[0] ?? "", ["api", "process", "module-widget"])
         )
         {
             $ezDigitalFactory = new ExcellCardFactory($this->app, $objData, new Cards());
 
-            if ($myHub === false && !$ezDigitalFactory->process($objData))
-            {
-                if (empty($objData->Params[0]))
-                {
+            if ($myHub === false && !$ezDigitalFactory->process()) {
+                if (empty($objData->Params[0])) {
                     return false;
                 }
 
                 $objCardResult = (new Cards())->getById($objData->Params[0]);
 
-                if ($objCardResult->result->Success === true)
-                {
+                if ($objCardResult->result->Success === true) {
                     $this->app->executeUrlRedirect(getFullUrl() . "/". $objData->Params[0]);
                 }
 

@@ -4,21 +4,26 @@
 
 namespace Stripe\Service;
 
-class TransferService extends \Stripe\Service\AbstractService
+use Stripe\StripeObject;
+use Stripe\Transfer;
+use Stripe\TransferReversal;
+use Stripe\Util\RequestOptions;
+
+class TransferService extends AbstractService
 {
     /**
      * Returns a list of existing transfers sent to connected accounts. The transfers
      * are returned in sorted order, with the most recently created transfers appearing
      * first.
      *
-     * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
-     *
-     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     * @param array|null $params
+     * @param RequestOptions|array|null $opts
      *
      * @return \Stripe\Collection
+     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     *
      */
-    public function all($params = null, $opts = null)
+    public function all(array $params = null, RequestOptions|array $opts = null): \Stripe\Collection
     {
         return $this->requestCollection('get', '/v1/transfers', $params, $opts);
     }
@@ -31,28 +36,29 @@ class TransferService extends \Stripe\Service\AbstractService
      * additional reversals.
      *
      * @param string $parentId
-     * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
-     *
-     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     * @param array|null $params
+     * @param RequestOptions|array|null $opts
      *
      * @return \Stripe\Collection
+     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     *
      */
-    public function allReversals($parentId, $params = null, $opts = null)
+    public function allReversals(string $parentId, array $params = null, RequestOptions|array $opts = null): \Stripe\Collection
     {
         return $this->requestCollection('get', $this->buildPath('/v1/transfers/%s/reversals', $parentId), $params, $opts);
     }
 
     /**
      * @param string $id
-     * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param array|null $params
+     * @param array|RequestOptions|null $opts
      *
+     * @return StripeObject|Transfer
+     * @throws \Stripe\Exception\ApiErrorException if the request fails
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\Transfer
      */
-    public function cancel($id, $params = null, $opts = null)
+    public function cancel(string $id, array $params = null, RequestOptions|array $opts = null): Transfer|StripeObject
     {
         return $this->request('post', $this->buildPath('/v1/transfers/%s/cancel', $id), $params, $opts);
     }
@@ -62,14 +68,14 @@ class TransferService extends \Stripe\Service\AbstractService
      * transfer object. Your <a href="#balance">Stripe balance</a> must be able to
      * cover the transfer amount, or you’ll receive an “Insufficient Funds” error.
      *
-     * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param array|null $params
+     * @param array|RequestOptions|null $opts
      *
+     * @return StripeObject|Transfer
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\Transfer
      */
-    public function create($params = null, $opts = null)
+    public function create(array $params = null, RequestOptions|array $opts = null): Transfer|StripeObject
     {
         return $this->request('post', '/v1/transfers', $params, $opts);
     }
@@ -85,14 +91,14 @@ class TransferService extends \Stripe\Service\AbstractService
      * reverse more money than is left on a transfer.
      *
      * @param string $parentId
-     * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param array|null $params
+     * @param array|RequestOptions|null $opts
      *
+     * @return StripeObject|TransferReversal
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\TransferReversal
      */
-    public function createReversal($parentId, $params = null, $opts = null)
+    public function createReversal(string $parentId, array $params = null, RequestOptions|array $opts = null): StripeObject|TransferReversal
     {
         return $this->request('post', $this->buildPath('/v1/transfers/%s/reversals', $parentId), $params, $opts);
     }
@@ -103,14 +109,14 @@ class TransferService extends \Stripe\Service\AbstractService
      * return the corresponding transfer information.
      *
      * @param string $id
-     * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param array|null $params
+     * @param array|RequestOptions|null $opts
      *
+     * @return StripeObject|Transfer
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\Transfer
      */
-    public function retrieve($id, $params = null, $opts = null)
+    public function retrieve(string $id, array $params = null, RequestOptions|array $opts = null): Transfer|StripeObject
     {
         return $this->request('get', $this->buildPath('/v1/transfers/%s', $id), $params, $opts);
     }
@@ -122,14 +128,14 @@ class TransferService extends \Stripe\Service\AbstractService
      *
      * @param string $parentId
      * @param string $id
-     * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param array|null $params
+     * @param array|RequestOptions|null $opts
      *
+     * @return StripeObject|TransferReversal
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\TransferReversal
      */
-    public function retrieveReversal($parentId, $id, $params = null, $opts = null)
+    public function retrieveReversal(string $parentId, string $id, array $params = null, RequestOptions|array $opts = null): StripeObject|TransferReversal
     {
         return $this->request('get', $this->buildPath('/v1/transfers/%s/reversals/%s', $parentId, $id), $params, $opts);
     }
@@ -141,14 +147,14 @@ class TransferService extends \Stripe\Service\AbstractService
      * This request accepts only metadata as an argument.
      *
      * @param string $id
-     * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param array|null $params
+     * @param array|RequestOptions|null $opts
      *
+     * @return StripeObject|Transfer
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\Transfer
      */
-    public function update($id, $params = null, $opts = null)
+    public function update(string $id, array $params = null, RequestOptions|array $opts = null): Transfer|StripeObject
     {
         return $this->request('post', $this->buildPath('/v1/transfers/%s', $id), $params, $opts);
     }
@@ -161,14 +167,14 @@ class TransferService extends \Stripe\Service\AbstractService
      *
      * @param string $parentId
      * @param string $id
-     * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param array|null $params
+     * @param array|RequestOptions|null $opts
      *
+     * @return StripeObject|TransferReversal
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\TransferReversal
      */
-    public function updateReversal($parentId, $id, $params = null, $opts = null)
+    public function updateReversal(string $parentId, string $id, array $params = null, RequestOptions|array $opts = null): StripeObject|TransferReversal
     {
         return $this->request('post', $this->buildPath('/v1/transfers/%s/reversals/%s', $parentId, $id), $params, $opts);
     }

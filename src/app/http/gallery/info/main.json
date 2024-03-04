@@ -1,14 +1,14 @@
 {
-  "blog": {
+  "gallery": {
     "Routes": {
-      "blog": {
-        "Alias:": "blog"
+      "gallery": {
+        "Alias:": "gallery"
       }
     },
-    "ModulePath": "blog",
+    "ModulePath": "gallery",
     "Main": {
-      "Name": "Blog",
-      "Icon": "blog-main.png"
+      "Name": "Gallery",
+      "Icon": "gallery-main.png"
     },
     "Permissions": {
       "Create": ["admin","webmaster","editor"],
@@ -17,22 +17,22 @@
     },
     "PublicRouting": {
       "page-css": {
-        "models":["Blog"],
+        "models":["Gallery"],
         "verbs":["GET"],
         "returnType":"AJAX"
       },
       "page-js": {
-        "models":["Blog"],
+        "models":["Gallery"],
         "verbs":["GET"],
         "returnType":"AJAX"
       },
       "page-ajax": {
-        "model":["Blog"],
+        "model":["Gallery"],
         "verbs":["GET","POST","DELETE","CREATE"],
         "returnType":"AJAX"
       },
       "widget-ajax": {
-        "models":["Blog"],
+        "models":["Gallery"],
         "verbs":["GET","POST","DELETE","CREATE"],
         "returnType":"AJAX"
       }

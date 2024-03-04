@@ -8,7 +8,15 @@ use App\Utilities\Excell\ExcellHttpModel;
 use App\Utilities\Transaction\ExcellTransaction;
 use Entities\Activities\Classes\UserLogs;
 use Entities\Cards\Classes\Cards;
+use Entities\Cards\Models\CardModel;
+use Entities\Cart\Classes\CartEmails;
+use Entities\Cart\Classes\CartProcess;
+use Entities\Cart\Classes\CartTicketProcess;
+use Entities\Cart\Classes\Factories\CartPurchaseFactory;
 use Entities\Emails\Classes\Emails;
+use Entities\Products\Classes\ProductProcessor;
+use Entities\Users\Classes\Factories\PersonaFactory;
+use Entities\Users\Classes\Factories\UserFactory;
 use Http\Users\Controllers\Base\UserController;
 use Entities\Users\Classes\Connections;
 use Entities\Users\Classes\ConnectionTypes;
@@ -51,6 +59,50 @@ class ApiController extends UserController
         $user->LoadUserConnections(false);
 
         return $this->renderReturnJson(true, ["user" => $user->ToPublicArray(null, true)], "We made it.");
+    }
+
+    public function getUserPersonas(ExcellHttpModel $objData) : bool
+    {
+        if (!$this->validateRequestType('GET'))
+        {
+            return false;
+        }
+
+        $objParams = $objData->Data->Params;
+
+        if (!$this->validate($objParams, [
+            "id" => "required|integer",
+        ]))
+        {
+            return $this->renderReturnJson(false, $this->validationErrors, "Validation errors.");
+        }
+
+        $users = new Users();
+        $user = $users->getById($objParams["id"])->getData()->first();
+
+        $personaFactory = new PersonaFactory($this->app, new Users(), new Cards());
+        $personasResult = $personaFactory->getPersonasForDirectoryRegistration($objParams["id"]);
+
+        if ($personasResult->getResult()->Count === 0) {
+            $personaFactory->processFreePersonaPurchase($objParams["id"], new CartPurchaseFactory(
+                new CartProcess(),
+                new ProductProcessor(),
+                new CartTicketProcess(),
+                new CartEmails(),
+                new Cards()
+            ));
+            $personasResult = $personaFactory->getPersonasForDirectoryRegistration($objParams["id"]);
+        }
+
+        $activePersonas = new ExcellCollection();
+        $personasResult->getData()->Foreach(function(CardModel $site) use (&$activePersonas) {
+            if ($site->status === "Active" || $site->status === "Build") {
+                $site->LoadFullCard();
+                $activePersonas->Add($site);
+            }
+        });
+
+        return $this->renderReturnJson(true, ["personas" => $activePersonas->ToPublicArray(), "user" => $user->ToPublicArray()], $personasResult->getResult()->Message);
     }
 
     public function logUserIntoCore(ExcellHttpModel $objData) : bool
@@ -97,6 +149,9 @@ class ApiController extends UserController
         $arUser["id"] = $arUser["sys_row_id"];
         $arUser["phone"] = $arUser["user_phone"];
         $arUser["email"] = $arUser["user_email"];
+        $arUser["Roles"] = $user->Roles->ToPublicArray();
+        $arUser["Departments"] = $user->Departments->ToPublicArray();
+
         unset($arUser["sys_row_id"]);
 
         $this->renderReturnJson(true, ["user" => $arUser], "User has successfully logged into the system.");
@@ -144,8 +199,7 @@ class ApiController extends UserController
 
     public function validateExistingUserCredentialsOnCard(ExcellHttpModel $objData) : bool
     {
-        if (!$this->validateRequestType('POST'))
-        {
+        if (!$this->validateRequestType('POST')) {
             return false;
         }
 
@@ -155,15 +209,13 @@ class ApiController extends UserController
         if (!$this->validate($objPost, [
             "username" => "required",
             "password" => "required",
-        ]))
-        {
+        ])) {
             return $this->renderReturnJson(false, $this->validationErrors, "Validation errors.");
         }
 
         if (!$this->validate($objParams, [
             "card_id" => "required|uuid",
-        ]))
-        {
+        ])) {
             return $this->renderReturnJson(false, $this->validationErrors, "Validation errors.");
         }
 
@@ -173,8 +225,7 @@ class ApiController extends UserController
 
         $objUserAuthentication = (new Users())->AuthenticateUserForLogin($objUser);
 
-        if ( $objUserAuthentication->result->Success === false)
-        {
+        if ( $objUserAuthentication->result->Success === false) {
             $this->renderReturnJson(false, [], "Authentication failed.");
         }
 
@@ -184,11 +235,9 @@ class ApiController extends UserController
         $cards = new Cards();
         $cardResult = $cards->getByUuid($objParams["card_id"])->getData()->first();
 
-        if ($cardResult === null || ($cardResult->owner_id !== $user->user_id && $cardResult->card_user_id !== $user->user_id))
-        {
+        if ($cardResult === null || ($cardResult->owner_id !== $user->user_id && $cardResult->card_user_id !== $user->user_id)) {
             $this->renderReturnJson(false, [], "User Does Not Own Card.");
         }
-
 
         $arUser = $user->ToPublicArray(["sys_row_id", "first_name", "last_name", "user_email", "user_phone", "user_id"]);
 
@@ -202,6 +251,10 @@ class ApiController extends UserController
 
     public function updateUser(ExcellHttpModel $objData) : bool
     {
+        if (!$this->validateRequestType('POST')) {
+            return false;
+        }
+
         $objPost = $this->app->objHttpRequest->Data->PostData;
         $objParams = $this->app->objHttpRequest->Data->Params;
 
@@ -211,133 +264,35 @@ class ApiController extends UserController
             "email" => "required|email",
             "phone" => "required",
             "username" => "required",
-        ]))
-        {
+        ])) {
             return $this->renderReturnJson(false, $this->validationErrors, "Validation errors.");
         }
 
         if (!$this->validate($objParams, [
             "user_id" => "required|number"
-        ]))
-        {
+        ])) {
             return $this->renderReturnJson(false, $this->validationErrors, "Validation errors.");
         }
 
         $userId =  $objData->Data->Params["user_id"];
-        $userResult = (new Users())->getById($objParams["user_id"]);
 
-        if ($userResult->result->Count !== 1)
-        {
-            return $this->renderReturnJson(false, ["error" => "no_user_found"], "User not found");
-        }
+        $userFactory = new UserFactory($this->app, new Users(), new Connections());
+        $userUpdateResult = $userFactory->updateUserFromDataIfMatch($userId, $objPost->first_name, $objPost->last_name, $objPost->email, $objPost->phone, $objPost->username, $objPost->status, $objPost->password ?? null, $objPost->affiliate_id ?? null);
 
-        $customPlatformId = $this->app->objCustomPlatform->getCompany()->company_id;
-
-        $objUser = $userResult->getData()->first();
-
-        $objUser->first_name = $objPost->first_name;
-        $objUser->last_name = $objPost->last_name;
-        $objUser->username = $objPost->username;
-
-        $objUser->status = $objPost->status;
-
-        if (!empty($objPost->password))
-        {
-            $objUser->password = $objPost->password;
-        }
-
-        $objUser->company_id = $customPlatformId;
-        $objUser->division_id = 0;
-        $objUser->sponsor_id = (!empty($objPost->affiliate_id) ? $objPost->affiliate_id : $this->app->objCustomPlatform->getCompany()->default_sponsor_id);
-
-        $strPrimaryEmail = $objPost->email ?? null;
-        $strPrimaryPhone = $objPost->phone ?? null;
-
-        $blnEmailMatch = (new Users())->findMatchingUserEmail($strPrimaryEmail, $userId);
-        $blnPhoneMatch = (new Users())->findMatchingUserPhone($strPrimaryPhone, $userId);
-
-        if ($blnEmailMatch->data["match"] === true)
-        {
-            $objUser->user_email = $blnEmailMatch->data["entity"]->connection_id;
-        }
-        else
-        {
-            $objConnection = new ConnectionModel();
-
-            $objConnection->user_id = $userId;
-            $objConnection->connection_type_id = 6;
-            $objConnection->division_id = 0;
-            $objConnection->company_id = $customPlatformId;
-            $objConnection->connection_value = $strPrimaryEmail;
-            $objConnection->is_primary = EXCELL_TRUE;
-            $objConnection->connection_class = 'user';
-
-            $objEmailResult = (new Connections())->createNew($objConnection);
-            $objUser->user_email = $objEmailResult->getData()->first()->connection_id;
-        }
-
-        if ($blnPhoneMatch->data["match"] === true)
-        {
-            $objUser->user_phone = $blnPhoneMatch->data["entity"]->connection_id;
-        }
-        else
-        {
-            $objConnection = new ConnectionModel();
-
-            $objConnection->user_id = $userId;
-            $objConnection->connection_type_id = 1;
-            $objConnection->division_id = 0;
-            $objConnection->company_id = $customPlatformId;
-            $objConnection->connection_value = $strPrimaryPhone;
-            $objConnection->is_primary = EXCELL_TRUE;
-            $objConnection->connection_class = 'user';
-
-            $objPhoneResult = (new Connections())->createNew($objConnection);
-            $objUser->user_phone = $objPhoneResult->getData()->first()->connection_id;
-        }
-
-        $userUpdateResult = (new Users())->update($objUser);
-
-        if ($userUpdateResult->result->Success === false)
-        {
+        if ($userUpdateResult->result->Success === false) {
             return $this->renderReturnJson(false, ["error" => "update_failed"], $userUpdateResult->result->Message);
         }
 
-        $this->processIntegrationsUpdate($userUpdateResult->getData()->first());
+        $userFactory->processIntegrationsUpdate($userUpdateResult->getData()->first());
 
         $arUser = $userUpdateResult->getData()->first()->ToPublicArray(["sys_row_id", "user_id", "first_name", "last_name", "user_email", "user_phone", "username"]);
 
         $arUser["id"] = $arUser["sys_row_id"];
-        $arUser["email"] = $strPrimaryEmail;
-        $arUser["phone"] = $strPrimaryPhone;
+        $arUser["email"] = $objPost->email ?? null;
+        $arUser["phone"] = $objPost->phone ?? null;
         unset($arUser["sys_row_id"]);
 
         return $this->renderReturnJson(true, ["user" => $arUser], $userUpdateResult->result->Message);
-    }
-
-    private function processIntegrationsUpdate(UserModel $user) : void
-    {
-        $query = "UPDATE excell_integrations.integrations_user 
-            SET synced = 0
-            WHERE user_id = {$user->user_id};";
-
-        global $app;
-        Database::SetDbConnection($app->objDBs->Integration)::update($query);
-    }
-
-    private function processIntegrationsCreate(UserModel $user) : void
-    {
-        $syncType = "1";
-        $currentTimestamp  = date("Y-m-d H:i:s");
-        $state  = "create";
-
-        $query = "INSERT INTO excell_integrations.integrations_user 
-            (integration_type, user_id, synced, created_on, state)
-        VALUES 
-            ($syncType, {$user->user_id}, 0, '$currentTimestamp', '$state');";
-
-        global $app;
-        Database::SetDbConnection($app->objDBs->Integration)::update($query);
     }
 
     public function createNewUser(ExcellHttpModel $objData) : bool
@@ -356,95 +311,24 @@ class ApiController extends UserController
             return $this->renderReturnJson(false, $this->validationErrors, "Validation errors.");
         }
 
-        $customPlatformId = $this->app->objCustomPlatform->getCompany()->company_id;
+        $userFactory = new UserFactory($this->app, new Users(), new Connections());
+        $objNewUserResult = $userFactory->createUserFromData(
+            $objPost->first_name,
+            $objPost->last_name,
+            $objPost->email,
+            $objPost->phone,
+            $objPost->username,
+            $objPost->password,
+        );
 
-        $userQuery = "SELECT ur.* FROM excell_main.user ur LEFT JOIN excell_main.connection con ON con.connection_id = ur.user_email WHERE company_id = {$customPlatformId} (con.connection_value = '" . $objPost->email . "' OR ur.username = '" . $objPost->username . "');";
-
-        $objDirectoryResult = Database::getSimple($userQuery);
-
-        if ($objDirectoryResult->result->Count > 0)
-        {
-            return $this->renderReturnJson(false, ["error" => "duplicate_account"], "Duplicate user account.");
+        if ($objNewUserResult->getResult()->Success === false) {
+            $this->renderReturnJson(false, $userFactory->getErrors(), $userFactory->getMessage());
         }
 
-        $strPrimaryEmail = $objPost->email ?? null;
-        $strPrimaryPhone = $objPost->phone ?? null;
+        $userFactory->processIntegrationsCreate($objNewUserResult->getData()->first());
+        $userArray = $userFactory->renderUserReturnArray($objNewUserResult->getData()->first(), $objPost->email, $objPost->phone);
 
-        $blnEmailMatch = (new Users())->findMatchingPrimaryEmail($strPrimaryEmail, $this->app->objCustomPlatform->getCompanyId());
-        $blnPhoneMatch = (new Users())->findMatchingPrimaryPhone($strPrimaryPhone, $this->app->objCustomPlatform->getCompanyId());
-
-        if ($blnEmailMatch->data["match"] === true)
-        {
-            return $this->renderReturnJson(false, ["error" => "primary_email_exists"], "Primary E-mail already assigned to another user.");
-        }
-
-        if ($blnPhoneMatch->data["match"] === true )
-        {
-            return $this->renderReturnJson(false, ["error" => "primary_phone_exists"], "Primary Phone already assigned to another user..");
-        }
-
-        $objUser = new UserModel();
-        $objUser->first_name = $objPost->first_name;
-        $objUser->last_name = $objPost->last_name;
-        $objUser->username = $objPost->username;
-        $objUser->password = $objPost->password;
-        $objUser->company_id = $customPlatformId;
-        $objUser->division_id = 0;
-        $objUser->sponsor_id = (!empty($objPost->affiliate_id) ? $objPost->affiliate_id : $this->app->objCustomPlatform->getCompany()->default_sponsor_id);
-
-        $objNewUserResult = (new Users())->createNew($objUser);
-
-        if ($objNewUserResult->result->Success === false)
-        {
-            return $this->renderReturnJson(false, ["error" => "creation_failed"], $objNewUserResult->result->Message);
-        }
-
-        $objNewUser = $objNewUserResult->getData()->first();
-
-        if ($strPrimaryEmail !== null)
-        {
-            $objConnection = new ConnectionModel();
-
-            $objConnection->user_id = $objNewUserResult->getData()->first()->user_id;
-            $objConnection->connection_type_id = 6;
-            $objConnection->division_id = 0;
-            $objConnection->company_id = $customPlatformId;
-            $objConnection->connection_value = $strPrimaryEmail;
-            $objConnection->is_primary = EXCELL_TRUE;
-            $objConnection->connection_class = 'user';
-
-            $objEmailResult = (new Connections())->createNew($objConnection);
-            $objNewUser->user_email = $objEmailResult->getData()->first()->connection_id;
-        }
-
-        if ($strPrimaryPhone !== null)
-        {
-            $objConnection = new ConnectionModel();
-
-            $objConnection->user_id = $objNewUserResult->getData()->first()->user_id;
-            $objConnection->connection_type_id = 1;
-            $objConnection->division_id = 0;
-            $objConnection->company_id = $customPlatformId;
-            $objConnection->connection_value = $strPrimaryPhone;
-            $objConnection->is_primary = EXCELL_TRUE;
-            $objConnection->connection_class = 'user';
-
-            $objPhoneResult = (new Connections())->createNew($objConnection);
-            $objNewUser->user_phone = $objPhoneResult->getData()->first()->connection_id;
-        }
-
-        $objNewUserResult = (new Users())->update($objNewUser);
-
-        $this->processIntegrationsCreate($objNewUserResult->getData()->first());
-
-        $arUser = $objNewUserResult->getData()->first()->ToPublicArray(["sys_row_id", "user_id", "first_name", "last_name", "user_email", "user_phone", "username"]);
-
-        $arUser["id"] = $arUser["sys_row_id"];
-        $arUser["email"] = $strPrimaryEmail;
-        $arUser["phone"] = $strPrimaryPhone;
-        unset($arUser["sys_row_id"]);
-
-        $this->renderReturnJson(true, ["user" => $arUser], "Valid User Credentials.");
+        return $this->renderReturnJson(true, ["user" => $userArray], "Valid User Credentials.");
     }
 
     public function getUsers(ExcellHttpModel $objData): void
@@ -745,7 +629,7 @@ class ApiController extends UserController
         $objCreationNewUser->password = $objNewUserData->password;
         $objCreationNewUser->division_id = 0;
         $objCreationNewUser->company_id = 0;
-        $objCreationNewUser->sponsor_id = 70726;
+        $objCreationNewUser->sponsor_id = 1001;
 
         $objNewUserResult = (new Users())->createNew($objCreationNewUser);
 

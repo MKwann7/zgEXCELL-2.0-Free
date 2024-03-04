@@ -195,6 +195,18 @@ ul li {
 
 /**----------------Portal Body------------- **/
 
+
+div.portal-section .BodyContentOuter {
+    height:100%;
+}
+div.portal-section .BodyContentBox,
+div.portal-section .BodyContentBox .formwrapper,
+div.portal-section .BodyContentBox .formwrapper-outer,
+div.portal-section .BodyContentOuter .formwrapper-outer .vue-app-body,
+div.portal-section .BodyContentOuter .formwrapper-outer .vue-app-body .entityDashboard {
+    height: inherit;
+}
+
 /**----------------Portal Header------------- **/
 
 .labelBreadcrumb {
@@ -272,12 +284,12 @@ header.portal-header {
 }
 
 div.portal-section {
-    margin-top:68px;
-    height: calc(100vh - 100px);
-    overflow-y: auto;
+    margin-top: 63px;
+    height: 100%;
+    padding: 0 0 0 0;
 }
 .BodyContentOuter {
-    padding: 0 25px;
+    /*padding: 0 25px;*/
 }
 .breadcrumb-right-menu-list {
     display:none;
@@ -601,7 +613,7 @@ td.page-count-display button.btn {
     background: url(<?php echo $this->app->objCustomPlatform->getFullPortalDomainName(); ?>/media/images/home-icon-01_black.png) no-repeat center center / 100% auto;
 }
 .theme_shade_light .slim-btn,
-.theme_shade_dark .vue-modal-wrapper div *,
+.theme_shade_dark .vue-modal-wrapper div:not(#app-vue),
 .theme_shade_dark .account-page-title,
 .theme_shade_dark .card-tile-50 h4,
 .theme_shade_dark .card-tile-100 h4,
@@ -1001,7 +1013,7 @@ body div.universal-float-shield {
     right: 0px;
     bottom: 0px;
     background: url(/website/images/LoadingIcon2.gif) no-repeat left 50% center / auto 35px,rgba(255,255,255,.4) ;
-    z-index:5;
+    z-index:11000;
     overflow-y: auto;
     justify-content: center;
     align-items: center;
@@ -1016,13 +1028,13 @@ body div.closedModal.universal-float-shield {
     max-height: 100vh;
     max-height: -webkit-fill-available;
 }
-.theme_shade_light .zgpopup-dialog-box {
+.theme_shade_light .zgpopup-dialog-box.dialog-theme-default {
     background: #ffffff;
     background: linear-gradient(to bottom, #fff 0%, #eaeaea 100%);
     box-shadow: 0 0 10px #000000;
 }
 
-.theme_shade_dark .zgpopup-dialog-box {
+.theme_shade_dark .zgpopup-dialog-box.dialog-theme-default {
     background: #142d2d;
     background: linear-gradient(to bottom, #142d2d 0%, #000 100%);
     box-shadow: 0 0 10px #fff;
@@ -1539,6 +1551,7 @@ body div.closedModal.universal-float-shield {
 .width150px {width: 150px;float:left;}
 .width175px {width: 175px;float:left;}
 .width250px {width: 250px;float:left;}
+.width300px {width: 300px;float:left;}
 .widthAutoTo175px {width: calc(100% - 175px);float:left;}
 .widthAutoTo250px {width: calc(100% - 250px);float:left;}
 
@@ -1743,8 +1756,9 @@ body .slickDraggingItem td.text-right {
         display:flex !important;
     }
     div.portal-section {
-        margin-top: 0;
-        padding:56px 10px 0 10px;
+        margin-top: 63px;
+        height: 100%;
+        padding: 0 0 0 0;
     }
     .width50 .card-tile-50 {
         width: 100% !important;

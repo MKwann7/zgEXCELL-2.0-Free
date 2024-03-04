@@ -4,6 +4,8 @@
 
 namespace Stripe;
 
+use Stripe\Exception\ApiErrorException;
+
 /**
  * Subscription items allow you to create customer subscriptions with more than one
  * plan, making it easy to represent complex billing relationships.
@@ -33,30 +35,28 @@ class SubscriptionItem extends ApiResource
     const PATH_USAGE_RECORDS = '/usage_records';
 
     /**
-     * @param null|string $id the ID of the subscription item on which to create the usage record
-     * @param null|array $params
-     * @param null|array|string $opts
+     * @param string|null $id the ID of the subscription item on which to create the usage record
+     * @param array|null $params
+     * @param array|string|null $opts
      *
+     * @return StripeObject|UsageRecord
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\UsageRecord
      */
-    public static function createUsageRecord($id, $params = null, $opts = null)
+    public static function createUsageRecord(?string $id, array $params = null, array|string $opts = null): StripeObject|UsageRecord
     {
         return self::_createNestedResource($id, static::PATH_USAGE_RECORDS, $params, $opts);
     }
 
     /**
+     * @param array|null $params
+     * @param array|string|null $opts
+     *
+     * @return Collection|array the list of usage record summaries
+     * @throws ApiErrorException if the request fails
      * @deprecated usageRecordSummaries is deprecated. Please use SubscriptionItem::allUsageRecordSummaries instead.
-     *
-     * @param null|array $params
-     * @param null|array|string $opts
-     *
-     * @throws \Stripe\Exception\ApiErrorException if the request fails
-     *
-     * @return \Stripe\Collection the list of usage record summaries
      */
-    public function usageRecordSummaries($params = null, $opts = null)
+    public function usageRecordSummaries(array $params = null, array|string $opts = null): Collection|array
     {
         $url = $this->instanceUrl() . '/usage_record_summaries';
         list($response, $opts) = $this->_request('get', $url, $params, $opts);
@@ -70,14 +70,14 @@ class SubscriptionItem extends ApiResource
 
     /**
      * @param string $id the ID of the subscription item on which to retrieve the usage record summaries
-     * @param null|array $params
-     * @param null|array|string $opts
+     * @param array|null $params
+     * @param array|string|null $opts
      *
+     * @return Collection|StripeObject
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\Collection the list of usage record summaries
      */
-    public static function allUsageRecordSummaries($id, $params = null, $opts = null)
+    public static function allUsageRecordSummaries(string $id, array $params = null, array|string $opts = null): Collection|StripeObject
     {
         return self::_allNestedResources($id, static::PATH_USAGE_RECORD_SUMMARIES, $params, $opts);
     }

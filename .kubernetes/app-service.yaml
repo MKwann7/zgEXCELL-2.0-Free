@@ -1,13 +1,20 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: circle-service
+  name: development-circle-service-dev
+  namespace: circle-ci-k8s-dev
   labels:
-    app: circle
+    app: excell-circle-app-dev
 spec:
   ports:
-    - port: 3000
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
+    - name: https
+      port: 443
+      targetPort: https
+      protocol: TCP
   selector:
-    app: ci-deploy
-    tier: backend
+    app: excell-app-dev
   type: LoadBalancer

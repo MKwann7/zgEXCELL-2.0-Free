@@ -77,15 +77,15 @@ class Source extends ApiResource
     use ApiOperations\NestedResource;
 
     /**
-     * @param null|array $params
-     * @param null|array|string $opts
-     *
-     * @throws \Stripe\Exception\UnexpectedValueException if the source is not attached to a customer
-     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     * @param array|null $params
+     * @param array|string|null $opts
      *
      * @return \Stripe\Source the detached source
+     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     *
+     * @throws \Stripe\Exception\UnexpectedValueException if the source is not attached to a customer
      */
-    public function detach($params = null, $opts = null)
+    public function detach(array $params = null, array|string $opts = null): static
     {
         self::_validateParams($params);
 
@@ -116,16 +116,16 @@ class Source extends ApiResource
     }
 
     /**
-     * @deprecated sourceTransactions is deprecated. Please use Source::allSourceTransactions instead.
+     * @param array|null $params
+     * @param array|string|null $opts
      *
-     * @param null|array $params
-     * @param null|array|string $opts
-     *
+     * @return array|Collection|StripeObject
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\Collection the list of source transactions
+     * @deprecated sourceTransactions is deprecated. Please use Source::allSourceTransactions instead.
+     *
      */
-    public function sourceTransactions($params = null, $opts = null)
+    public function sourceTransactions(array $params = null, array|string $opts = null): Collection|StripeObject|array
     {
         $url = $this->instanceUrl() . '/source_transactions';
         list($response, $opts) = $this->_request('get', $url, $params, $opts);
@@ -137,27 +137,27 @@ class Source extends ApiResource
 
     /**
      * @param string $id
-     * @param null|array $params
-     * @param null|array|string $opts
+     * @param array|null $params
+     * @param array|string|null $opts
      *
+     * @return Collection|StripeObject
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\Collection the list of source transactions
      */
-    public static function allSourceTransactions($id, $params = null, $opts = null)
+    public static function allSourceTransactions(string $id, array $params = null, array|string $opts = null): Collection|StripeObject
     {
         return self::_allNestedResources($id, '/source_transactions', $params, $opts);
     }
 
     /**
-     * @param null|array $params
-     * @param null|array|string $opts
-     *
-     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     * @param array|null $params
+     * @param array|string|null $opts
      *
      * @return Source the verified source
+     *@throws \Stripe\Exception\ApiErrorException if the request fails
+     *
      */
-    public function verify($params = null, $opts = null)
+    public function verify(array $params = null, array|string $opts = null): static
     {
         $url = $this->instanceUrl() . '/verify';
         list($response, $opts) = $this->_request('post', $url, $params, $opts);

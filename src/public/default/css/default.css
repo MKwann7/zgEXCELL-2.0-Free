@@ -6,7 +6,7 @@ body div.universal-float-shield {
     right: 0px;
     bottom: 0px;
     background: url(/website/images/LoadingIcon2.gif) no-repeat left 50% center / auto 35px,rgba(255,255,255,.4) ;
-    z-index:5;
+    z-index:11000;
     overflow-y: auto;
     justify-content: center;
     align-items: center;
@@ -33,7 +33,7 @@ body div.closedModal.universal-float-shield {
     opacity: 1 !important;
     transition: all 0.1s ease-in-out 0s;
 }
-.zgpopup-dialog-box {
+.zgpopup-dialog-box.dialog-theme-default {
     background: #ffffff;
     background: -moz-linear-gradient(top,  #ffffff 0%, #eaeaea 100%);
     background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#ffffff), color-stop(100%,#eaeaea));
@@ -47,7 +47,7 @@ body div.closedModal.universal-float-shield {
     max-width: calc(100vw - 50px);
     min-width: 250px;
 }
-.zgpopup-dialog-header {
+.zgpopup-dialog-header.dialog-theme-default {
     background: -moz-linear-gradient(top, #ffffff 0%, #FAFAFA 100%);
     background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#ffffff), color-stop(100%,#FAFAFA));
     background: -webkit-linear-gradient(top, #ffffff 0%, #FAFAFA 100%);

@@ -33,9 +33,7 @@ header('Content-Type:text/css');
     max-height: -webkit-fill-available;
 }
 .app-card {
-    /*width: 500px;*/
     display: block;
-    /*height: 890px;*/
     position: relative;
 }
 .app-template-2 .app-main-comp-header {
@@ -447,7 +445,7 @@ body.theme_shade_light div.universal-float-shield {
     max-width: calc(100vw - 50px);
     min-width: 250px;
 }
-.theme_shade_light .zgpopup-dialog-box {
+.theme_shade_light .zgpopup-dialog-box.dialog-theme-default {
     background: #ffffff;
     background: linear-gradient(to bottom, #fff 0%, #eaeaea 100%);
     box-shadow: 0 0 10px #000000;
@@ -658,10 +656,6 @@ body.theme_shade_light div.universal-float-shield {
 .vue-app-body,
 .vue-app-body > div,
 .vue-app-body > div > div {
-    height:100%;
-}
-
-.vue-app-body-component {
     height:100%;
 }
 

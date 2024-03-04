@@ -24,7 +24,7 @@ abstract class Webhook
      *
      * @return Event the Event instance
      */
-    public static function constructEvent($payload, $sigHeader, $secret, $tolerance = self::DEFAULT_TOLERANCE)
+    public static function constructEvent($payload, $sigHeader, $secret, $tolerance = self::DEFAULT_TOLERANCE): Event
     {
         WebhookSignature::verifyHeader($payload, $sigHeader, $secret, $tolerance);
 

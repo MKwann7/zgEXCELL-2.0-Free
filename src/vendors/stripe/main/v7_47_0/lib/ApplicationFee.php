@@ -32,28 +32,28 @@ class ApplicationFee extends ApiResource
 
     /**
      * @param string $id the ID of the application fee on which to retrieve the fee refunds
-     * @param null|array $params
-     * @param null|array|string $opts
+     * @param array|null $params
+     * @param array|string|null $opts
      *
+     * @return Collection|StripeObject
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\Collection the list of fee refunds
      */
-    public static function allRefunds($id, $params = null, $opts = null)
+    public static function allRefunds(string $id, array $params = null, array|string $opts = null): Collection|StripeObject
     {
         return self::_allNestedResources($id, static::PATH_REFUNDS, $params, $opts);
     }
 
     /**
      * @param string $id the ID of the application fee on which to create the fee refund
-     * @param null|array $params
-     * @param null|array|string $opts
+     * @param array|null $params
+     * @param array|string|null $opts
      *
+     * @return ApplicationFeeRefund|StripeObject
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\ApplicationFeeRefund
      */
-    public static function createRefund($id, $params = null, $opts = null)
+    public static function createRefund(string $id, array $params = null, array|string $opts = null): StripeObject|ApplicationFeeRefund
     {
         return self::_createNestedResource($id, static::PATH_REFUNDS, $params, $opts);
     }
@@ -61,14 +61,14 @@ class ApplicationFee extends ApiResource
     /**
      * @param string $id the ID of the application fee to which the fee refund belongs
      * @param string $refundId the ID of the fee refund to retrieve
-     * @param null|array $params
-     * @param null|array|string $opts
+     * @param array|null $params
+     * @param array|string|null $opts
      *
+     * @return ApplicationFeeRefund|StripeObject
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\ApplicationFeeRefund
      */
-    public static function retrieveRefund($id, $refundId, $params = null, $opts = null)
+    public static function retrieveRefund(string $id, string $refundId, array $params = null, array|string $opts = null): StripeObject|ApplicationFeeRefund
     {
         return self::_retrieveNestedResource($id, static::PATH_REFUNDS, $refundId, $params, $opts);
     }
@@ -76,14 +76,14 @@ class ApplicationFee extends ApiResource
     /**
      * @param string $id the ID of the application fee to which the fee refund belongs
      * @param string $refundId the ID of the fee refund to update
-     * @param null|array $params
-     * @param null|array|string $opts
+     * @param array|null $params
+     * @param array|string|null $opts
      *
+     * @return ApplicationFeeRefund|StripeObject
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\ApplicationFeeRefund
      */
-    public static function updateRefund($id, $refundId, $params = null, $opts = null)
+    public static function updateRefund(string $id, string $refundId, array $params = null, array|string $opts = null): StripeObject|ApplicationFeeRefund
     {
         return self::_updateNestedResource($id, static::PATH_REFUNDS, $refundId, $params, $opts);
     }

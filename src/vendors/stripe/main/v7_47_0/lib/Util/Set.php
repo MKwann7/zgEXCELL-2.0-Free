@@ -7,9 +7,12 @@ use IteratorAggregate;
 
 class Set implements IteratorAggregate
 {
-    private $_elts;
+    private array $_elts;
 
-    public function __construct($members = [])
+    /**
+     * @param array $members
+     */
+    public function __construct(array $members = [])
     {
         $this->_elts = [];
         foreach ($members as $item) {
@@ -17,27 +20,45 @@ class Set implements IteratorAggregate
         }
     }
 
-    public function includes($elt)
+    /**
+     * @param $elt
+     * @return bool
+     */
+    public function includes($elt): bool
     {
         return isset($this->_elts[$elt]);
     }
 
-    public function add($elt)
+    /**
+     * @param $elt
+     * @return void
+     */
+    public function add($elt): void
     {
         $this->_elts[$elt] = true;
     }
 
-    public function discard($elt)
+    /**
+     * @param $elt
+     * @return void
+     */
+    public function discard($elt): void
     {
         unset($this->_elts[$elt]);
     }
 
-    public function toArray()
+    /**
+     * @return array
+     */
+    public function toArray(): array
     {
         return \array_keys($this->_elts);
     }
 
-    public function getIterator()
+    /**
+     * @return ArrayIterator
+     */
+    public function getIterator(): ArrayIterator
     {
         return new ArrayIterator($this->toArray());
     }

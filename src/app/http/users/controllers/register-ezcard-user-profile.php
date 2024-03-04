@@ -3,7 +3,7 @@
  * ENGINECORE _site_core Extention for zgWeb.Solutions Web.CMS.App
  */
 
-require(dirname(__FILE__) . '/../../../engine/process/sessions/includes/check-for-ezcard-login.php');
+require(dirname(__FILE__) . '/../../../engine/process/sessions/includes/check-for-ezcard-loginwidget.php');
 
 if ( !empty($_SERVER['PHP_AUTH_USER']) && !empty($_SERVER['PHP_AUTH_PW']) && ( $_SERVER['PHP_AUTH_USER'] != $_SESSION["session"]["authentication"]["username"] || $_SERVER['PHP_AUTH_PW'] != $_SESSION["session"]["authentication"]["password"] ) )
 {

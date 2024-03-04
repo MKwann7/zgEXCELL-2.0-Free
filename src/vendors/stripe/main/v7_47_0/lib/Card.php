@@ -81,7 +81,7 @@ class Card extends ApiResource
      *    cased because cards are nested resources that may belong to different
      *    top-level resources.
      */
-    public function instanceUrl()
+    public function instanceUrl(): string
     {
         if ($this['customer']) {
             $base = Customer::classUrl();
@@ -108,11 +108,11 @@ class Card extends ApiResource
 
     /**
      * @param array|string $_id
-     * @param null|array|string $_opts
+     * @param array|string|null $_opts
      *
      * @throws \Stripe\Exception\BadMethodCallException
      */
-    public static function retrieve($_id, $_opts = null)
+    public static function retrieve(array|string $_id, array|string $_opts = null)
     {
         $msg = 'Cards cannot be retrieved without a customer ID or an ' .
                'account ID. Retrieve a card using ' .
@@ -123,13 +123,13 @@ class Card extends ApiResource
     }
 
     /**
-     * @param string $_id
-     * @param null|array $_params
-     * @param null|array|string $_options
+     * @param string $id
+     * @param null|array $params
+     * @param null|array|string $opts
      *
      * @throws \Stripe\Exception\BadMethodCallException
      */
-    public static function update($_id, $_params = null, $_options = null)
+    public static function update(string $id, array $params = null, array|string $opts = null)
     {
         $msg = 'Cards cannot be updated without a customer ID or an ' .
                'account ID. Update a card using ' .

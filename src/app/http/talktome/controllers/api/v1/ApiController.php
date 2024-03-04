@@ -1,11 +1,11 @@
 <?php
 
-namespace Http\Sharesave\Controllers\Api\V1;
+namespace Http\Talktome\Controllers\Api\V1;
 
 use App\Utilities\Excell\ExcellHttpModel;
-use Http\Sharesave\Controllers\Base\ShareSaveController;
+use Http\Talktome\Controllers\Base\TalkToMeController;
 
-class ApiController extends ShareSaveController
+class ApiController extends TalkToMeController
 {
     public function configMain(ExcellHttpModel $objData) : bool
     {

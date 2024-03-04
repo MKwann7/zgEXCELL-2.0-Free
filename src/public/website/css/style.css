@@ -121,6 +121,7 @@ body {
 .width150px {width: 150px;float:left;}
 .width175px {width: 175px;float:left;}
 .width250px {width: 250px;float:left;}
+.width300px {width: 300px;float:left;}
 .widthAutoTo175px {width: calc(100% - 175px);float:left;}
 .widthAutoTo250px {width: calc(100% - 250px);float:left;}
 

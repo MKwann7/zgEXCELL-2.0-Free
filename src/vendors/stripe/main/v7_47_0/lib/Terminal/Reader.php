@@ -4,6 +4,12 @@
 
 namespace Stripe\Terminal;
 
+use Stripe\ApiOperations\All;
+use Stripe\ApiOperations\Create;
+use Stripe\ApiOperations\Delete;
+use Stripe\ApiOperations\Retrieve;
+use Stripe\ApiOperations\Update;
+
 /**
  * A Reader represents a physical device for accepting payment details.
  *
@@ -27,9 +33,9 @@ class Reader extends \Stripe\ApiResource
 {
     const OBJECT_NAME = 'terminal.reader';
 
-    use \Stripe\ApiOperations\All;
-    use \Stripe\ApiOperations\Create;
-    use \Stripe\ApiOperations\Delete;
-    use \Stripe\ApiOperations\Retrieve;
-    use \Stripe\ApiOperations\Update;
+    use All;
+    use Create;
+    use Delete;
+    use Retrieve;
+    use Update;
 }

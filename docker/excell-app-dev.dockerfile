@@ -19,6 +19,9 @@ COPY docker/setup/config/php.ini /etc/php8/conf.d/custom.ini
 # Configure supervisord
 COPY docker/setup/config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
+# Switch to use a non-root user from here on
+USER nobody
+
 # Setup document root
 RUN mkdir -p /app/excell/code
 RUN mkdir -p /app/excell/logs
@@ -29,7 +32,7 @@ RUN mkdir -p /app/excell/storage
 RUN mkdir -p /app/excell/storage/core
 RUN mkdir -p /app/excell/storage/ssl
 RUN mkdir -p /app/excell/storage/uploads
-RUN mkdir -p /app/excell/storage/commands
+RUN mkdir -p /app/excell/list/commands
 RUN mkdir -p /app/excell/storage/modules
 RUN mkdir -p /app/excell/storage/modules/company
 RUN mkdir -p /app/excell/tmp
@@ -52,6 +55,9 @@ RUN chown -R nobody.nobody /app/excell/code && \
 #VOLUME /app/excell/list
 #VOLUME /app/excell/tmp
 #VOLUME /app/excell/logs
+
+# Switch to root user
+USER root
 
 COPY docker/ssl/ssl.zip /app/excell/storage/ssl
 RUN 7z e /app/excell/storage/ssl/ssl.zip -o/app/excell/ssl -y > nul

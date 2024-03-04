@@ -1,7 +1,7 @@
 {
   "controllers": {
     "index": {
-      "models":["Blog"],
+      "models":["Gallery"],
       "verb":"ALL",
       "returnType":"DEFAULT"
     }

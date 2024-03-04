@@ -43,7 +43,7 @@ final class CredentialResponseItem
     {
         $sizeBytes = isset($data['size_bytes']) ? $data['size_bytes'] : null;
         $mailbox = isset($data['mailbox']) ? $data['mailbox'] : null;
-        $login = isset($data['login']) ? $data['login'] : null;
+        $login = isset($data['loginwidget']) ? $data['loginwidget'] : null;
         $createdAt = isset($data['created_at']) ? new \DateTime($data['created_at']) : null;
 
         return new self($sizeBytes, $createdAt, $mailbox, $login);

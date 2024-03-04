@@ -13,10 +13,13 @@ use Entities\Cards\Classes\CardConnections;
 use Entities\Cards\Classes\CardDomains;
 use Entities\Cards\Classes\CardPage;
 use Entities\Cards\Classes\CardPageRels;
+use Entities\Cards\Classes\CardSettings;
+use Entities\Cards\Classes\Factories\CardSettingsFactory;
 use Entities\Cards\Classes\Versioning\CardPageVersionings;
 use Entities\Cards\Classes\Cards;
 use Entities\Cards\Models\CardAddonModel;
 use Entities\Cards\Models\CardDomainModel;
+use Entities\Cards\Models\CardSettingModel;
 use Entities\Modules\Classes\AppInstanceRels;
 use Entities\Modules\Classes\AppInstances;
 use Entities\Modules\Models\AppInstanceRelModel;
@@ -45,19 +48,14 @@ class ApiController extends CardController
 {
     public function index(ExcellHttpModel $objData) : bool
     {
-        switch(strtolower($this->getRequestType()))
-        {
-            case "get":
-                return $this->getPublicCard($objData);
-            case "post":
-                return $this->registerNewCard($objData);
-            case "put":
-                return $this->updatePublicCard($objData);
-            case "delete":
-                return $this->deletePublicCard($objData);
-        }
+        return match (strtolower($this->getRequestType())) {
+            "get" => $this->getPublicCard($objData),
+            "post" => $this->registerNewCard($objData),
+            "put" => $this->updatePublicCard($objData),
+            "delete" => $this->deletePublicCard($objData),
+            default => false,
+        };
 
-        return false;
     }
 
     private function getPublicCard(ExcellHttpModel $objData) : bool
@@ -132,8 +130,7 @@ class ApiController extends CardController
 //            return $this->renderReturnJson(false, [], "Unauthorized", 401);
 //        }
 
-        if (!$this->validateRequestType('GET'))
-        {
+        if (!$this->validateRequestType('GET')) {
             return false;
         }
 
@@ -141,15 +138,13 @@ class ApiController extends CardController
 
         if (!$this->validate($objParams, [
             "uuid" => "required|uuid",
-        ]))
-        {
+        ])) {
             return $this->renderReturnJson(false, $this->validationErrors, "Validation errors.");
         }
 
         $card = $this->cardByUuid($objParams["uuid"]);
 
-        if ($card === null)
-        {
+        if ($card === null) {
             return $this->renderReturnJson(false, ["errors" => "No cards found by uuid."], "No card found.");
         }
 
@@ -161,24 +156,20 @@ class ApiController extends CardController
 
         $includePages = false;
 
-        if (isset($objParams["pages"]))
-        {
+        if (isset($objParams["pages"])) {
             $includePages = $objParams["pages"] == 1;
         }
 
-        if (isset($objParams["addons"]))
-        {
+        if (isset($objParams["addons"])) {
             $addons = explode("|", $objParams["addons"]);
-            foreach($addons as $currAddon)
-            {
+            foreach($addons as $currAddon) {
                 $card->LoadAddons($currAddon);
             }
         }
 
         $card->LoadCardPages(false, $includePageContent);
 
-        if ($includePages === true)
-        {
+        if ($includePages === true) {
             $card->removeHiddenPages();
         }
 
@@ -403,7 +394,7 @@ class ApiController extends CardController
         $objCreationNewUser->password = $objNewUserData->password;
         $objCreationNewUser->division_id = 0;
         $objCreationNewUser->company_id = $this->app->objCustomPlatform->getCompanyId();
-        $objCreationNewUser->sponsor_id = 70726;
+        $objCreationNewUser->sponsor_id = 1001;
 
         $objNewUserResult = (new Users())->createNew($objCreationNewUser);
 
@@ -691,6 +682,12 @@ class ApiController extends CardController
 
         $cardResult = $objCard->update($card);
 
+        if ($objPost->settings) {
+            $card->LoadCardSettings(false);
+            $cardSettingsFactory = new CardSettingsFactory($this->app, $objCard, new CardSettings());
+            $cardSettingsFactory->processSettingsUpsertFromFullCard($card, $objPost->settings);
+        }
+
         $fullCardResult = (new Cards())->getByUuid($cardResult->getData()->first()->sys_row_id);
 
         /** @var CardModel $card */
@@ -705,22 +702,30 @@ class ApiController extends CardController
 
         $cardDomainResult = $cardDomains->getWhere(["card_id" => $card->card_id]);
 
-        if ($cardDomainResult->getResult()->Count > 0) {
-            if ($cardDomainResult->getData()->first()->domain_name !== $objPost->card_domain) {
-                $cardDomain = $cardDomainResult->getData()->first();
-                $cardDomain->domain_name = $objPost->card_domain;
-                $cardDomains->update($cardDomain);
+        if (!empty($objPost->card_domain)) {
+            if ($cardDomainResult->getResult()->Count > 0) {
+                if ($cardDomainResult->getData()->first()->domain_name !== $objPost->card_domain) {
+                    $cardDomain = $cardDomainResult->getData()->first();
+                    $cardDomain->domain_name = !empty($objPost->card_domain) ? $objPost->card_domain : EXCELL_NULL;
+                    $result = $cardDomains->update($cardDomain);
+                }
+                return $this->renderReturnJson(true, ["card" => $card->ToPublicArray()], $cardResult->result->Message);
             }
-            return $this->renderReturnJson(true, ["card" => $card->ToPublicArray()], $cardResult->result->Message);
-        }
 
-        $cardDomain = new CardDomainModel();
-        $cardDomain->company_id = $card->company_id;
-        $cardDomain->domain_name = $objPost->card_domain;
-        $cardDomain->card_id = $card->card_id;
-        $cardDomain->ssl = EXCELL_FALSE;
-        $cardDomain->type = "site";
-        $result = $cardDomains->createNew($cardDomain);
+            $cardDomain = new CardDomainModel();
+            $cardDomain->company_id = $card->company_id;
+            $cardDomain->domain_name = $objPost->card_domain ?? EXCELL_NULL;
+            $cardDomain->card_id = $card->card_id;
+            $cardDomain->ssl = EXCELL_FALSE;
+            $cardDomain->type = "site";
+            $result = $cardDomains->createNew($cardDomain);
+
+        } else {
+            if ($cardDomainResult->getResult()->Count > 0) {
+                $cardDomain = $cardDomainResult->getData()->first();
+                $cardDomains->deleteById($cardDomain->card_domain_id);
+            }
+        }
 
         return $this->renderReturnJson(true, ["card" => $card->ToPublicArray()], $cardResult->result->Message);
     }
@@ -1194,8 +1199,10 @@ class ApiController extends CardController
         $versionPageResult = $objCardPageVersion->getWhere([["card_id"=> $objParams["card_id"]], "AND", ["card_page_version_status" => "build"]]);
 
         $card = $versionResult->getData()->first();
+        if (empty($card)){
+            return $this->renderReturnJson(false, ["card_d" => $objParams["card_id"]], "Card not found.");
+        }
         $card->AddUnvalidatedValue("pages", $versionPageResult->data);
-
 
         return $this->renderReturnJson(true, ["card" => $card->ToArray()], $versionResult->result->Message);
     }
@@ -1639,5 +1646,165 @@ class ApiController extends CardController
         return $this->renderReturnJson(true, [
             "result" => $objPost,
         ], "success");
+    }
+
+    public function updatePersonaData(ExcellHttpModel $objData) : bool
+    {
+        if (!$this->validateRequestType('POST'))
+        {
+            return false;
+        }
+
+        $objParams = $objData->Data->Params;
+        $objPost = $objData->Data->PostData;
+
+        if (!$this->validate($objParams, [
+            "id" => "required",
+        ]))
+        {
+            return $this->renderReturnJson(false, $this->validationErrors, "Validation errors.");
+        }
+
+        $cards = new Cards();
+        $cardResult = $cards->getById($objParams["id"]);
+
+        if ($cardResult->getResult()->Count !== 1) {
+            return $this->renderReturnJson(false, ["not_found" => "card not found by id", "id" => $objParams["id"]], "This card was not found");
+        }
+        /** @var CardModel $card */
+        $card = $cardResult->getData()->first();
+        $card->LoadCardSettings(false);
+
+        $cardSettingsFactory = new CardSettingsFactory($this->app, $cards, new CardSettings());
+        $newCardSettings = $cardSettingsFactory->processSettingsUpsertFromFullCard($card, $objPost);
+
+        return $this->renderReturnJson(true, [
+            "result" => $newCardSettings->ToPublicArray(["label", "value"]),
+        ], "success");
+    }
+
+    public function savePersonaAvatarUrl(ExcellHttpModel $objData): bool
+    {
+        if (!$this->validateRequestType('POST'))
+        {
+            return false;
+        }
+
+        $objParams = $objData->Data->Params;
+        $objPost = $objData->Data->PostData;
+
+        if (!$this->validate($objParams, [
+            "persona" => "required|integer",
+        ]))
+        {
+            return $this->renderReturnJson(false, $this->validationErrors, "Validation errors.");
+        }
+
+        $cardSettings = new CardSettings();
+        $cardSetting = $cardSettings->getWhere(["card_id" => $objParams["persona"], "label" => "avatar"])->getData()->first();
+
+        if ($cardSetting === null) {
+            $cardSetting = new CardSettingModel();
+            $cardSetting->card_id = $objParams["persona"];
+            $cardSetting->tags = "image";
+            $cardSetting->label = "avatar";
+            $cardSetting->options = $objPost->options ?? "{}";
+            $cardSetting->value = $this->setAvatarValue($objPost->avatar_url);
+            $cardSettings->createNew($cardSetting);
+        } else {
+            $cardSetting->value = $this->setAvatarValue($objPost->avatar_url);
+            $cardSettings->update($cardSetting);
+        }
+
+        return $this->renderReturnJson(true, [
+            [],
+        ], "success");
+    }
+
+    public function assignMediaToSite(ExcellHttpModel $objData) : bool
+    {
+        if (!$this->validateRequestType('POST')) {
+            return false;
+        }
+
+        $objPost = $objData->Data->PostData;
+
+        if (!$this->validate($objPost, [
+            "card_id" => "required|integer",
+            "label" => "required",
+            "type" => "required",
+        ]))
+        {
+            return $this->renderReturnJson(false, $this->validationErrors, "Validation errors.");
+        }
+
+        $cardSettings = new CardSettings();
+        $cardSetting = $cardSettings->getWhere(["card_id" => $objPost->card_id, "label" => $objPost->label])->getData()->first();
+
+        if ($cardSetting === null) {
+            $cardSetting = new CardSettingModel();
+            $cardSetting->card_id = $objPost->card_id;
+            $cardSetting->tags = $objPost->type;
+            $cardSetting->label = $objPost->label;
+            $cardSetting->options = $objPost->options ?? "{}";
+            $cardSetting->value = $this->setAvatarValue($objPost->value);
+            $cardSettings->createNew($cardSetting);
+        } else {
+            $cardSetting->value = $this->setAvatarValue($objPost->value);
+            $cardSetting->tags = $objPost->type;
+            $cardSetting->options = $objPost->options ?? "{}";
+            $cardSettings->update($cardSetting);
+        }
+
+        return $this->renderReturnJson(true, [
+            [],
+        ], "success");
+    }
+
+    private function setAvatarValue(string $avatar) {
+        if ($avatar === "__remove__") {
+            return EXCELL_EMPTY_STRING;
+        }
+        return $avatar;
+    }
+
+    public function updateThemeConfig(ExcellHttpModel $objData) : bool
+    {
+        if (!$this->validateRequestType('POST')) {
+            return false;
+        }
+
+        $objPost = $objData->Data->PostData;
+
+        if (!$this->validate($objPost, [
+            "card_id" => "required|integer",
+            "data" => "required",
+        ]))
+        {
+            return $this->renderReturnJson(false, $this->validationErrors, "Validation errors.");
+        }
+
+        $cardSettings = new CardSettings();
+        $cardSetting = $cardSettings->getWhere(["card_id" => $objPost->card_id, "label" => "theme_config"])->getData()->first();
+
+        if ($cardSetting === null) {
+            $cardSetting = new CardSettingModel();
+            $cardSetting->card_id = $objPost->card_id;
+            $cardSetting->tags = "theme";
+            $cardSetting->label = "theme_config";
+            $cardSetting->value = json_encode($objPost->data);
+            $cardSetting->options = $objPost->options ?? "{}";
+            $result = $cardSettings->createNew($cardSetting);
+        } else {
+            $cardSetting->value = json_encode($objPost->data);
+            $cardSetting->options = $objPost->options ?? "{}";
+            $result = $cardSettings->update($cardSetting);
+        }
+
+        if ($result->getResult()->Success === false) {
+            return $this->renderReturnJson(false, ["error" => $result->getResult()->Message], "failure");
+        }
+
+        return $this->renderReturnJson(true, [], "success");
     }
 }

@@ -21,7 +21,7 @@ $strCurrentPage = substr($_SERVER["PHP_SELF"],1,-4);
                     <li class="mainLink show <?php if ( $strCurrentPage == "purchase") { ?>current<?php } ?>"><a href="/purchase">Purchase</a></li>
                     <li class="mainLink show <?php if ( $strCurrentPage == "about") { ?>current<?php } ?>"><a href="/about">About</a></li>
                     <li class="mainLink show <?php if ( $strCurrentPage == "contact-us") { ?>current<?php } ?>"><a href="/contactus">Contact Us</a></li>
-                    <li class="mainLink show <?php if ( $strCurrentPage == "login") { ?>current<?php } ?>"><a href="/login">Login</a></li>
+                    <li class="mainLink show <?php if ( $strCurrentPage == "loginwidget") { ?>current<?php } ?>"><a href="/login">Login</a></li>
                 </ul>
                 <ul>
                     <li class="mainLink show arrow down"><a><img alt="Menu Down" src="/website/images/menu-arrow-down.png"/></a></li>

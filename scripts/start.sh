@@ -6,7 +6,9 @@ reset
 BUILD=local
 APP_NAME=excell
 
-project_path="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+cd ../
+
+project_path="$( cd "$( dirname "${BASH_SOURCE[0]//scripts\/}" )" &> /dev/null && pwd )"
 echo "project_path = ${project_path}"
 
 if [[ -z "$(ls -A ${project_path}/src/engine)" ]]; then

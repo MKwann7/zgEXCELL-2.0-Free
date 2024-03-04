@@ -25,6 +25,8 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
     if (time) { transitionTime = time; }
     let isChangingComponents = false;
     let userId = vueInstance.userId;
+    let contentBuilderToolbar = null
+    let contentBuilderToolbarSideBar = null
     if (typeof userId === "undefined" || userId === null) { userId = Cookie.get("userId") }
 
     let userNum = vueInstance.userNum;
@@ -40,7 +42,9 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
         const transitionEvent = whichTransitionEvent();
         transitionEvent && vueWrapper.addEventListener(transitionEvent, function(event)
         {
-            _.el.style.overflowX = "visible";
+            window.setTimeout( function() {
+                _.el.style.overflowX = "visible";
+            }, 100)
             if (!currentComponent || !newComponent || currentComponent === newComponent) { return; }
             currentComponent.style.display = "none";
             currentComponent.style.removeProperty("top");
@@ -83,6 +87,23 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
 		}
 
 		return null;
+	}
+
+	this.setNewParentIdForComponentById = function(id, parentId)
+	{
+        const parentComponent = _.getComponentById(parentId)
+        for(const currComponentIndex in Array.from(_.components))
+        {
+            if (_.components[currComponentIndex].id === resolveCamelCase(id))
+            {
+                _.components[currComponentIndex].parentInstanceId = parentComponent.instanceId
+                if (_.components[currComponentIndex].instance) {
+                    _.components[currComponentIndex].instance.parentId = parentComponent.instanceId
+                }
+            }
+        }
+
+		return _;
 	}
 
 	this.getComponentFromRecord = function(componentRecord)
@@ -272,7 +293,15 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
 	this.backToComponent = function(methodCall)
 	{
 		_.runComponentDismissalScript();
+
+        let currentComponent = _.getCurrentComponent()
+        if (currentComponent.instance && typeof currentComponent.instance.parentCustomAction === "function") {
+            currentComponent.instance.parentCustomAction();
+            return;
+        }
+
 		let component = _.getComponentByInstanceId(componentParentId);
+
 		currentComponentId = component.instanceId;
 		componentAction = component.action;
 		showComponent(methodCall, true);
@@ -293,36 +322,37 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
 		let component = _.getComponentByInstanceId(componentId);
 		if (component === null) { return false; }
 
-		if (component.disableParent === true)
-		{
-			return false;
+        if (typeof component.instance.getParentCustomAction === "function" &&  component.instance.getParentCustomAction() === true) {
+            return true
+        }
+
+		if (
+            (
+                component.disableParent === true ||
+                (componentParentId === null && (vcType === "modal" || vcType === "hub"))
+            ) && (
+                typeof component.instance.getParentCustomAction !== "function" || component.instance.getParentCustomAction() === false
+            )
+        ) {
+			return false
 		}
 
-        if (componentParentId === null && (vcType === "modal" || vcType === "hub"))
-		{
-			return false;
-		}
+		if (
+            (
+                typeof component.instance.getParentLinkActions !== "function" ||
+                typeof component.instance.getParentLinkActions() !== "object" ||
+                component.instance.getParentLinkActions().length === 0
+            ) || (
+                typeof component.instance.getParentCustomAction === "function" ||
+                component.instance.getParentCustomAction() === true
+            )
 
-		if (typeof component.instance.getParentLinkActions !== "function")
-        {
-            return true;
+        ) {
+            return true
         }
 
-		let parentLinkActions = component.instance.getParentLinkActions();
-
-        if (typeof parentLinkActions !== "object")
-        {
-            return true;
-        }
-
-        if ( parentLinkActions.length === 0)
-        {
-            return true;
-        }
-
-		if (!parentLinkActions.includes(componentAction))
-		{
-			return false;
+		if (!parentLinkActions.includes(componentAction)) {
+			return false
 		}
 
 		return true;
@@ -413,14 +443,15 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
             parentInstanceId = component.parentInstanceId;
         }
 
+        let showComponentAction = show
 		if (typeof component !== "undefined" && component != null)
 		{
 		    if (hydrate === true)
             {
-                hydrateComponent(instanceId, parentInstanceId, action, entity, entities, props, show)
+                showComponentAction = hydrateComponent(instanceId, parentInstanceId, action, entity, entities, props, show)
             }
 
-			if (show)
+			if (showComponentAction)
 			{
                 currentComponentId = instanceId
 				showComponent()
@@ -446,7 +477,8 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
 
 	const getDynamicComponentFromApi = function(instanceId, id, parentInstanceId, action, title, entity, entities, props, show, hydrate, callback)
 	{
-		let componentApi = "<?php echo getFullPortalUrl(); ?>/modules/widget/config?widget_id=" + id + "&user_id=" + ( userId ? userId : "visitor" )
+        const userType = (typeof userId !== "undefined" && userId !== null && userId !== "null" && userId) ? userId : "visitor"
+		let componentApi = "<?php echo getFullActiveUrl(); ?>/modules/widget/config?widget_id=" + id + "&user_id=" + userType
 
         if  (props && props.site_id) {
             componentApi = componentApi + "&site_id=" + props.site_id
@@ -473,7 +505,7 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
                     modal.DisplayAlert({title:"Dynamic Vue Error", html: "We are unable to load the requested component from our system.<br> Error return: " + ex});
                     return;
                 } else {
-                    console.log("We are unable to load the requested component from our system.<br> Error return: " + ex);
+                    console.log("We are unable to load the requested component from our system.<br> Error return: " + result.response.message);
                     console.log(componentApi);
                     return;
                 }
@@ -557,12 +589,17 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
         addDynamicComponentsMethodIfApplicable(dynamicComponent);
 
         const instanceRef = "comp" + instanceId.replace(/-/g,"") + "Ref";
+        const instanceDynRef = "dyn" + instanceId.replace(/-/g,"");
         const newComponentItem = processComponentMount(dynamicComponent, componentSubId, instanceRef, instanceId, id, parentInstanceId, action, props)
 
 		_.components.push(newComponentItem);
 
         if (hydrate === true && newComponentItem.instance !== null) {
             hydrateComponent(instanceId, parentInstanceId, action, entity, entities, props, show);
+        }
+
+        if (dynamicComponent.mountType === "no_mount" || dynamicComponent.mountType === "dynamic") {
+            componentRepo.register(instanceDynRef, newComponentItem)
         }
 
         if (show && newComponentItem.instance !== null) {
@@ -736,8 +773,7 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
         {
             let vc = this.findVc(this);
             const component = vc.getComponentByInstanceId(this.instanceId);
-            if (typeof component.instance.$el !== "undefined")
-            {
+            if (typeof component.instance.$el !== "undefined" && typeof component.instance.$el.classList !== "undefined") {
                 component.instance.$el.classList.add("ajax-loading-anim");
             }
         }
@@ -747,24 +783,21 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
             let vc = this.findVc(this);
             const component =  vc.getComponentByInstanceId(this.instanceId);
 
-            if (typeof component.instance.$el !== "undefined")
-            {
+            if (typeof component.instance.$el !== "undefined" && typeof component.instance.$el.classList !== "undefined") {
                 component.instance.$el.classList.remove("ajax-loading-anim");
             }
         }
 
         dynamicComponent.methods.addDynamicComponent = function(id, component)
         {
-            if (typeof this[id] === "undefined" || this[id] === null)
-            {
+            if (typeof this[id] === "undefined" || this[id] === null) {
                 this[id] = component;
             }
         }
 
         if (typeof dynamicComponent.methods.buildBreadCrumb !== "function")
         {
-            dynamicComponent.methods.buildBreadCrumb = function()
-            {
+            dynamicComponent.methods.buildBreadCrumb = function() {
                 return [1,2,3];
             }
         }
@@ -787,6 +820,17 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
             }
         }
 
+        dynamicComponent.methods.getComponentByStaticId = function(id, parent, action, entity, entities, props, show, hydrate, callback)
+        {
+            let vc = this.findVc(this);
+            if (vc && typeof vc.loadComponentByStaticId === "function")
+            {
+                return vc.loadComponentByStaticId(id, parent, action, entity, entities, props, show, hydrate, callback)
+            }
+
+            return null
+        }
+
         dynamicComponent.methods.injectDefaultData = function(instanceId, parentInstanceId, action, entity, entities, props, parentData, userId, userNum)
         {
             this.action = action;
@@ -798,8 +842,7 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
             this.instanceId = instanceId;
             this.loadProps(props);
 
-            if (Object.keys(parentData).length > 0)
-            {
+            if (Object.keys(parentData).length > 0) {
                 this.parentData = parentData;
             }
 
@@ -811,7 +854,7 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
             return this.recursiveEntityCall(vue, "vc", true);
         }
 
-        dynamicComponent.methods.findChildVc = function(vue)
+        dynamicComponent.methods.findChildVc = function(vue, recursive)
         {
             return this.recursiveForwardEntityCall(vue, "vc", true);
         }
@@ -883,15 +926,20 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
             return this.recursiveEntityCall(vue, "modal", true);
         }
 
+        dynamicComponent.methods.setModalWidth = function(vue, width)
+        {
+            const modal = this.findModal(vue)
+            if (!modal) return
+            modal.setWidth(width)
+        }
+
         dynamicComponent.methods.setModalComponentInstance = function(instanceId, show)
         {
-            if (typeof instanceId !== "undefined")
-            {
+            if (typeof instanceId !== "undefined") {
                 this.instanceId = instanceId;
             }
 
-            if (typeof this.dynamicComponents === "function")
-            {
+            if (typeof this.dynamicComponents === "function") {
                 let dynamicComponentList = this.dynamicComponents();
 
                 let vc = this.findVc(this);
@@ -899,35 +947,28 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
 
                 if (typeof dynamicComponentList === "undefined") return;
 
-                for(let currComponentName in dynamicComponentList)
-                {
+                for(let currComponentName in dynamicComponentList) {
                     let currComponentId = dynamicComponentList[currComponentName];
                     let newComponent = null;
 
-                    if (typeof vc.getComponentFromRecord === "function")
-                    {
+                    if (typeof vc.getComponentFromRecord === "function") {
                         newComponent = vc.getComponentFromRecord(currComponentId);
                     }
 
-                    if (typeof newComponent !== "undefined" && newComponent !== null && newComponent.instance)
-                    {
+                    if (typeof newComponent !== "undefined" && newComponent !== null && newComponent.instance) {
                         this.addDynamicComponent(currComponentName, newComponent.rawInstance);
 
-                        if (typeof newComponent.instance.dynamicComponents === "function" && typeof newComponent.instance.setModalComponentInstance === "function")
-                        {
+                        if (typeof newComponent.instance.dynamicComponents === "function" && typeof newComponent.instance.setModalComponentInstance === "function") {
                             newComponentList.push(newComponent);
                             newComponent.instance.setModalComponentInstance(newComponent.instanceId, false);
                         }
                     }
                 }
 
-                if (newComponentList.length > 0)
-                {
-                    for (let currComponent of newComponentList)
-                    {
-                        if (typeof currComponent.instance.instantiateDynamicComponents === "function")
-                        {
-                            currComponent.instance.instantiateDynamicComponents();
+                if (newComponentList.length > 0) {
+                    for (let currComponent of newComponentList) {
+                        if (typeof currComponent.instance.instantiateDynamicComponents === "function") {
+                            currComponent.instance.instantiateDynamicComponents(currComponent.rawInstance.id);
                         }
                     }
                 }
@@ -954,41 +995,31 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
 		let componentIds = [];
 		instanceId = resolveCamelCase(instanceId);
 
-		if ( id !== dynamicComponent.main.id)
-        {
+		if ( id !== dynamicComponent.main.id) {
             id = resolveCamelCase(dynamicComponent.main.id);
-        }
-		else
-        {
+        } else {
             id = resolveCamelCase(id);
         }
 
 		parentInstanceId = resolveCamelCase(parentInstanceId);
-
 		componentIds.push({instanceId: instanceId, id: id, parentId: parentInstanceId});
 
-		for (let currHelper of Array.from(dynamicComponent["helpers"]))
-		{
+		for (let currHelper of Array.from(dynamicComponent["helpers"])) {
 			let parentId = ((currHelper.parent) ? resolveCamelCase(currHelper.parent) : "");
 
-			if (parentId === "main" || parentId === id)
-			{
+			if (parentId === "main" || parentId === id)  {
 				parentId = instanceId;
 			}
 
 			let newInstanceId = uuidv4();
-
 			componentIds.push({instanceId: newInstanceId, id: resolveCamelCase(typeof currHelper.id === "undefined" ? currHelper.name : currHelper.id), parentId: parentId});
 		}
 
-		for (let currParentIndex in componentIds)
-		{
+		for (let currParentIndex in componentIds) {
 			let parentId = componentIds[currParentIndex].parentId;
 
-			for(let currHelper of Array.from(componentIds))
-			{
-				if (parentId === currHelper.id)
-				{
+			for(let currHelper of Array.from(componentIds)) {
+				if (parentId === currHelper.id) {
 					componentIds[currParentIndex].parentInstanceId = resolveCamelCase(currHelper.instanceId);
 					break;
 				}
@@ -1003,16 +1034,25 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
         let activeComponent = null;
         let components = getComponentsDomInstances();
 
-        for (let currClassIndex = 0; currClassIndex < components.length; currClassIndex++)
-        {
-            if (components[currClassIndex].style.display !== "none")
-            {
+        for (let currClassIndex = 0; currClassIndex < components.length; currClassIndex++) {
+            if (components[currClassIndex].style.display !== "none") {
                 activeComponent = components[currClassIndex];
                 break;
             }
         }
 
         return activeComponent;
+    }
+
+    const setModalWidth = function(component)
+    {
+        if (vcType === "modal") {
+            if (component.instance && typeof component.instance.customModalWidth === "function") {
+                _.vue.setWidth(component.instance.customModalWidth());
+            } else {
+                _.vue.setWidth(component.modalWidth);
+            }
+        }
     }
 
     const slideComponentsOver = function(callback)
@@ -1039,6 +1079,10 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
 
         window.setTimeout( function() {
             isChangingComponents = false;
+            window.setTimeout( function() {
+                _.el.style.overflowX = "visible";
+                vueWrapper.style.transform = "";
+            }, 100)
             if (typeof callback === "function") {
                 callback();
             }
@@ -1069,6 +1113,10 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
 
         window.setTimeout( function() {
             isChangingComponents = false;
+            window.setTimeout( function() {
+                _.el.style.overflowX = "visible";
+                vueWrapper.style.transform = "";
+            }, 100)
             if (typeof callback === "function") {
                 callback();
             }
@@ -1110,22 +1158,16 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
         currentComponent = getCurrentActiveComponent();
         let goingForward = calculateGoingForward(currentComponent, component, parentComponentId);
 
-        if ((componentParentId === null && (vcType === "modal" || vcType === "hub")) || ((component.disableParent === true) && goingForward === true) || ((currentComponent === null) && goingForward === false))
-        {
+        if ((componentParentId === null && (vcType === "modal" || vcType === "hub")) || ((component.disableParent === true) && goingForward === true) || ((currentComponent === null) && goingForward === false)) {
             _.hideComponents();
 
             componentElement.style.display = "block";
 
-            if (vcType === "app")
-            {
-                if (_.getInitialComponentLoad())
-                {
+            if (vcType === "app") {
+                if (_.getInitialComponentLoad()) {
                     appHistory.updateCurrentHistory(component.instanceId, component.parentInstanceId);
-                }
-                else
-                {
-                    if (typeof component.uriAbstract !== "undefined")
-                    {
+                } else {
+                    if (typeof component.uriAbstract !== "undefined") {
                         let newComponentUri = "/" + uriBasePath + "/" + component.uriAbstract;
                         appHistory.pushState(newComponentUri, "component", component.instanceId, component.parentInstanceId);
                     }
@@ -1138,65 +1180,59 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
             return;
         }
 
-        if (goingForward)
-        {
-            if (vcType === "app")
-            {
-                if (typeof component.uriAbstract !== "undefined")
-                {
+        if (goingForward) {
+            if (vcType === "app") {
+                if (typeof component.uriAbstract !== "undefined") {
                     let newComponentUri = "/" + uriBasePath + "/" + component.uriAbstract;
 
                     if (newComponentUri.includes("{id}")) {
                         newComponentUri = newComponentUri.replace("{id}", component.instance.entity.sys_row_id);
                     }
 
+                    if (newComponentUri.includes("{instance_uuid}")) {
+                        console.log(component.instance.entity);
+                        newComponentUri = newComponentUri.replace("{instance_uuid}", component.instance.entity.instance_uuid);
+                    }
+
                     appHistory.pushState(newComponentUri, "component", component.instanceId, component.parentInstanceId);
                 }
-            }
-            else if (vcType === "hub")
-            {
-                if (typeof component.uriAbstract !== "undefined")
-                {
+            } else if (vcType === "hub") {
+                if (typeof component.uriAbstract !== "undefined") {
                     let newComponentUri = (typeof uriBasePath !== "undefined" ? ("/" + uriBasePath) : "") + "/" + component.uriAbstract;
 
-
-
-                    if (newComponentUri.includes("{card_num}"))
-                    {
+                    if (newComponentUri.includes("{card_num}")) {
                         runAsyncUriUpdate(newComponentUri, component);
-                    }
-                    else if (newComponentUri.includes("myhub"))
-                    {
+                    } else if (newComponentUri.includes("myhub")) {
                         appHistory.pushState("/myhub", "component", component.instanceId, component.parentInstanceId);
                     }
                 }
             }
+
+            setModalWidth(component)
+
             slideComponentsOver(callback)
-        }
-        else
-        {
-            if (vcType === "app")
-            {
+        } else {
+            if (vcType === "app") {
                 let newComponentUri = "/" + uriBasePath;
                 if (component.uriAbstract !== "") newComponentUri += "/" + component.uriAbstract;
 
                 appHistory.pushState(newComponentUri, "component", component.instanceId, component.parentInstanceId);
-            }
-            else if (vcType === "hub")
-            {
+            } else if (vcType === "hub") {
                 if (typeof component.uriAbstract !== "undefined") {
                     let newComponentUri = (typeof uriBasePath !== "undefined" ? ("/" + uriBasePath) : "") + "/" + component.uriAbstract;
                     appHistory.pushState(newComponentUri, "component", component.instanceId, component.parentInstanceId);
                 }
             }
+
+            setModalWidth(component)
+
             slideComponentsBack(callback)
         }
     }
 
     const runAsyncUriUpdate = function(newComponentUri, component)
     {
-        if (typeof component.instance.entity.card_num === "undefined")
-        {
+        if (typeof component.instance.entity.card_num === "undefined") {
             setTimeout(function() {
                 //ezLog(component.instance.entity, "InstanceEntity")
                 runAsyncUriUpdate(newComponentUri, component)
@@ -1204,12 +1240,9 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
             return;
         }
 
-        if (component.instance.entity.card_vanity_url)
-        {
+        if (component.instance.entity.card_vanity_url) {
             newComponentUri = newComponentUri.replace("{card_num}", component.instance.entity.card_vanity_url);
-        }
-        else
-        {
+        } else {
             newComponentUri = newComponentUri.replace("{card_num}", component.instance.entity.card_num);
         }
 
@@ -1225,8 +1258,7 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
     {
         componentParentId = null;
 
-        if (component.parentInstanceId)
-        {
+        if (component.parentInstanceId) {
             componentParentId = component.parentInstanceId;
         }
     }
@@ -1239,8 +1271,7 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
 
     this.showModal = function(vueComponent, callback)
     {
-        if (typeof vueComponent !== "undefined")
-        {
+        if (typeof vueComponent !== "undefined") {
             let component = _.getComponentByInstanceId(vueComponent.instanceId);
             this.loadComponentByInstance(component, true, true, callback);
             return;
@@ -1252,8 +1283,7 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
 
 	const showComponent = function(methodCall, returning)
 	{
-	    if (typeof _.vue.show !== "undefined")
-        {
+	    if (typeof _.vue.show !== "undefined") {
             _.vue.show(currentComponentId);
         }
 
@@ -1264,8 +1294,7 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
 	        return;
         }
 
-		if (!returning)
-        {
+		if (!returning) {
             setParentId(component);
         }
 
@@ -1278,17 +1307,13 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
             let componentTitle = buildComponentTitle(component, componentAction);
             _.vue.modal_title = componentTitle;
 
-            if (vcType === "modal")
-            {
-                _.vue.setWidth(component.modalWidth);
-            }
+            setModalWidth(component)
 
             // update breadCrumb
             updateBreadCrumb(component);
             updateSubPageLinks(component);
 
-            if (returning)
-            {
+            if (returning) {
                 setParentId(component);
             }
 
@@ -1296,14 +1321,11 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
                 typeof component.instance !== "undefined" &&
                 component.instance !== null &&
                 typeof component.instance.showComponent !== "undefined"
-            )
-            {
+            ) {
                 component.instance.showComponent();
 
-                if(methodCall)
-                {
-                    if (typeof component.instance[methodCall] === "function")
-                    {
+                if(methodCall) {
+                    if (typeof component.instance[methodCall] === "function") {
                         component.instance[methodCall]();
                     }
                 }
@@ -1319,8 +1341,7 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
     {
         if (vcType !== "app") { return; }
 
-        if (typeof _.vue.renderBreadCrumb === "function")
-        {
+        if (typeof _.vue.renderBreadCrumb === "function") {
             _.vue.renderBreadCrumb(component.instance);
         }
     }
@@ -1329,18 +1350,15 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
     {
         if (vcType !== "app") { return; }
 
-        if (typeof _.vue.renderSubPageLinks === "function")
-        {
+        if (typeof _.vue.renderSubPageLinks === "function") {
             _.vue.renderSubPageLinks(component.instance);
         }
     }
 
 	const addResizeSensorToReadyClient = function()
     {
-        if (_.el.clientWidth === 0)
-        {
-            setTimeout(function()
-            {
+        if (_.el.clientWidth === 0) {
+            setTimeout(function() {
                 addResizeSensorToReadyClient();
 
             }, 10);
@@ -1352,8 +1370,7 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
 
 	const addResizeSensor = function()
     {
-        if (resizeSensor === null)
-        {
+        if (resizeSensor === null) {
             resizeSensor = new ResizeSensorFromSO(_.el, function() {
                 resizeComponents();
             });
@@ -1367,13 +1384,61 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
         componentWidth = _.el.clientWidth;
         let components = getComponentsDomInstances();
 
-        for (let currClassIndex = 0; currClassIndex < components.length; currClassIndex++)
-        {
+        for (let currClassIndex = 0; currClassIndex < components.length; currClassIndex++) {
             components[currClassIndex].style.width = componentWidth + "px";
         }
 
         document.documentElement.style.setProperty('--vh', `${window.innerHeight}px`);
         document.documentElement.style.setProperty('--vhw1', `${window.innerHeight-90}px`);
+
+        _.resizeContentBuilder()
+    }
+
+    this.resizeContentBuilder = function(retry, callback)
+    {
+        const contentBuilder = sessionStorage.getItem('content-builder-active');
+
+        if (!contentBuilder) {
+            contentBuilderToolbar = null
+            return
+        }
+
+        if (contentBuilderToolbar === null || document.getElementById("divSnippetList") === null) {
+            contentBuilderToolbar = document.getElementById("divSnippetList");
+        }
+
+        if (contentBuilderToolbar === null) {
+            if (retry && retry > 0) {
+                setTimeout(function() {
+                    _.resizeContentBuilder(retry - 1)
+                }, 200)
+            }
+            return
+        }
+
+        if (typeof callback === "function") {
+            callback(contentBuilderToolbar)
+        }
+
+        contentBuilderToolbarSideBar = document.getElementsByClassName("right-hand-column")[0];
+
+        const rect = contentBuilderToolbarSideBar.getBoundingClientRect()
+
+        if (rect.y === 0) {
+            setTimeout(function() {
+                _.resizeContentBuilder(retry - 1)
+            }, 200)
+            return;
+        }
+
+        document.documentElement.style.setProperty('--cb-top', `${rect.y + 35 }px`);
+        document.documentElement.style.setProperty('--cb-bottom', `${rect.y + rect.bottom - 70}px`);
+        document.documentElement.style.setProperty('--cb-left', `${rect.x + 15}px`);
+        document.documentElement.style.setProperty('--cb-right', `${rect.x + rect.width - 30}px`);
+        document.documentElement.style.setProperty('--cb-width', `${rect.width - 30}px`);
+        document.documentElement.style.setProperty('--cb-height', `${rect.height - 70}px`);
+
+        contentBuilderToolbar.classList.add("micah-test")
     }
 
 	const createComponentNode = function(instanceId, componentInstance)
@@ -1387,8 +1452,7 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
 		node.id = instanceId;
 		node.classList.add("vue-app-body-component");
 
-		if (!vcType)
-        {
+		if (!vcType) {
             node.classList.add("formwrapper-control");
         }
 
@@ -1407,8 +1471,7 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
 	{
         let components = getComponentsDomInstances();
 
-		for (let currClassIndex = 0; currClassIndex < components.length; currClassIndex++)
-		{
+		for (let currClassIndex = 0; currClassIndex < components.length; currClassIndex++) {
 			components[currClassIndex].style.display = "none";
 		}
 	}
@@ -1429,20 +1492,16 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
         const abstractMatch = abstract.split("/");
         const patternMatch = pattern.split("/");
 
-        for (let currMapIndex in patternMatch)
-        {
-            if (patternMatch[currMapIndex].substring(0,1) === "{" && patternMatch[currMapIndex].slice(-1) === "}")
-            {
-                if (patternMatch[currMapIndex] === "{id}")
-                {
+        for (let currMapIndex in patternMatch) {
+            if (patternMatch[currMapIndex].substring(0,1) === "{" && patternMatch[currMapIndex].slice(-1) === "}") {
+                if (patternMatch[currMapIndex] === "{id}" || patternMatch[currMapIndex] === "{instance_uuid}") {
                     return abstractMatch[currMapIndex];
                 }
 
                 continue;
             }
 
-            if ( patternMatch[currMapIndex] === abstractMatch[currMapIndex])
-            {
+            if ( patternMatch[currMapIndex] === abstractMatch[currMapIndex]) {
                 continue;
             }
 
@@ -1454,8 +1513,7 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
 
 	this.buildComponent = function(component)
 	{
-		if (typeof component.instance !== "undefined" && typeof component.instance.$children !== "undefined")
-		{
+		if (typeof component.instance !== "undefined" && typeof component.instance.$children !== "undefined") {
 			const childInstance = component.instance.$children[0];
 			component.instance = childInstance;
 		}
@@ -1465,12 +1523,21 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
 
 	this.hydrate = function(instanceId, parentInstanceId, action, entity, entities, props, show)
     {
-        hydrateComponent(instanceId, parentInstanceId, action, entity, entities, props, show)
+        return hydrateComponent(instanceId, parentInstanceId, action, entity, entities, props, show)
     }
 
 	const hydrateComponent = function(instanceId, parentInstanceId, action, entity, entities, props, show)
 	{
 		let component = _.getComponentByInstanceId(instanceId);
+
+        if (component.rawInstance) {
+            if (!component.rawInstance.props) component.rawInstance.props = []
+            for (let currPropLabel in props) {
+                if (!component.rawInstance.props[currPropLabel] || (typeof props[currPropLabel] !== "undefined" && props[currPropLabel] !== null)) {
+                    component.rawInstance.props[currPropLabel] = props[currPropLabel];
+                }
+            }
+        }
 
 		if (
 			typeof component.instance === "undefined" ||
@@ -1478,7 +1545,7 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
 			typeof component.instance.hydrateComponent === "undefined"
 		)
 		{
-			//console.log(instanceId + " component cannot be hydrated");
+			console.log(instanceId + " component cannot be hydrated");
 			return;
 		}
 
@@ -1487,16 +1554,17 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
 
 		toggleComponentParent(component, parentInstanceId);
 
-		component.instance
+		const hydrationResult = component.instance
             .setModalComponentInstance(component.instanceId, show)
             .injectDefaultData(component.instanceId, component.parentInstanceId, action, entity, entities, props,  _.parentData, userId, userNum)
             .hydrateComponent(props, show, function(self) { self.$forceUpdate(); });
+
+        return (typeof hydrationResult === "undefined" || hydrationResult !== false)
 	}
 
 	const toggleComponentParent = function(component, parentInstanceId)
     {
-        if (parentInstanceId === '')
-        {
+        if (parentInstanceId === '') {
             component.disableParent = true;
             return;
         }
@@ -1510,20 +1578,17 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
 
         if (typeof component.instance === "undefined") return componentTitle;
 
-		switch(action)
-		{
+		switch(action) {
 			case "add": componentTitle = "Add Entity"; break;
 			case "edit": componentTitle = "Edit Entity"; break;
 			case "delete": componentTitle = "Delete Entity"; break;
 			case "read": componentTitle = "View Entity"; break;
 		}
 
-		if (typeof component.instance.getModalTitle === "function")
-		{
+		if (typeof component.instance.getModalTitle === "function") {
 			let componentTitleTemp = component.instance.getModalTitle(action);
 
-			if (componentTitleTemp !== null && componentTitleTemp !== "")
-			{
+			if (componentTitleTemp !== null && componentTitleTemp !== "") {
 				componentTitle = componentTitleTemp;
 			}
 		}
@@ -1533,8 +1598,7 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
 
 	const assignExpectedRootMethods = function(helper)
 	{
-		if (typeof helper.dynamicComponents === "function")
-		{
+		if (typeof helper.dynamicComponents === "function") {
 			helper.methods.dynamicComponents = helper.dynamicComponents;
 			helper.dynamicComponents = null;
 		}
@@ -1613,37 +1677,6 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
         let currentWidth = size.width
         let currentHeight = size.height
 
-        function processMediaQuery(windowWidth,bodyEl,comTag)
-        {
-            bodyEl.classList.remove("media-"+comTag+"-320")
-            bodyEl.classList.remove("media-"+comTag+"-400")
-            bodyEl.classList.remove("media-"+comTag+"-480")
-            bodyEl.classList.remove("media-"+comTag+"-568")
-            bodyEl.classList.remove("media-"+comTag+"-640")
-            bodyEl.classList.remove("media-"+comTag+"-768")
-            bodyEl.classList.remove("media-"+comTag+"-850")
-            bodyEl.classList.remove("media-"+comTag+"-1024")
-            bodyEl.classList.remove("media-"+comTag+"-1224")
-            bodyEl.classList.remove("media-"+comTag+"-1300")
-
-            let classClass = ""
-            if (windowWidth <= 1300) classClass = "media-"+comTag+"-1300"
-            if (windowWidth <= 1224) classClass = "media-"+comTag+"-1224"
-            if (windowWidth <= 1024) classClass = "media-"+comTag+"-1024"
-            if (windowWidth <= 850) classClass = "media-"+comTag+"-850"
-            if (windowWidth <= 768) classClass = "media-"+comTag+"-768"
-            if (windowWidth <= 640) classClass = "media-"+comTag+"-640"
-            if (windowWidth <= 568) classClass = "media-"+comTag+"-568"
-            if (windowWidth <= 480) classClass = "media-"+comTag+"-480"
-            if (windowWidth <= 400) classClass = "media-"+comTag+"-400"
-            if (windowWidth <= 320) classClass = "media-"+comTag+"-320"
-
-            if (classClass !== "") {
-                bodyEl.classList.add(classClass)
-            }
-            dispatch.broadcast("screen_resize", {width: windowWidth})
-        }
-
         let onScroll = function()
         {
             let size = element.getBoundingClientRect()
@@ -1655,16 +1688,7 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
                 currentWidth = newWidth
                 currentHeight = newHeight
 
-                // We need to check and see what the declaration is, and if it's empty, run these.
-                const windowWidth = window.innerWidth
-                let bodyEl = _.el
-                let comTag = "app"
-
-                if( _.el.id.includes("vue-hub-body")) {
-                    comTag = "hub"
-                }
-
-                processMediaQuery(windowWidth,bodyEl,comTag)
+                processMediaQueryAssignments()
 
                 callback()
             }
@@ -1674,6 +1698,64 @@ const vueComponents = function(vueInstance, domEl, type, uriBase, time)
 
         expand.addEventListener('scroll', onScroll)
         shrink.addEventListener('scroll', onScroll)
+        processMediaQueryAssignments()
+    }
+
+    const processMediaQueryAssignments = function()
+    {
+        // We need to check and see what the declaration is, and if it's empty, run these.
+        const windowWidth = window.innerWidth
+        let bodyEl = _.el
+        let comTag = "app"
+
+        if( _.el.id.includes("vue-hub-body")) {
+            comTag = "hub"
+        }
+
+        processMediaQuery(windowWidth, bodyEl, comTag)
+    }
+
+    const processMediaQuery = function(windowWidth,bodyEl,comTag)
+    {
+        bodyEl.classList.remove("media-"+comTag+"-320")
+        bodyEl.classList.remove("media-"+comTag+"-400")
+        bodyEl.classList.remove("media-"+comTag+"-480")
+        bodyEl.classList.remove("media-"+comTag+"-568")
+        bodyEl.classList.remove("media-"+comTag+"-640")
+        bodyEl.classList.remove("media-"+comTag+"-768")
+        bodyEl.classList.remove("media-"+comTag+"-850")
+        bodyEl.classList.remove("media-"+comTag+"-1024")
+        bodyEl.classList.remove("media-"+comTag+"-1224")
+        bodyEl.classList.remove("media-"+comTag+"-1300")
+        bodyEl.classList.remove("app-width-mobile")
+        bodyEl.classList.remove("app-width-tablet")
+
+        let classClass = ""
+        if (windowWidth <= 1300) classClass = "media-"+comTag+"-1300"
+        if (windowWidth <= 1224) classClass = "media-"+comTag+"-1224"
+        if (windowWidth <= 1024) classClass = "media-"+comTag+"-1024"
+        if (windowWidth <= 850) classClass = "media-"+comTag+"-850"
+        if (windowWidth <= 768) classClass = "media-"+comTag+"-768"
+        if (windowWidth <= 640) classClass = "media-"+comTag+"-640"
+        if (windowWidth <= 568) classClass = "media-"+comTag+"-568"
+        if (windowWidth <= 480) classClass = "media-"+comTag+"-480"
+        if (windowWidth <= 400) classClass = "media-"+comTag+"-400"
+        if (windowWidth <= 320) classClass = "media-"+comTag+"-320"
+
+
+        if (classClass !== "") {
+            bodyEl.classList.add(classClass)
+        }
+
+        if (windowWidth <= 400) {
+            bodyEl.classList.add("app-width-mobile")
+        } else if (windowWidth <= 850) {
+            bodyEl.classList.add("app-width-tablet")
+        }
+
+        if (typeof document.getElementsByClassName("app-card")[0] !== "undefined") {
+            dispatch.broadcast("screen_resize", {width: document.getElementsByClassName("app-card")[0].offsetWidth})
+        }
     }
 
     const resolveCamelCase = function(string)

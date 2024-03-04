@@ -1,8 +1,10 @@
 <?php
 
-namespace http\sharesave\controllers\api\v1;
+namespace Http\Sharesave\Controllers\Api\V1;
 
-class PublicFullPageController
+use Http\Sharesave\Controllers\Base\ShareSaveController;
+
+class PublicFullPageController extends ShareSaveController
 {
 
 }

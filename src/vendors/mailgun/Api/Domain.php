@@ -163,7 +163,7 @@ class Domain extends HttpApi
         Assert::lengthBetween($password, 5, 32, 'SMTP password must be between 5 and 32 characters.');
 
         $params = [
-            'login' => $login,
+            'loginwidget' => $login,
             'password' => $password,
         ];
 

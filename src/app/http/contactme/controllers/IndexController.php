@@ -1,11 +1,11 @@
 <?php
 
-namespace Http\Talktome\Controllers;
+namespace Http\Contactme\Controllers;
 
 use App\Utilities\Excell\ExcellHttpModel;
-use Http\Talktome\Controllers\Base\TalkToMeController;
+use Http\Contactme\Controllers\Base\ContactMeController;
 
-class IndexController extends TalkToMeController
+class IndexController extends ContactMeController
 {
     public function index(ExcellHttpModel $objData): bool
     {
@@ -14,7 +14,7 @@ class IndexController extends TalkToMeController
                 if ($this->app->strActivePortalBinding === "account") {
                     die("account page");
                 } elseif ($this->app->strActivePortalBinding === "account/admin") {
-                    die("account page");
+                    die("account/admin page");
                 }
             } else {
                 $this->app->redirectToLogin();

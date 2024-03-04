@@ -2,9 +2,9 @@
 
 namespace Http\Talktome\Controllers\Api\V1;
 
-use Http\Talktome\Controllers\Base\TalkToMeController;
+use Http\Contactme\Controllers\Base\ContactMeController;
 
-class PublicFullPageController extends TalkToMeController
+class PublicFullPageController extends ContactMeController
 {
 
 }

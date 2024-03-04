@@ -22,7 +22,7 @@ abstract class WebhookSignature
      *
      * @return bool
      */
-    public static function verifyHeader($payload, $header, $secret, $tolerance = null)
+    public static function verifyHeader($payload, $header, $secret, $tolerance = null): bool
     {
         // Extract timestamp and signatures from header
         $timestamp = self::getTimestamp($header);
@@ -82,7 +82,7 @@ abstract class WebhookSignature
      * @return int the timestamp contained in the header, or -1 if no valid
      *  timestamp is found
      */
-    private static function getTimestamp($header)
+    private static function getTimestamp($header): int
     {
         $items = \explode(',', $header);
 
@@ -108,7 +108,7 @@ abstract class WebhookSignature
      *
      * @return array the list of signatures matching the provided scheme
      */
-    private static function getSignatures($header, $scheme)
+    private static function getSignatures($header, $scheme): array
     {
         $signatures = [];
         $items = \explode(',', $header);
@@ -133,7 +133,7 @@ abstract class WebhookSignature
      *
      * @return string the signature as a string
      */
-    private static function computeSignature($payload, $secret)
+    private static function computeSignature($payload, $secret): string
     {
         return \hash_hmac('sha256', $payload, $secret);
     }

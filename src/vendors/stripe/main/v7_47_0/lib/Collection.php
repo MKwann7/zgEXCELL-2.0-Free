@@ -2,6 +2,8 @@
 
 namespace Stripe;
 
+use Stripe\Exception\ApiErrorException;
+
 /**
  * Class Collection.
  *
@@ -16,13 +18,12 @@ class Collection extends StripeObject implements \Countable, \IteratorAggregate
 
     use ApiOperations\Request;
 
-    /** @var array */
-    protected $filters = [];
+    protected array $filters = [];
 
     /**
      * @return string the base URL for the given class
      */
-    public static function baseUrl()
+    public static function baseUrl(): string
     {
         return Stripe::$apiBase;
     }
@@ -32,7 +33,7 @@ class Collection extends StripeObject implements \Countable, \IteratorAggregate
      *
      * @return array the filters
      */
-    public function getFilters()
+    public function getFilters(): array
     {
         return $this->filters;
     }
@@ -42,12 +43,16 @@ class Collection extends StripeObject implements \Countable, \IteratorAggregate
      *
      * @param array $filters the filters
      */
-    public function setFilters($filters)
+    public function setFilters(array $filters): void
     {
         $this->filters = $filters;
     }
 
-    public function offsetGet($k)
+    /**
+     * @param $k
+     * @return mixed
+     */
+    public function offsetGet($k): mixed
     {
         if (\is_string($k)) {
             return parent::offsetGet($k);
@@ -60,7 +65,13 @@ class Collection extends StripeObject implements \Countable, \IteratorAggregate
         throw new Exception\InvalidArgumentException($msg);
     }
 
-    public function all($params = null, $opts = null)
+    /**
+     * @param $params
+     * @param $opts
+     * @return Collection
+     * @throws ApiErrorException
+     */
+    public function all($params = null, $opts = null): Collection
     {
         self::_validateParams($params);
         list($url, $params) = $this->extractPathAndUpdateParams($params);
@@ -77,7 +88,13 @@ class Collection extends StripeObject implements \Countable, \IteratorAggregate
         return $obj;
     }
 
-    public function create($params = null, $opts = null)
+    /**
+     * @param $params
+     * @param $opts
+     * @return StripeObject|array
+     * @throws ApiErrorException
+     */
+    public function create($params = null, $opts = null): StripeObject|array
     {
         self::_validateParams($params);
         list($url, $params) = $this->extractPathAndUpdateParams($params);
@@ -87,7 +104,14 @@ class Collection extends StripeObject implements \Countable, \IteratorAggregate
         return Util\Util::convertToStripeObject($response, $opts);
     }
 
-    public function retrieve($id, $params = null, $opts = null)
+    /**
+     * @param $id
+     * @param $params
+     * @param $opts
+     * @return StripeObject|array
+     * @throws ApiErrorException
+     */
+    public function retrieve($id, $params = null, $opts = null): StripeObject|array
     {
         self::_validateParams($params);
         list($url, $params) = $this->extractPathAndUpdateParams($params);
@@ -107,7 +131,7 @@ class Collection extends StripeObject implements \Countable, \IteratorAggregate
     /**
      * @return int the number of objects in the current page
      */
-    public function count()
+    public function count(): int
     {
         return \count($this->data);
     }
@@ -116,7 +140,7 @@ class Collection extends StripeObject implements \Countable, \IteratorAggregate
      * @return \ArrayIterator an iterator that can be used to iterate
      *    across objects in the current page
      */
-    public function getIterator()
+    public function getIterator(): \ArrayIterator
     {
         return new \ArrayIterator($this->data);
     }
@@ -125,7 +149,7 @@ class Collection extends StripeObject implements \Countable, \IteratorAggregate
      * @return \ArrayIterator an iterator that can be used to iterate
      *    backwards across objects in the current page
      */
-    public function getReverseIterator()
+    public function getReverseIterator(): \ArrayIterator
     {
         return new \ArrayIterator(\array_reverse($this->data));
     }
@@ -136,7 +160,7 @@ class Collection extends StripeObject implements \Countable, \IteratorAggregate
      *    encountered, the next page will be fetched automatically for
      *    continued iteration.
      */
-    public function autoPagingIterator()
+    public function autoPagingIterator(): array|\Generator
     {
         $page = $this;
 
@@ -170,7 +194,7 @@ class Collection extends StripeObject implements \Countable, \IteratorAggregate
      *
      * @return Collection
      */
-    public static function emptyCollection($opts = null)
+    public static function emptyCollection($opts = null): Collection
     {
         return Collection::constructFrom(['data' => []], $opts);
     }
@@ -180,7 +204,7 @@ class Collection extends StripeObject implements \Countable, \IteratorAggregate
      *
      * @return bool
      */
-    public function isEmpty()
+    public function isEmpty(): bool
     {
         return empty($this->data);
     }
@@ -196,7 +220,7 @@ class Collection extends StripeObject implements \Countable, \IteratorAggregate
      *
      * @return Collection
      */
-    public function nextPage($params = null, $opts = null)
+    public function nextPage($params = null, $opts = null): Collection
     {
         if (!$this->has_more) {
             return static::emptyCollection($opts);
@@ -224,7 +248,7 @@ class Collection extends StripeObject implements \Countable, \IteratorAggregate
      *
      * @return Collection
      */
-    public function previousPage($params = null, $opts = null)
+    public function previousPage($params = null, $opts = null): Collection
     {
         if (!$this->has_more) {
             return static::emptyCollection($opts);
@@ -246,7 +270,7 @@ class Collection extends StripeObject implements \Countable, \IteratorAggregate
      *
      * @return null|\Stripe\StripeObject
      */
-    public function first()
+    public function first(): ?StripeObject
     {
         return \count($this->data) > 0 ? $this->data[0] : null;
     }
@@ -256,12 +280,16 @@ class Collection extends StripeObject implements \Countable, \IteratorAggregate
      *
      * @return null|\Stripe\StripeObject
      */
-    public function last()
+    public function last(): ?StripeObject
     {
         return \count($this->data) > 0 ? $this->data[\count($this->data) - 1] : null;
     }
 
-    private function extractPathAndUpdateParams($params)
+    /**
+     * @param $params
+     * @return array
+     */
+    private function extractPathAndUpdateParams($params): array
     {
         $url = \parse_url($this->url);
         if (!isset($url['path'])) {

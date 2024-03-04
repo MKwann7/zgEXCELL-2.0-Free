@@ -235,6 +235,7 @@ ul li {
 .width150px {width: 150px;float:left;}
 .width175px {width: 175px;float:left;}
 .width250px {width: 250px;float:left;}
+.width300px {width: 300px;float:left;}
 .widthAutoTo175px {width: calc(100% - 175px);float:left;}
 .widthAutoTo250px {width: calc(100% - 250px);float:left;}
 
@@ -342,9 +343,9 @@ header.portal-header {
 }
 
 div.portal-section {
+    margin-top:0px;
     height: 100vh;
-    overflow-y: auto;
-    padding-top: 65px;
+    padding: 65px 0 0 0;
 }
 div.portal-section .BodyContentOuter {
    height:100%;
@@ -1114,7 +1115,7 @@ body div.universal-float-shield {
     right: 0px;
     bottom: 0px;
     background: url(/website/images/LoadingIcon2.gif) no-repeat left 50% center / auto 35px,rgba(255,255,255,.4) ;
-    z-index:5;
+    z-index:11000;
     overflow-y: auto;
     justify-content: center;
     align-items: center;
@@ -1130,13 +1131,13 @@ body div.closedModal.universal-float-shield {
     max-height: -webkit-fill-available;
 }
 
-.theme_shade_light .zgpopup-dialog-box {
+.theme_shade_light .zgpopup-dialog-box.dialog-theme-default {
     background: #ffffff;
     background: linear-gradient(to bottom, #fff 0%, #eaeaea 100%);
     box-shadow: 0 0 10px #000000;
 }
 
-.theme_shade_dark .zgpopup-dialog-box {
+.theme_shade_dark .zgpopup-dialog-box.dialog-theme-default {
     background: #142d2d;
     background: linear-gradient(to bottom, #142d2d 0%, #000 100%);
     box-shadow: 0 0 10px #fff;
@@ -1178,6 +1179,12 @@ body div.closedModal.universal-float-shield {
 .pop-up-dialog-main-title-text {
     font-family: 'Roboto Condensed', sans-serif;
     font-size:1.75rem;
+    display: inline-block;
+    margin-top: 5px;
+}
+.pop-up-dialog-sub-title-text {
+    font-family: 'Roboto Condensed', sans-serif;
+    font-size:1.50rem;
     display: inline-block;
     margin-top: 5px;
 }
@@ -1656,6 +1663,7 @@ body div.closedModal.universal-float-shield {
 .width150px {width: 150px;float:left;}
 .width175px {width: 175px;float:left;}
 .width250px {width: 250px;float:left;}
+.width300px {width: 300px;float:left;}
 .widthAutoTo175px {width: calc(100% - 175px);float:left;}
 .widthAutoTo250px {width: calc(100% - 250px);float:left;}
 
@@ -1695,28 +1703,35 @@ body .handle {
 }
 
 /** SCROLL BAR **/
-.vueAppWrapper ::-webkit-scrollbar {
+.vueAppWrapper ::-webkit-scrollbar,
+#_cbhtml ::-webkit-scrollbar {
     width: 8px;
 }
-.vueAppWrapper ::-webkit-scrollbar-track {
+.vueAppWrapper ::-webkit-scrollbar-track,
+#_cbhtml ::-webkit-scrollbar-track {
     background: transparent;
 }
-.vueAppWrapper ::-webkit-scrollbar-thumb {
-    background-color: #ccc;
+.vueAppWrapper ::-webkit-scrollbar-thumb,
+#_cbhtml ::-webkit-scrollbar-thumb {
+    background-color: #ddd;
     border-radius:5px;
 }
-.vueAppWrapper ::-webkit-scrollbar-thumb:hover {
+.vueAppWrapper ::-webkit-scrollbar-thumb:hover,
+#_cbhtml ::-webkit-scrollbar-thumb:hover {
     background-color: #bbb;
 }
-.vueAppWrapper navigation::-webkit-scrollbar {
+.vueAppWrapper navigation::-webkit-scrollbar,
+#_cbhtml navigation::-webkit-scrollbar {
     width: 5px;
 }
-.vueAppWrapper navigation::-webkit-scrollbar-thumb {
-    background-color: #eee;
+.vueAppWrapper navigation::-webkit-scrollbar-thumb,
+#_cbhtml navigation::-webkit-scrollbar-thumb {
+    background-color: #ddd;
     border-radius:5px;
 }
-.vueAppWrapper navigation::-webkit-scrollbar-thumb:hover {
-    background-color: #ddd;
+.vueAppWrapper navigation::-webkit-scrollbar-thumb:hover,
+#_cbhtml navigation::-webkit-scrollbar-thumb:hover {
+    background-color: #eee;
 }
 
 /** VALIDATIONS **/
@@ -1862,7 +1877,8 @@ body .slickDraggingItem td.text-right {
     }
     div.portal-section {
         margin-top: 0;
-        padding:56px 10px 0 10px;
+        height: 100vh;
+        padding: 65px 0 0 0;
     }
     .width50 .card-tile-50 {
         width: 100% !important;
@@ -2192,4 +2208,15 @@ body .slickDraggingItem td.text-right {
 }
 .theme_shade_dark .card-tile-price {
     color: #fff !important;
+}
+
+/**---- From App/CSS/Template.min.css */
+
+.vue-modal-wrapper,
+.vue-modal-wrapper > div,
+.vue-modal-wrapper > div > div,
+.vue-app-body,
+.vue-app-body > div,
+.vue-app-body > div > div {
+    height:100%;
 }

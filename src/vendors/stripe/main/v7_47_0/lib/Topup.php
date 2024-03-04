@@ -52,7 +52,7 @@ class Topup extends ApiResource
      *
      * @return Topup the canceled topup
      */
-    public function cancel($params = null, $opts = null)
+    public function cancel($params = null, $opts = null): static
     {
         $url = $this->instanceUrl() . '/cancel';
         list($response, $opts) = $this->_request('post', $url, $params, $opts);

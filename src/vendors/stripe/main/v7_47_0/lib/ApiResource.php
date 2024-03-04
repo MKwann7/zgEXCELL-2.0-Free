@@ -2,6 +2,8 @@
 
 namespace Stripe;
 
+use Stripe\Util\Set;
+
 /**
  * Class ApiResource.
  */
@@ -10,13 +12,22 @@ abstract class ApiResource extends StripeObject
     use ApiOperations\Request;
 
     /**
-     * @return \Stripe\Util\Set A list of fields that can be their own type of
+     * @var bool A flag that can be set a behavior that will cause this
+     * resource to be encoded and sent up along with an update of its parent
+     * resource. This is usually not desirable because resources are updated
+     * individually on their own endpoints, but there are certain cases,
+     * replacing a customer's source for example, where this is allowed.
+     */
+    public bool $saveWithParent = false;
+
+    /**
+     * @return Set|null A list of fields that can be their own type of
      * API resource (say a nested card under an account for example), and if
      * that resource is set, it should be transmitted to the API on a create or
      * update. Doing so is not the default behavior because API resources
      * should normally be persisted on their own RESTful endpoints.
      */
-    public static function getSavedNestedResources()
+    public static function getSavedNestedResources(): ?Util\Set
     {
         static $savedNestedResources = null;
         if (null === $savedNestedResources) {
@@ -27,15 +38,11 @@ abstract class ApiResource extends StripeObject
     }
 
     /**
-     * @var bool A flag that can be set a behavior that will cause this
-     * resource to be encoded and sent up along with an update of its parent
-     * resource. This is usually not desirable because resources are updated
-     * individually on their own endpoints, but there are certain cases,
-     * replacing a customer's source for example, where this is allowed.
+     * @param $k
+     * @param $v
+     * @return void
      */
-    public $saveWithParent = false;
-
-    public function __set($k, $v)
+    public function __set($k, $v): void
     {
         parent::__set($k, $v);
         $v = $this->{$k};
@@ -50,7 +57,7 @@ abstract class ApiResource extends StripeObject
      *
      * @return ApiResource the refreshed resource
      */
-    public function refresh()
+    public function refresh(): static
     {
         $requestor = new ApiRequestor($this->_opts->apiKey, static::baseUrl());
         $url = $this->instanceUrl();
@@ -70,7 +77,7 @@ abstract class ApiResource extends StripeObject
     /**
      * @return string the base URL for the given class
      */
-    public static function baseUrl()
+    public static function baseUrl(): string
     {
         return Stripe::$apiBase;
     }
@@ -78,7 +85,7 @@ abstract class ApiResource extends StripeObject
     /**
      * @return string the endpoint URL for the given class
      */
-    public static function classUrl()
+    public static function classUrl(): string
     {
         // Replace dots with slashes for namespaced resources, e.g. if the object's name is
         // "foo.bar", then its URL will be "/v1/foo/bars".
@@ -88,13 +95,13 @@ abstract class ApiResource extends StripeObject
     }
 
     /**
-     * @param null|string $id the ID of the resource
-     *
-     * @throws Exception\UnexpectedValueException if $id is null
+     * @param string|null $id the ID of the resource
      *
      * @return string the instance endpoint URL for the given class
+     *@throws Exception\UnexpectedValueException if $id is null
+     *
      */
-    public static function resourceUrl($id)
+    public static function resourceUrl(?string $id): string
     {
         if (null === $id) {
             $class = static::class;
@@ -113,7 +120,7 @@ abstract class ApiResource extends StripeObject
     /**
      * @return string the full API URL for this API resource
      */
-    public function instanceUrl()
+    public function instanceUrl(): string
     {
         return static::resourceUrl($this['id']);
     }

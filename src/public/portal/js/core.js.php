@@ -182,6 +182,8 @@ $(document).ready(function() {
 
 <?php require(PUBLIC_PORTAL . "js/dispatch.js" . XT); ?>
 
+<?php require(PUBLIC_PORTAL . "js/componentRepo.js" . XT); ?>
+
 <?php require(PUBLIC_PORTAL . "js/authentication.js" . XT); ?>
 
 <?php require(PUBLIC_PORTAL . "js/history.js" . XT); ?>

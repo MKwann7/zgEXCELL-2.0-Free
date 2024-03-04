@@ -1,7 +1,7 @@
 <?php
 ?>
 
-const ExcellAuthentication = function(vue)
+function ExcellAuthentication(vue)
 {
     const self = this;
     const vueApp = vue;
@@ -23,7 +23,7 @@ const ExcellAuthentication = function(vue)
         Cookie.set('userId', auth.userId);
     }
 
-    this.clearAuth = function()
+    this.clearAuth = function(noRedirect)
     {
         const autoUrl = "process/login/logout";
 
@@ -35,18 +35,22 @@ const ExcellAuthentication = function(vue)
 
         ajax.Post(autoUrl, null,function(objLogoutRequest) {
 
-            Cookie.set('instance', null);
-            Cookie.set('user', null);
-            Cookie.set('userNum', null);
-            Cookie.set('userId', null);
+            //Cookie.set('instance', '');
+            Cookie.set('user', "visitor");
+            Cookie.set('userNum', '');
+            Cookie.set('userId', '');
+            Cookie.set('username', '');
+            Cookie.set('activeLogin', '');
 
-            if (typeof objLogoutRequest.redirect === "undefined")
-            {
-                location.href = "/login";
-                return;
+            if (typeof noRedirect === "undefined") {
+                if (typeof objLogoutRequest.redirect === "undefined") {
+                    location.href = "/login";
+                    return;
+                }
+                location.href = objLogoutRequest.redirect;
+            } else {
+                propagateClearAuth()
             }
-
-            location.href = objLogoutRequest.redirect;
             return;
 
         },"POST");
@@ -65,11 +69,11 @@ const ExcellAuthentication = function(vue)
 
         if (typeof Cookie.get('user') !== "undefined" && Cookie.get('user') !== "visitor" && (typeof Cookie.get('userNum') === "undefined" || Cookie.get('userNum') === "undefined" || Cookie.get('user') === "[object Object]"))
         {
-            preAuthenticate(this.authenticate);
+            preAuthenticate(self.authenticate);
             return;
         }
 
-        this.authenticate()
+        self.authenticate()
     }
 
     this.authenticate = function()
@@ -78,14 +82,10 @@ const ExcellAuthentication = function(vue)
         userNum = Cookie.get('userNum')
         user = Cookie.get('user')
 
-        vueApp.isLoggedIn = (userId !== "visitor") ? "active" : "inactive"
+        vueApp.isLoggedIn = "inactive"
         vueApp.authUserId = Cookie.get("userId")
 
-        propagateAuthentication(vueApp, this.userId, this.userNum, this.user);
-
-        if (typeof vueApp.updateAllChildrenAuth === "function") {
-            vueApp.updateAllChildrenAuth(vueApp.isLoggedIn, vueApp.authUserId, userId, userNum, JSON.parse(user))
-        }
+        propagateAuthentication();
     }
 
     const preAuthenticate = function(callback)
@@ -111,19 +111,31 @@ const ExcellAuthentication = function(vue)
                     console.log(e);
                 }
             }
-
-            callback();
+            if (typeof callback === "function") callback();
         });
     }
 
-    const propagateAuthentication = function(vue)
+    const propagateAuthentication = function()
     {
         const userData = {
             userId: userId,
             userNum: userNum,
             user: typeof user === "string" ? user : JSON.stringify(user),
-            isLoggedIn: "active",
+            isLoggedIn: user !== "visitor" ? "active" : "inactive",
             authUserId: Cookie.get("userId")
+        }
+
+        dispatch.broadcast("user_auth", userData)
+    }
+
+    const propagateClearAuth = function()
+    {
+        const userData = {
+            userId: "",
+            userNum: "",
+            user: "visitor",
+            isLoggedIn: "inactive",
+            authUserId: ""
         }
 
         dispatch.broadcast("user_auth", userData)

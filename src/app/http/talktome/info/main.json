@@ -1,14 +1,14 @@
 {
-  "sharesave": {
+  "contactme": {
     "Routes": {
-      "sharesave": {
-        "Alias:": "sharesave"
+      "contactme": {
+        "Alias:": "contactme"
       }
     },
-    "ModulePath": "sharesave",
+    "ModulePath": "contactme",
     "Main": {
-      "Name": "ShareSave",
-      "Icon": "sharesave-main.png"
+      "Name": "ContactMe",
+      "Icon": "contactme-main.png"
     },
     "PublicRouting": {
     },

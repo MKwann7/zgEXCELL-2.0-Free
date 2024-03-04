@@ -4,6 +4,12 @@
 
 namespace Stripe\Terminal;
 
+use Stripe\ApiOperations\All;
+use Stripe\ApiOperations\Create;
+use Stripe\ApiOperations\Delete;
+use Stripe\ApiOperations\Retrieve;
+use Stripe\ApiOperations\Update;
+
 /**
  * A Location represents a grouping of readers.
  *
@@ -22,9 +28,9 @@ class Location extends \Stripe\ApiResource
 {
     const OBJECT_NAME = 'terminal.location';
 
-    use \Stripe\ApiOperations\All;
-    use \Stripe\ApiOperations\Create;
-    use \Stripe\ApiOperations\Delete;
-    use \Stripe\ApiOperations\Retrieve;
-    use \Stripe\ApiOperations\Update;
+    use All;
+    use Create;
+    use Delete;
+    use Retrieve;
+    use Update;
 }

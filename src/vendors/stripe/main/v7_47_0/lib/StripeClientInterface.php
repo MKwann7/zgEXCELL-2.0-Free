@@ -12,35 +12,35 @@ interface StripeClientInterface
      *
      * @return null|string the API key used by the client to send requests
      */
-    public function getApiKey();
+    public function getApiKey(): ?string;
 
     /**
      * Gets the client ID used by the client in OAuth requests.
      *
      * @return null|string the client ID used by the client in OAuth requests
      */
-    public function getClientId();
+    public function getClientId(): ?string;
 
     /**
      * Gets the base URL for Stripe's API.
      *
      * @return string the base URL for Stripe's API
      */
-    public function getApiBase();
+    public function getApiBase(): string;
 
     /**
      * Gets the base URL for Stripe's OAuth API.
      *
      * @return string the base URL for Stripe's OAuth API
      */
-    public function getConnectBase();
+    public function getConnectBase(): string;
 
     /**
      * Gets the base URL for Stripe's Files API.
      *
      * @return string the base URL for Stripe's Files API
      */
-    public function getFilesBase();
+    public function getFilesBase(): string;
 
     /**
      * Sends a request to Stripe's API.
@@ -52,5 +52,5 @@ interface StripeClientInterface
      *
      * @return \Stripe\StripeObject the object returned by Stripe's API
      */
-    public function request($method, $path, $params, $opts);
+    public function request($method, $path, $params, $opts): StripeObject;
 }

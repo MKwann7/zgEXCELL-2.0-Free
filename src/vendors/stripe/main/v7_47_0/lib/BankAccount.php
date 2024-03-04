@@ -56,7 +56,7 @@ class BankAccount extends ApiResource
      * @return string The instance URL for this resource. It needs to be special
      *    cased because it doesn't fit into the standard resource pattern.
      */
-    public function instanceUrl()
+    public function instanceUrl(): string
     {
         if ($this['customer']) {
             $base = Customer::classUrl();
@@ -79,11 +79,11 @@ class BankAccount extends ApiResource
 
     /**
      * @param array|string $_id
-     * @param null|array|string $_opts
+     * @param array|string|null $_opts
      *
      * @throws \Stripe\Exception\BadMethodCallException
      */
-    public static function retrieve($_id, $_opts = null)
+    public static function retrieve(array|string $_id, array|string $_opts = null)
     {
         $msg = 'Bank accounts cannot be retrieved without a customer ID or ' .
                'an account ID. Retrieve a bank account using ' .
@@ -95,13 +95,13 @@ class BankAccount extends ApiResource
     }
 
     /**
-     * @param string $_id
-     * @param null|array $_params
-     * @param null|array|string $_options
+     * @param string $id
+     * @param null|array $params
+     * @param null|array|string $opts
      *
      * @throws \Stripe\Exception\BadMethodCallException
      */
-    public static function update($_id, $_params = null, $_options = null)
+    public static function update($id, $params = null, $opts = null)
     {
         $msg = 'Bank accounts cannot be updated without a customer ID or an ' .
                'account ID. Update a bank account using ' .

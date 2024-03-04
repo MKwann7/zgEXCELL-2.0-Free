@@ -28,13 +28,13 @@
     "icon": "fa fa-book desktop-20px",
     "url": "/account/free-resources"
   }, {
-    "title": "Payment Center",
+    "title": "Billing",
     "icon": "fa fa-credit-card desktop-20px",
     "url": "/account/payment-center"
   }, {
-    "title": "Commisions",
+    "title": "Upgrade",
     "icon": "fa fa-money-bill desktop-20px",
-    "url": "/account/commissions"
+    "url": "/account/upgrade"
   }, {
     "title": "Support/Help",
     "icon": "fas fa-headphones desktop-20px",
@@ -49,14 +49,14 @@
     "icon": "fa fa-globe desktop-20px",
     "url": "/account/my-max-sites"
   }, {
+    "title": "My Groups",
+    "icon": "fa fa-id-card desktop-20px",
+    "url": "/account/my-groups"
+  },{
     "title": "Max Pro CRM",
     "icon": "fa fa-users desktop-20px",
     "url": "/account/max-pro-crm"
-  }, {
-    "title": "Max Directories",
-    "icon": "fa fa-id-card desktop-20px",
-    "url": "/account/max-directories"
-  }, {
+  },  {
     "title": "Max Follow Up",
     "icon": "fa fa-handshake desktop-20px",
     "url": "/account/max-follow-up"
@@ -80,7 +80,7 @@
   }, {
     "title": "Journal",
     "icon": "fa fa-address-book desktop-20px",
-    "url": "/account/max-directories"
+    "url": "/account/max-journal"
   }, {
     "title": "Planning",
     "icon": "fa fa-handshake desktop-20px",

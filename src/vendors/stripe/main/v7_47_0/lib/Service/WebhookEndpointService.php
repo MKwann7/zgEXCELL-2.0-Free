@@ -4,19 +4,24 @@
 
 namespace Stripe\Service;
 
-class WebhookEndpointService extends \Stripe\Service\AbstractService
+use Stripe\Collection;
+use Stripe\StripeObject;
+use Stripe\Util\RequestOptions;
+use Stripe\WebhookEndpoint;
+
+class WebhookEndpointService extends AbstractService
 {
     /**
      * Returns a list of your webhook endpoints.
      *
-     * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param array|null $params
+     * @param RequestOptions|array|null $opts
      *
+     * @return Collection
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\Collection
      */
-    public function all($params = null, $opts = null)
+    public function all(array $params = null, RequestOptions|array $opts = null): Collection
     {
         return $this->requestCollection('get', '/v1/webhook_endpoints', $params, $opts);
     }
@@ -32,14 +37,14 @@ class WebhookEndpointService extends \Stripe\Service\AbstractService
      * href="https://dashboard.stripe.com/account/webhooks">webhooks settings</a>
      * section of the Dashboard.
      *
-     * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param array|null $params
+     * @param array|RequestOptions|null $opts
      *
+     * @return StripeObject|WebhookEndpoint
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\WebhookEndpoint
      */
-    public function create($params = null, $opts = null)
+    public function create(array $params = null, RequestOptions|array $opts = null): WebhookEndpoint|StripeObject
     {
         return $this->request('post', '/v1/webhook_endpoints', $params, $opts);
     }
@@ -50,14 +55,14 @@ class WebhookEndpointService extends \Stripe\Service\AbstractService
      * management</a> page of the Stripe dashboard.
      *
      * @param string $id
-     * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param array|null $params
+     * @param array|RequestOptions|null $opts
      *
+     * @return StripeObject|WebhookEndpoint
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\WebhookEndpoint
      */
-    public function delete($id, $params = null, $opts = null)
+    public function delete(string $id, array $params = null, RequestOptions|array $opts = null): WebhookEndpoint|StripeObject
     {
         return $this->request('delete', $this->buildPath('/v1/webhook_endpoints/%s', $id), $params, $opts);
     }
@@ -66,14 +71,14 @@ class WebhookEndpointService extends \Stripe\Service\AbstractService
      * Retrieves the webhook endpoint with the given ID.
      *
      * @param string $id
-     * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param array|null $params
+     * @param array|RequestOptions|null $opts
      *
+     * @return StripeObject|WebhookEndpoint
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\WebhookEndpoint
      */
-    public function retrieve($id, $params = null, $opts = null)
+    public function retrieve(string $id, array $params = null, RequestOptions|array $opts = null): WebhookEndpoint|StripeObject
     {
         return $this->request('get', $this->buildPath('/v1/webhook_endpoints/%s', $id), $params, $opts);
     }
@@ -83,14 +88,14 @@ class WebhookEndpointService extends \Stripe\Service\AbstractService
      * <code>enabled_events</code>, and the status of your endpoint.
      *
      * @param string $id
-     * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param array|null $params
+     * @param array|RequestOptions|null $opts
      *
+     * @return StripeObject|WebhookEndpoint
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\WebhookEndpoint
      */
-    public function update($id, $params = null, $opts = null)
+    public function update(string $id, array $params = null, RequestOptions|array $opts = null): WebhookEndpoint|StripeObject
     {
         return $this->request('post', $this->buildPath('/v1/webhook_endpoints/%s', $id), $params, $opts);
     }

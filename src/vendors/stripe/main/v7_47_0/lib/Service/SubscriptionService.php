@@ -4,20 +4,25 @@
 
 namespace Stripe\Service;
 
-class SubscriptionService extends \Stripe\Service\AbstractService
+use Stripe\Collection;
+use Stripe\StripeObject;
+use Stripe\Subscription;
+use Stripe\Util\RequestOptions;
+
+class SubscriptionService extends AbstractService
 {
     /**
      * By default, returns a list of subscriptions that have not been canceled. In
      * order to list canceled subscriptions, specify <code>status=canceled</code>.
      *
-     * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param array|null $params
+     * @param RequestOptions|array|null $opts
      *
+     * @return Collection
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\Collection
      */
-    public function all($params = null, $opts = null)
+    public function all(array $params = null, RequestOptions|array $opts = null): Collection
     {
         return $this->requestCollection('get', '/v1/subscriptions', $params, $opts);
     }
@@ -42,14 +47,14 @@ class SubscriptionService extends \Stripe\Service\AbstractService
      * all.
      *
      * @param string $id
-     * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param array|null $params
+     * @param array|RequestOptions|null $opts
      *
+     * @return StripeObject|Subscription
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\Subscription
      */
-    public function cancel($id, $params = null, $opts = null)
+    public function cancel(string $id, array $params = null, RequestOptions|array $opts = null): StripeObject|Subscription
     {
         return $this->request('delete', $this->buildPath('/v1/subscriptions/%s', $id), $params, $opts);
     }
@@ -58,14 +63,14 @@ class SubscriptionService extends \Stripe\Service\AbstractService
      * Creates a new subscription on an existing customer. Each customer can have up to
      * 25 active or scheduled subscriptions.
      *
-     * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param array|null $params
+     * @param array|RequestOptions|null $opts
      *
+     * @return StripeObject|Subscription
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\Subscription
      */
-    public function create($params = null, $opts = null)
+    public function create(array $params = null, RequestOptions|array $opts = null): StripeObject|Subscription
     {
         return $this->request('post', '/v1/subscriptions', $params, $opts);
     }
@@ -74,14 +79,14 @@ class SubscriptionService extends \Stripe\Service\AbstractService
      * Removes the currently applied discount on a subscription.
      *
      * @param string $id
-     * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param array|null $params
+     * @param array|RequestOptions|null $opts
      *
+     * @return StripeObject|Subscription
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\Subscription
      */
-    public function deleteDiscount($id, $params = null, $opts = null)
+    public function deleteDiscount(string $id, array $params = null, RequestOptions|array $opts = null): StripeObject|Subscription
     {
         return $this->request('delete', $this->buildPath('/v1/subscriptions/%s/discount', $id), $params, $opts);
     }
@@ -90,14 +95,14 @@ class SubscriptionService extends \Stripe\Service\AbstractService
      * Retrieves the subscription with the given ID.
      *
      * @param string $id
-     * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param array|null $params
+     * @param array|RequestOptions|null $opts
      *
+     * @return StripeObject|Subscription
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\Subscription
      */
-    public function retrieve($id, $params = null, $opts = null)
+    public function retrieve(string $id, array $params = null, RequestOptions|array $opts = null): StripeObject|Subscription
     {
         return $this->request('get', $this->buildPath('/v1/subscriptions/%s', $id), $params, $opts);
     }
@@ -110,14 +115,14 @@ class SubscriptionService extends \Stripe\Service\AbstractService
      * invoice</a> endpoint.
      *
      * @param string $id
-     * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param array|null $params
+     * @param array|RequestOptions|null $opts
      *
+     * @return StripeObject|Subscription
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\Subscription
      */
-    public function update($id, $params = null, $opts = null)
+    public function update(string $id, array $params = null, RequestOptions|array $opts = null): StripeObject|Subscription
     {
         return $this->request('post', $this->buildPath('/v1/subscriptions/%s', $id), $params, $opts);
     }

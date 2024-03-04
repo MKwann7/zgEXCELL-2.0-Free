@@ -2,6 +2,8 @@
 ?>
 function AjaxApp()
 {
+    let type = "ajax"
+
     this.Get = function(endPoint, data, callback)
     {
         return this.Send("GET", endPoint, data, callback);
@@ -9,6 +11,12 @@ function AjaxApp()
 
     this.Post = function(endPoint, data, callback)
     {
+        return this.Send("POST", endPoint, data, callback);
+    }
+
+    this.File = function(endPoint, data, callback)
+    {
+        type = "files"
         return this.Send("POST", endPoint, data, callback);
     }
 
@@ -54,7 +62,6 @@ function AjaxApp()
         }
 
         if (data && processData && typeof data !== "string" ) {
-
             data = serializeData( data, false );
         }
 
@@ -100,9 +107,13 @@ function AjaxApp()
             };
         }
 
-        xhr.setRequestHeader("Content-type", setAjaxSendType(options));
+        if (setAjaxSendType(options)) {
+            xhr.setRequestHeader("Content-type", setAjaxSendType(options))
+        }
 
-        xhr.send(JSON.stringify(data));
+        const sendData = (type === "files") ? data : JSON.stringify(data)
+
+        xhr.send(sendData)
     }
 
     const processCallback = function(self, xhr, callback)
@@ -165,12 +176,16 @@ function AjaxApp()
 
     const setAjaxSendType = function (options)
     {
-        if (typeof options === "undefined" || typeof options.type === "undefined"  || options.type === "json" ) { return "application/json;charset=UTF-8"; }
+        if (type === "ajax" && (typeof options === "undefined" || typeof options.type === "undefined"  || options.type === "json")) {
+            return "application/json;charset=UTF-8";
+        }
 
-        switch(type)
-        {
-            case "form":
-                return "application/x-www-form-urlencoded; charset=UTF-8";
+        if (type === "form") {
+            return "application/x-www-form-urlencoded; charset=UTF-8";
+        }
+
+        if (type === "files") {
+            return false;
         }
     }
 
@@ -187,13 +202,12 @@ function AjaxApp()
         return url + "/";
     }
 
-    const serializeData = function( a, traditional )
+    const serializeData = function(a, traditional)
     {
         let prefix,
             s = [],
             add = function( key, valueOrFunction )
             {
-
                 // If value is a function, invoke it and use its return value
                 var value = isFunction( valueOrFunction ) ?
                     valueOrFunction() :

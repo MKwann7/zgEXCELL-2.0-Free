@@ -47,14 +47,14 @@ class Order extends ApiResource
     use ApiOperations\Update;
 
     /**
-     * @param null|array $params
-     * @param null|array|string $opts
+     * @param array|null $params
+     * @param array|string|null $opts
      *
+     * @return array|OrderReturn|StripeObject
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\OrderReturn the newly created return
      */
-    public function returnOrder($params = null, $opts = null)
+    public function returnOrder(array $params = null, array|string $opts = null): StripeObject|array|OrderReturn
     {
         $url = $this->instanceUrl() . '/returns';
         list($response, $opts) = $this->_request('post', $url, $params, $opts);
@@ -63,14 +63,14 @@ class Order extends ApiResource
     }
 
     /**
-     * @param null|array $params
-     * @param null|array|string $opts
-     *
-     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     * @param array|null $params
+     * @param array|string|null $opts
      *
      * @return Order the paid order
+     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     *
      */
-    public function pay($params = null, $opts = null)
+    public function pay(array $params = null, array|string $opts = null): static
     {
         $url = $this->instanceUrl() . '/pay';
         list($response, $opts) = $this->_request('post', $url, $params, $opts);

@@ -2,8 +2,11 @@
 
 require_once(__DIR__ . '/slim.php');
 
-// Get posted data
-$images = Slim::getImages();
+$slim = new Slim($app);
+$images = $slim
+    ->setFiles($_FILES)
+    ->setPost($_POST)
+    ->getImages();
 
 // No image found under the supplied input name
 if ($images == false) {
@@ -11,8 +14,7 @@ if ($images == false) {
     // inject your own auto crop or fallback script here
     echo '<p>Slim was not used to upload these images.</p>';
 
-}
-else {
+} else {
 
     // Could be multiple slim croppers
     foreach ($images as $image) {

@@ -78,14 +78,14 @@ class SetupIntent extends ApiResource
     const STATUS_SUCCEEDED = 'succeeded';
 
     /**
-     * @param null|array $params
-     * @param null|array|string $opts
-     *
-     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     * @param array|null $params
+     * @param array|string|null $opts
      *
      * @return SetupIntent the canceled setup intent
+     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     *
      */
-    public function cancel($params = null, $opts = null)
+    public function cancel(array $params = null, array|string $opts = null): static
     {
         $url = $this->instanceUrl() . '/cancel';
         list($response, $opts) = $this->_request('post', $url, $params, $opts);
@@ -95,14 +95,14 @@ class SetupIntent extends ApiResource
     }
 
     /**
-     * @param null|array $params
-     * @param null|array|string $opts
-     *
-     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     * @param array|null $params
+     * @param array|string|null $opts
      *
      * @return SetupIntent the confirmed setup intent
+     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     *
      */
-    public function confirm($params = null, $opts = null)
+    public function confirm(array $params = null, array|string $opts = null): static
     {
         $url = $this->instanceUrl() . '/confirm';
         list($response, $opts) = $this->_request('post', $url, $params, $opts);

@@ -7,9 +7,29 @@ abstract class SlimStatus {
 
 class Slim {
 
-    public static function getImages($inputName = 'slim') {
+    private array $post = [];
+    private array $files = [];
+    public function __construct(
+        private \App\Core\App $app,
+        private string $userUuid
+    ) {
+    }
 
-        $values = Slim::getPostData($inputName);
+    public function setFiles(array $files) : self
+    {
+        $this->files = $files;
+        return $this;
+    }
+
+    public function setPost(array $post) : self
+    {
+        $this->post = $post;
+        return $this;
+    }
+
+    public function getImages(string $inputName = 'slim')
+    {
+        $values = $this->getPostData($inputName);
 
         // test for errors
         if ($values === false) {
@@ -17,16 +37,15 @@ class Slim {
         }
 
         // determine if contains multiple input values, if is singular, put in array
-        $data = array();
+        $data = [];
         if (!is_array($values)) {
             $values = array($values);
         }
 
         // handle all posted fields
         foreach ($values as $value) {
-            $inputValue = Slim::parseInput($value);
+            $inputValue = $this->parseInput($value);
             if ($inputValue) {
-                logText("Slim.Image.Process.log", "Name: " .  $inputValue["output"]["name"] ?? "Empty");
                 array_push($data, $inputValue);
             }
         }
@@ -37,8 +56,8 @@ class Slim {
     }
 
     // $value should be in JSON format
-    private static function parseInput($value) {
-
+    private function parseInput($value)
+    {
         // if no json received, exit, don't handle empty input values.
         if (empty($value)) {return null;}
 
@@ -55,10 +74,10 @@ class Slim {
 
             $inputData = null;
             if (isset($data->input->image)) {
-                $inputData = Slim::getBase64Data($data->input->image);
+                $inputData = $this->getBase64Data($data->input->image);
             }
             else if (isset($data->input->field)) {
-                $filename = $_FILES[$data->input->field]['tmp_name'];
+                $filename = $this->files[$data->input->field]['tmp_name'];
                 if ($filename) {
                     $inputData = file_get_contents($filename);
                 }
@@ -72,18 +91,17 @@ class Slim {
                 'width' => $data->input->width,
                 'height' => $data->input->height,
             );
-
         }
 
         if (isset($data->output)) {
             
             $outputDate = null;
             if (isset($data->output->image)) {
-                $outputData = Slim::getBase64Data($data->output->image);
+                $outputData = $this->getBase64Data($data->output->image);
             }
             else if (isset ($data->output->field)) {
                 logText("Slim.Image.Process.log", "FieldName: " . $data->output->field);
-                $filename = $_FILES[$data->output->field]['tmp_name'];
+                $filename = $this->files[$data->output->field]['tmp_name'];
 
                 logText("Slim.Image.Process.log", "FileName" . $filename);
                 if ($filename) {
@@ -134,59 +152,77 @@ class Slim {
         );
     }
 
-    // $path should have trailing slash
-    public static function saveFile($data, $name, $entityType = 'user', $entityId = 1000, $intUserId = 1000, $strClass = "editor", $uid = true)
+    public function saveFile($data, $name, $entityType = 'user', $entityId = 1000, $intUserId = 1000, $strClass = "editor", $uid = true)
     {
-        logText("Slim.SaveFile.Process.log", "saveFile: [START]");
-        // Let's put a unique id in front of the filename so we don't accidentally overwrite older files
         $arFilePath = explode(".", $name);
         $strFileExtension = end($arFilePath);
-        $strTempFileNameAndPath = APP_STORAGE . 'uploads/'. sha1(microtime()) . "." . $strFileExtension;
+        $strTempFileNameAndPath = APP_TMP . 'uploads/'. sha1(microtime()) . "." . $strFileExtension;
 
-        // Save Tempfile
+        if (!is_dir(APP_TMP . 'uploads/')) {
+            mkdir(APP_TMP . 'uploads/');
+        }
+
         file_put_contents($strTempFileNameAndPath, $data);
 
-        logText("Slim.SaveFile.Process.log", "saveFile: [POST] " . $strTempFileNameAndPath);
+        if (!file_get_contents($strTempFileNameAndPath)) {
+            die("We didn't write the tmp file correctly.");
+        }
 
-        try
-        {
-            $strPostUrl = "https://app.ezcardmedia.com/upload-image/{$entityType}s/" . $entityId;
-            logText("Slim.SaveFile.Process.log", "POST URL = " . $strPostUrl);
+        return $this->postFileToMediaServer($strTempFileNameAndPath, $name, $entityType, $entityId, $intUserId, $strClass);
+    }
+
+    public function postFileToMediaServer(
+        string $filenameAndPath,
+        string $name,
+        string $entityType,
+        string $entityId,
+        mixed    $intUserId,
+        string $strClass,
+        int $parentId = null
+    ) {
+        ini_set('memory_limit', '-1');
+        set_time_limit(500);
+
+        try {
+            $postUrl = $this->app->getCustomPlatform()->getFullMediaDomainName(true) . "/upload-image";
             $objHttp = new App\Utilities\Http\Http();
-            $objFileForCurl = curl_file_create($strTempFileNameAndPath);
-            $objHttpRequest = $objHttp->newRawRequest(
+
+            $objHttp->setDefaultHeaders([
+                "Authorization" => "Bearer {$this->userUuid}"
+            ]);
+
+            $curlFileObject = curl_file_create($filenameAndPath);
+
+            $objHttpRequest = $objHttp->newFormRequest(
                 "post",
-                $strPostUrl,
+                $postUrl,
                 [
-                    "file" => $objFileForCurl,
+                    "file" => $curlFileObject,
+                    "entity_id" => $entityId,
+                    "entity_name" => $entityType,
                     "user_id" => $intUserId,
-                    "image_class" => $strClass
+                    "image_class" => $strClass,
+                    "parent_id" => $parentId ?? "X"
                 ]
             )
-                ->setOption(CURLOPT_CAINFO, '/etc/ssl/ca-bundle.crt')
+                ->setOption(CURLOPT_CAINFO, '/etc/ssl/certs/ca-certificates.crt')
                 ->setOption(CURLOPT_SSL_VERIFYPEER, false);
 
             $objHttpResponse = $objHttpRequest->send();
 
-            unlink($strTempFileNameAndPath);
-        }
-        catch(\Exception $ex)
-        {
-            logText("Slim.SaveFile.Process.log", "Error: " . $ex);
+        } catch(\Exception $ex) {
+            logText("Slim.SaveFile.Process.log", "Error: " . $ex->getMessage());
         }
 
-        logText("Slim.SaveFile.Process.log", "Response: " . json_encode($objHttpResponse));
-
-        if ( $objHttpResponse->statusCode !== 200 )
-        {
+        if ($objHttpResponse->statusCode !== 200) {
             logText("Slim.SaveFile.Process.log","Upload Image to Media Server Did Not Return a 200 - " . $objHttpResponse->statusCode);
+            logText("Slim.SaveFile.Process.log","Error in Body: " . $objHttpResponse->body);
             return false;
         }
 
         $objDeletionResponse = json_decode($objHttpResponse->body);
 
-        if ($objDeletionResponse->success == false)
-        {
+        if ($objDeletionResponse->success == false) {
             logText("Slim.SaveFile.Process.log","Upload Image to Media Server Failed: " . json_encode($objDeletionResponse));
             return false;
         }
@@ -194,25 +230,21 @@ class Slim {
         // return the files new name and location
         return array(
             'name' => $name,
-            'path' => $objDeletionResponse->link
+            'path' => $objDeletionResponse->data->image,
+            'id' => $objDeletionResponse->data->image_id,
+            'type' => $objDeletionResponse->data->type,
         );
     }
 
-    public static function outputJSON($data) {
+    public function outputJSON($data) : bool
+    {
         header('Content-Type: application/json');
         echo json_encode($data);
+        die;
+        return true;
     }
 
-    /**
-     * http://stackoverflow.com/a/2021729
-     * Remove anything which isn't a word, whitespace, number
-     * or any of the following characters -_~,;[]().
-     * If you don't need to handle multi-byte characters
-     * you can use preg_replace rather than mb_ereg_replace
-     * @param $str
-     * @return string
-     */
-    public static function sanitizeFileName($str) {
+    public function sanitizeFileName($str) {
         // Basic clean up
         $str = mb_ereg_replace("([^\w\s\d\-_~,;\[\]\(\).])", '', $str);
         // Remove any runs of periods
@@ -220,44 +252,25 @@ class Slim {
         return $str;
     }
 
-    /**
-     * Gets the posted data from the POST or FILES object. If was using Slim to upload it will be in POST (as posted with hidden field) if not enhanced with Slim it'll be in FILES.
-     * @param $inputName
-     * @return array|bool
-     */
-    private static function getPostData($inputName) {
+    private function getPostData(string $inputName) {
 
-        $values = array();
+        $values = [];
 
-        if (isset($_POST[$inputName])) {
-            $values = $_POST[$inputName];
-
-            logText("Slim.Async.Process.log", "POST: " . json_encode($values));
+        if (isset($this->post[$inputName])) {
+            $values = $this->post[$inputName];
         }
-        else if (isset($_FILES[$inputName])) {
-            logText("Slim.Async.Process.log", "FILES: " . json_encode($inputName));
-            // Slim was not used to upload this file
+        else if (isset($this->files[$inputName])) {
             return false;
         }
 
         return $values;
     }
 
-    /**
-     * Saves the data to a given location
-     * @param $data
-     * @param $path
-     */
-    private static function save($data, $path) {
+    private function save($data, $path) {
         file_put_contents($path, $data);
     }
 
-    /**
-     * Strips the "data:image..." part of the base64 data string so PHP can save the string as a file
-     * @param $data
-     * @return string
-     */
-    private static function getBase64Data($data) {
+    private function getBase64Data($data) {
         return base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $data));
     }
 

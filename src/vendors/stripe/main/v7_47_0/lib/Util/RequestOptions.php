@@ -7,26 +7,23 @@ class RequestOptions
     /**
      * @var array<string> a list of headers that should be persisted across requests
      */
-    public static $HEADERS_TO_PERSIST = [
+    public static array $HEADERS_TO_PERSIST = [
         'Stripe-Account',
         'Stripe-Version',
     ];
 
-    /** @var array<string, string> */
-    public $headers;
+    public array $headers;
 
-    /** @var null|string */
-    public $apiKey;
+    public string|null $apiKey;
 
-    /** @var null|string */
-    public $apiBase;
+    public string|null $apiBase;
 
     /**
-     * @param null|string $key
+     * @param string|null $key
      * @param array<string, string> $headers
-     * @param null|string $base
+     * @param string|null $base
      */
-    public function __construct($key = null, $headers = [], $base = null)
+    public function __construct(string $key = null, array $headers = [], string $base = null)
     {
         $this->apiKey = $key;
         $this->headers = $headers;
@@ -49,12 +46,12 @@ class RequestOptions
      * Unpacks an options array and merges it into the existing RequestOptions
      * object.
      *
-     * @param null|array|RequestOptions|string $options a key => value array
+     * @param array|string|RequestOptions|null $options a key => value array
      * @param bool $strict when true, forbid string form and arbitrary keys in array form
      *
      * @return RequestOptions
      */
-    public function merge($options, $strict = false)
+    public function merge(RequestOptions|array|string|null $options, bool $strict = false): RequestOptions
     {
         $other_options = self::parse($options, $strict);
         if (null === $other_options->apiKey) {
@@ -71,7 +68,7 @@ class RequestOptions
     /**
      * Discards all headers that we don't want to persist across requests.
      */
-    public function discardNonPersistentHeaders()
+    public function discardNonPersistentHeaders(): void
     {
         foreach ($this->headers as $k => $v) {
             if (!\in_array($k, self::$HEADERS_TO_PERSIST, true)) {
@@ -90,7 +87,7 @@ class RequestOptions
      *
      * @return RequestOptions
      */
-    public static function parse($options, $strict = false)
+    public static function parse(null|array|RequestOptions|string $options, bool $strict = false): RequestOptions
     {
         if ($options instanceof self) {
             return $options;
@@ -154,7 +151,10 @@ class RequestOptions
         throw new \Stripe\Exception\InvalidArgumentException($message);
     }
 
-    private function redactedApiKey()
+    /**
+     * @return string
+     */
+    private function redactedApiKey(): string
     {
         $pieces = \explode('_', $this->apiKey, 3);
         $last = \array_pop($pieces);

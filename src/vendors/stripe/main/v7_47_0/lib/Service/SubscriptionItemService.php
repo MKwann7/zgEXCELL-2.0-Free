@@ -4,19 +4,25 @@
 
 namespace Stripe\Service;
 
-class SubscriptionItemService extends \Stripe\Service\AbstractService
+use Stripe\Collection;
+use Stripe\StripeObject;
+use Stripe\SubscriptionItem;
+use Stripe\UsageRecord;
+use Stripe\Util\RequestOptions;
+
+class SubscriptionItemService extends AbstractService
 {
     /**
      * Returns a list of your subscription items for a given subscription.
      *
-     * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param array|null $params
+     * @param RequestOptions|array|null $opts
      *
+     * @return Collection
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\Collection
      */
-    public function all($params = null, $opts = null)
+    public function all(array $params = null, RequestOptions|array $opts = null): Collection
     {
         return $this->requestCollection('get', '/v1/subscription_items', $params, $opts);
     }
@@ -34,14 +40,14 @@ class SubscriptionItemService extends \Stripe\Service\AbstractService
      * period ends.
      *
      * @param string $parentId
-     * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param array|null $params
+     * @param array|RequestOptions|null $opts
      *
-     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     * @return Collection
+     *@throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\Collection
      */
-    public function allUsageRecordSummaries($parentId, $params = null, $opts = null)
+    public function allUsageRecordSummaries(string $parentId, array $params = null, RequestOptions|array $opts = null): Collection
     {
         return $this->requestCollection('get', $this->buildPath('/v1/subscription_items/%s/usage_record_summaries', $parentId), $params, $opts);
     }
@@ -50,14 +56,14 @@ class SubscriptionItemService extends \Stripe\Service\AbstractService
      * Adds a new item to an existing subscription. No existing items will be changed
      * or replaced.
      *
-     * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param array|null $params
+     * @param array|RequestOptions|null $opts
      *
+     * @return StripeObject|SubscriptionItem
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\SubscriptionItem
      */
-    public function create($params = null, $opts = null)
+    public function create(array $params = null, RequestOptions|array $opts = null): SubscriptionItem|StripeObject
     {
         return $this->request('post', '/v1/subscription_items', $params, $opts);
     }
@@ -88,14 +94,14 @@ class SubscriptionItemService extends \Stripe\Service\AbstractService
      * model.
      *
      * @param string $parentId
-     * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param array|null $params
+     * @param array|RequestOptions|null $opts
      *
+     * @return StripeObject|UsageRecord
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\UsageRecord
      */
-    public function createUsageRecord($parentId, $params = null, $opts = null)
+    public function createUsageRecord(string $parentId, array $params = null, RequestOptions|array $opts = null): StripeObject|UsageRecord
     {
         return $this->request('post', $this->buildPath('/v1/subscription_items/%s/usage_records', $parentId), $params, $opts);
     }
@@ -105,14 +111,14 @@ class SubscriptionItemService extends \Stripe\Service\AbstractService
      * subscription will not cancel the subscription.
      *
      * @param string $id
-     * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param array|null $params
+     * @param array|RequestOptions|null $opts
      *
+     * @return StripeObject|SubscriptionItem
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\SubscriptionItem
      */
-    public function delete($id, $params = null, $opts = null)
+    public function delete(string $id, array $params = null, RequestOptions|array $opts = null): SubscriptionItem|StripeObject
     {
         return $this->request('delete', $this->buildPath('/v1/subscription_items/%s', $id), $params, $opts);
     }
@@ -121,14 +127,14 @@ class SubscriptionItemService extends \Stripe\Service\AbstractService
      * Retrieves the subscription item with the given ID.
      *
      * @param string $id
-     * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param array|null $params
+     * @param array|RequestOptions|null $opts
      *
+     * @return StripeObject|SubscriptionItem
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\SubscriptionItem
      */
-    public function retrieve($id, $params = null, $opts = null)
+    public function retrieve(string $id, array $params = null, RequestOptions|array $opts = null): SubscriptionItem|StripeObject
     {
         return $this->request('get', $this->buildPath('/v1/subscription_items/%s', $id), $params, $opts);
     }
@@ -137,14 +143,14 @@ class SubscriptionItemService extends \Stripe\Service\AbstractService
      * Updates the plan or quantity of an item on a current subscription.
      *
      * @param string $id
-     * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param array|null $params
+     * @param array|RequestOptions|null $opts
      *
+     * @return StripeObject|SubscriptionItem
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\SubscriptionItem
      */
-    public function update($id, $params = null, $opts = null)
+    public function update(string $id, array $params = null, RequestOptions|array $opts = null): SubscriptionItem|StripeObject
     {
         return $this->request('post', $this->buildPath('/v1/subscription_items/%s', $id), $params, $opts);
     }

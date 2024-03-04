@@ -58,15 +58,17 @@ class CreditNote extends ApiResource
     const TYPE_POST_PAYMENT = 'post_payment';
     const TYPE_PRE_PAYMENT = 'pre_payment';
 
+    const PATH_LINES = '/lines';
+
     /**
-     * @param null|array $params
-     * @param null|array|string $opts
+     * @param array|null $params
+     * @param array|string|null $opts
      *
+     * @return array|CreditNote|StripeObject
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\CreditNote the previewed credit note
      */
-    public static function preview($params = null, $opts = null)
+    public static function preview(array $params = null, array|string $opts = null): CreditNote|StripeObject|array
     {
         $url = static::classUrl() . '/preview';
         list($response, $opts) = static::_staticRequest('get', $url, $params, $opts);
@@ -77,14 +79,14 @@ class CreditNote extends ApiResource
     }
 
     /**
-     * @param null|array $params
-     * @param null|array|string $opts
-     *
-     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     * @param array|null $params
+     * @param array|string|null $opts
      *
      * @return CreditNote the voided credit note
+     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     *
      */
-    public function voidCreditNote($params = null, $opts = null)
+    public function voidCreditNote(array $params = null, array|string $opts = null): static
     {
         $url = $this->instanceUrl() . '/void';
         list($response, $opts) = $this->_request('post', $url, $params, $opts);
@@ -93,18 +95,16 @@ class CreditNote extends ApiResource
         return $this;
     }
 
-    const PATH_LINES = '/lines';
-
     /**
      * @param string $id the ID of the credit note on which to retrieve the credit note line items
-     * @param null|array $params
-     * @param null|array|string $opts
+     * @param array|null $params
+     * @param array|string|null $opts
      *
+     * @return Collection|StripeObject
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\Collection the list of credit note line items
      */
-    public static function allLines($id, $params = null, $opts = null)
+    public static function allLines(string $id, array $params = null, array|string $opts = null): Collection|StripeObject
     {
         return self::_allNestedResources($id, static::PATH_LINES, $params, $opts);
     }

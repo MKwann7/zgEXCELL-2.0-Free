@@ -53,14 +53,14 @@ $portalLogoLight = $this->app->objCustomPlatform->getCompanySettings()->FindEnti
     flex-direction: column;
     max-height: 100vh;
     max-height: -webkit-fill-available;
+    width:100%;
 }
 .app-card {
-    /*width: 500px;*/
     display: block;
-    /*height: 890px;*/
     position: relative;
 }
-.app-main-comp-header {
+.app-main-comp-header,
+.app-main-comp-footer {
     display: flex;
     width: 100%;
     position: relative;
@@ -74,7 +74,7 @@ $portalLogoLight = $this->app->objCustomPlatform->getCompanySettings()->FindEnti
 .app-main-comp-portal-header {
     display: flex;
     width: 100%;
-    height: 100px;
+    height: 150px;
     background: #ccc;
     position: relative;
 }
@@ -88,6 +88,7 @@ $portalLogoLight = $this->app->objCustomPlatform->getCompanySettings()->FindEnti
 .app-main-comp-footer-menu {
     display: flex;
     flex-direction: row;
+    flex-wrap: wrap;
     justify-content: space-between;
     width: 100%;
     height: 100%;
@@ -96,14 +97,19 @@ $portalLogoLight = $this->app->objCustomPlatform->getCompanySettings()->FindEnti
 }
 .app-main-comp-footer-menu li {
     display: flex;
-    width: 100%;
     height: 100%;
     align-items: center;
-    justify-content: center;
+    justify-content: left;
     list-style-type: none;
     padding: 10px;
     font-size: 16px;
     cursor: pointer;
+}
+.app-width-tablet .app-main-comp-footer-menu li {
+    width: 50% !important;
+}
+.app-width-mobile .app-main-comp-footer-menu li {
+    width: 100% !important;
 }
 .app-main-comp-footer-menu li > span {
     width: 65px;
@@ -140,7 +146,6 @@ $portalLogoLight = $this->app->objCustomPlatform->getCompanySettings()->FindEnti
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 75px;
 }
 .vue-app-body {
     overflow:hidden;
@@ -299,9 +304,6 @@ $portalLogoLight = $this->app->objCustomPlatform->getCompanySettings()->FindEnti
     display: inline-block;
     font-size: 35px;
 }
-.app-main-comp-footer div {
-    display: flex;
-}
 .app-main-comp-nav,
 .app-main-comp-body {
     display: flex;
@@ -405,9 +407,6 @@ $portalLogoLight = $this->app->objCustomPlatform->getCompanySettings()->FindEnti
     overflow-y: auto;
     padding: 10px 0;
 }
-.management-hub .app-main-comp-pages {
-    max-height: 420px;
-}
 .handed-left .app-main-comp-pages {
     padding-right: 30px;
     direction: ltr;
@@ -436,8 +435,8 @@ $portalLogoLight = $this->app->objCustomPlatform->getCompanySettings()->FindEnti
     width: 100%;
     justify-content: center;
 }
-.management-hub .app-main-comp-nav ul li,
-.management-hub .app-main-comp-pages ul li {
+.management-hub .app-template-2  .app-main-comp-nav ul li,
+.management-hub .app-template-2  .app-main-comp-pages ul li {
     display: flex;
     align-items: center;
     min-height: 80px;
@@ -607,13 +606,13 @@ body.theme_shade_light div.universal-float-shield {
     visibility: hidden;
     opacity: 0;
 }
-.activeModal .zgpopup-dialog-box {
+.activeModal .zgpopup-dialog-box.dialog-theme-default {
     transform: scale(1) !important;
     visibility: visible !important;
     opacity: 1 !important;
     transition: all 0.2s ease-in-out 0s;
 }
-.theme_shade_light .zgpopup-dialog-box {
+.theme_shade_light .zgpopup-dialog-box.dialog-theme-default {
     background: #ffffff;
     background: linear-gradient(to bottom, #fff 0%, #eaeaea 100%);
     box-shadow: 0 0 10px #000000;
@@ -651,9 +650,9 @@ body #divSnippetList {
     padding: 4px;
     border: solid #ff0000;
     transform: rotate(135deg);
-    margin-left: 15px;
+    margin-left: 5px;
     margin-right: 3px;
-    top: -2px;
+    top: 2px;
     position: relative;
 }
 .app-modal-title {
@@ -682,6 +681,8 @@ body #divSnippetList {
 }
 
 /** MODULES APP **/
+.app-template-4 .app-main-comp-footer,
+.app-template-6 .app-main-comp-footer,
 .app-template-4 .app-main-comp-header,
 .app-template-6 .app-main-comp-header {
     display:block;
@@ -693,7 +694,18 @@ body #divSnippetList {
     width:100%;
     flex-direction: column;
     align-items: center;
+    height: 100%;
 }
+
+.app-template-4 .app-main-comp-footer-inner,
+.app-template-6 .app-main-comp-footer-inner {
+    display:flex;
+    margin:auto;
+    width:100%;
+    flex-direction: column;
+    align-items: center;
+}
+
 .app-template-4 .app-main-comp-body-inner,
 .app-template-6 .app-main-comp-body-inner {
     margin:auto;
@@ -718,14 +730,12 @@ body #divSnippetList {
 .app-template-6 .mainImageLeftHeader {
     display:flex;
 }
-.app-template-4 .mainImageLeftHeader {
-    left: 20px;
-}
+
 .app-template-4 .floatRightHeader,
 .app-template-6 .floatRightHeader {
     display:flex;
     flex: 1 1 calc(100% - 230px);
-    flex-direction: column;
+    flex-flow: row-reverse;
 }
 .app-template-4 .app-main-comp-header-flex,
 .app-template-6 .app-main-comp-header-flex {
@@ -781,7 +791,8 @@ body #divSnippetList {
 }
 .app-template-4 .app-main-comp-nav {
     margin: auto;
-    background: linear-gradient(to right, #ffc000 0%, #fe5d4b 100%);
+    position:relative;
+    /*background: linear-gradient(to right, #ffc000 0%, #fe5d4b 100%);*/
 }
 .app-template-4 .app-main-comp-page-title h2 {
     margin:0;
@@ -867,9 +878,6 @@ body #divSnippetList {
 
 /** COMP WRAPPER **/
 
-.management-hub .app-hub-comp-wrapper .vue-app-body-component {
-    height: calc(100vh - 95px);
-}
 .app-template-2 .management-hub .app-hub-comp-wrapper .vue-app-body-component {
     height: 797px;
 }
@@ -1068,10 +1076,6 @@ body #divSnippetList {
     height:100%;
 }
 
-.vue-app-body-component {
-    height:100%;
-}
-
 .app-page-content img {
     max-width:100%;
 }
@@ -1121,10 +1125,10 @@ body #divSnippetList {
         width:100%;
         max-height: inherit;
     }
-    .management-hub .app-main-comp-pages {
+    .app-template-2 .management-hub .app-main-comp-pages {
         max-height: calc(var(--vh) - (100vw * .565) - 160px);
     }
-    .app-main-comp-footer {
+    .app-template-2 .app-main-comp-footer {
         height: 70px;
     }
     .app-main-comp-nav {
@@ -1144,8 +1148,10 @@ body #divSnippetList {
         width: 100%;
         justify-content: center;
     }
-    .management-hub .app-main-comp-nav ul li,
-    .management-hub .app-main-comp-pages ul li {
+    .management-hub .app-template-2 .app-main-comp-nav ul li,
+    .management-hub .app-template-2 .app-main-comp-pages ul li,
+    .management-hub .app-template-3 .app-main-comp-nav ul li,
+    .management-hub .app-template-3 .app-main-comp-pages ul li {
         min-height: calc((var(--vhw1) - (100vw * .565) - 80px) / 5);
         height: calc((var(--vhw1) - (100vw * .565) - 80px) / 5);
     }
@@ -1282,3 +1288,52 @@ body #divSnippetList {
         padding-bottom:75px;
     }
 }}
+
+<?php
+
+$arActiveCssLibraries = [
+    "vendor" => array(
+        "slim" => true
+    )
+];
+
+foreach($this->app->arCssLibraries->vendor as $strVenderName => $arVenderLibraries)
+{
+    foreach($arVenderLibraries as $strLibraryPath => $strLibraryFileNames)
+    {
+        $arLibraryPaths = explode("/", $strLibraryPath);
+        if( !empty($arActiveCssLibraries["vendor"][$strVenderName]) && $arActiveCssLibraries["vendor"][$strVenderName] === true)
+        {
+            foreach($strLibraryFileNames as $strLibraryFileName)
+            {
+                $strJsFilePath = APP_VENDORS . $strVenderName . "/" . $strLibraryPath . "/min/" . $strLibraryFileName;
+
+                if (is_file($strJsFilePath))
+                {
+                    echo "/* ".$strVenderName . " " .$strLibraryPath . " " . $strLibraryFileName . " */" . PHP_EOL . PHP_EOL;
+                    require $strJsFilePath;
+                    echo PHP_EOL . PHP_EOL;
+                }
+            }
+        }
+        elseif( !empty($arActiveCssLibraries["vendor"][$strVenderName]) && is_array($arActiveCssLibraries["vendor"][$strVenderName]))
+        {
+            foreach($strLibraryFileNames as $strLibraryFileName)
+            {
+                if( !empty($arActiveCssLibraries["vendor"][$strVenderName]) &&
+                !empty($arActiveCssLibraries["vendor"][$strVenderName][$arLibraryPaths[0]]) &&
+                $arActiveCssLibraries["vendor"][$strVenderName][$arLibraryPaths[0]] === true)
+                {
+                    $strJsFilePath = APP_VENDORS . $strVenderName . "/" . $strLibraryPath . "/min/" . $strLibraryFileName;
+
+                    if (is_file($strJsFilePath))
+                    {
+                        echo "/* ".$strVenderName . " " .$strLibraryPath . " " . $strLibraryFileName . " */" . PHP_EOL . PHP_EOL;
+                        require $strJsFilePath;
+                        echo PHP_EOL . PHP_EOL;
+                    }
+                }
+            }
+        }
+    }
+}

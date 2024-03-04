@@ -4,6 +4,8 @@
 
 namespace Stripe;
 
+use Stripe\Service\CoreServiceFactory;
+
 /**
  * Client used to send requests to Stripe's API.
  *
@@ -60,15 +62,12 @@ namespace Stripe;
  */
 class StripeClient extends BaseStripeClient
 {
-    /**
-     * @var \Stripe\Service\CoreServiceFactory
-     */
-    private $coreServiceFactory;
+    private Service\CoreServiceFactory $coreServiceFactory;
 
     public function __get($name)
     {
-        if (null === $this->coreServiceFactory) {
-            $this->coreServiceFactory = new \Stripe\Service\CoreServiceFactory($this);
+        if (!isset($this->coreServiceFactory)) {
+            $this->coreServiceFactory = new CoreServiceFactory($this);
         }
 
         return $this->coreServiceFactory->__get($name);
