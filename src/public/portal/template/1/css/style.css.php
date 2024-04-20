@@ -567,7 +567,7 @@ div.portal-section {
     text-decoration:underline;
 }
 .cart-display-box,
-.cart-display-box > div {
+.cart-display-box-inner {
     height: 100%;
 }
 

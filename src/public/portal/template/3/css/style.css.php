@@ -657,7 +657,7 @@ div.portal-section .BodyContentOuter .formwrapper-outer .vue-app-body .entityDas
     text-decoration:underline;
 }
 .cart-display-box,
-.cart-display-box > div {
+.cart-display-box-inner {
     height: 100%;
 }
 

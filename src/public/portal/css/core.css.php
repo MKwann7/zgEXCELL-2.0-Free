@@ -2163,7 +2163,7 @@ div#arc-menu #dismiss:hover {
     text-decoration:underline;
 }
 .cart-display-box,
-.cart-display-box > div {
+.cart-display-box-inner {
     height: 100%;
 }
 #place_order_col_2 .cart-display-box {
