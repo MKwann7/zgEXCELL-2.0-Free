@@ -6,8 +6,6 @@ reset
 BUILD=local
 APP_NAME=excell
 
-ls -al
-
 project_path="$( cd "$( dirname "${BASH_SOURCE[0]//scripts\/}" )" &> /dev/null && pwd )"
 echo "project_path = ${project_path}"
 
