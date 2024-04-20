@@ -325,25 +325,21 @@ class IndexController extends UserController
 
     private function RenderMyPersonas(ExcellHttpModel $objData) : void
     {
-        switch($objData->Uri[2]) {
-            case "purchase":
-                $vueApp = (new MyPersonasApp("vueApp"))
-                    ->setDefaultComponentId(PurchasePersonaWidget::getStaticId())->setDefaultComponentAction("view")
-                    ->setDefaultComponentProps([
-                        new VueProps("productGroup", "string", "'persona'"),
-                        new VueProps("inModal", "boolean", "false"),
-                        new VueProps("loggedInUserId", "number", $this->app->getActiveLoggedInUser()->user_id),
-                    ])
-                    ->setUriBase($objData->PathControllerBase);
-                break;
-            default:
-                $vueApp = (new MyPersonasApp("vueApp"))
-                    ->setUriBase($objData->PathControllerBase)
-                    ->registerComponentAbstracts([
-                        ManagePersonaWidget::getStaticId() => ManagePersonaWidget::getStaticUriAbstract(),
-                    ]);
-                break;
-        }
+        $vueApp = match ($objData->Uri[2] ?? "") {
+            "purchase" => (new MyPersonasApp("vueApp"))
+                ->setDefaultComponentId(PurchasePersonaWidget::getStaticId())->setDefaultComponentAction("view")
+                ->setDefaultComponentProps([
+                    new VueProps("productGroup", "string", "'persona'"),
+                    new VueProps("inModal", "boolean", "false"),
+                    new VueProps("loggedInUserId", "number", $this->app->getActiveLoggedInUser()->user_id),
+                ])
+                ->setUriBase($objData->PathControllerBase),
+            default => (new MyPersonasApp("vueApp"))
+                ->setUriBase($objData->PathControllerBase)
+                ->registerComponentAbstracts([
+                    ManagePersonaWidget::getStaticId() => ManagePersonaWidget::getStaticUriAbstract(),
+                ]),
+        };
 
         (new Users())->renderApp(
             "user.view_users_personas",

@@ -121,7 +121,7 @@ class IndexController extends CardController
             return false;
         }
 
-        $vueApp = match ($objData->Uri[2]) {
+        $vueApp = match ($objData->Uri[2] ?? "") {
             "purchase" => (new MyMaxGroupsApp("vueApp"))
                 ->setDefaultComponentId(PurchaseGroupWidget::getStaticId())->setDefaultComponentAction("view")
                 ->setDefaultComponentProps([
