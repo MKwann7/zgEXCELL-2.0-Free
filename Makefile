@@ -11,6 +11,9 @@ unit:
 	@./scripts/unit.sh
 kill:
 	@./scripts/kill.sh
+	@./scripts/unit.sh
+kill-app:
+	@./scripts/kill-app.sh
 kill-db:
 	@./scripts/kill-db.sh
 users:
