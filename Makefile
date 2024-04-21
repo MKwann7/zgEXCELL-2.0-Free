@@ -14,7 +14,11 @@ kill:
 	@./scripts/unit.sh
 kill-app:
 	@./scripts/kill-app.sh
+kill-app-full:
+	@./scripts/kill-app-full.sh
 kill-db:
+	@./scripts/kill-db.sh
+kill-db-full:
 	@./scripts/kill-db.sh
 users:
 	@./scripts/importUsers.sh

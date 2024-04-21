@@ -48,23 +48,22 @@ INSERT INTO card_tab_type (card_tab_type_id,abbreviation,name,description,sys_ro
 (4,'WIDGET','Single Widget','This renders the card page with a single widget.','fe2910b6-e265-11ea-b088-42010a522005');
 
 INSERT INTO card_template (card_template_id,company_id,division_id,name,template_type,`data`,sys_row_id) VALUES
-(1,NULL,0,'Excell Theme','site','{"connections":{"count":"NA=="}}','9a2b1749-3474-11e9-9461-52de8773d5f0'),
-(2,NULL,0,'EZ Card Original','site','{"connections":{"count":"NA=="}}','4dd5597f-3f7e-11eb-9e97-42010a52200a'),
-(3,NULL,0,'Premium EZ Digital','site','{"connections":{"count":"NA=="}}','cee79531-8781-11eb-969d-42010a52200b'),
-(4,NULL,0,'Standard MaxSite','site','{"header": {"title": "SGVhZGVy","type": "dGhlbWU=","elements": [{"title": "SGVhZGVyIEhlaWdodA==","label": "aGVhZGVyLWJhbm5lcg==","type": "Y3Nz","data": {"label": "aGVpZ2h0","default": "MTc1","responsive": {"tablet": "MTUw","mobile": "MTI1"}}}]},"main-logo": {"type": "bG9nbw==","elements": [{"title": "TG9nbyBIZWlnaHQ=","label": "bG9nby1oZWlnaHQ=","type": "Y3Nz","data": {"label": "aGVpZ2h0","default": "MTI1","responsive": {"tablet": "MTAw","mobile": "NzU="}}},{"title": "TG9nbyBVcmw=","label": "bG9nby11cmw=","type": "aW1hZ2U=","data": {"label": "dXJs","default": "L3dlYnNpdGUvaW1hZ2VzL21heHItbWljcm9zaXRlLWxvZ28ucG5n","responsive": {"tablet": null,"mobile": null}}},{"title": "VG9wIE9mZnNldA==","label": "dG9wLW9mZnNldA==","type": "Y3Nz","data": {"label": "dG9w","default": "Mg==","responsive": {"tablet": "Mg==","mobile": "Mg=="}}},{"title": "TGVmdCBPZmZzZXQ=","label": "bGVmdC1vZmZzZXQ=","type": "Y3Nz","data": {"label": "bGVmdA==","default": "MjA=","responsive": {"tablet": "MjU=","mobile": "MjA="}}}]}}','cee79531-8781-11eb-969d-42010a52200b'),
-(5,NULL,0,'Premium MaxSite','site','{"connections":{"count":"NA=="}}','cee79531-8781-11eb-969d-42010a52200b'),
-(6,NULL,0,'Basic Persona','persona','{"connections":{"count":"NA=="}}','cee79531-8781-11eb-969d-42010a52200b'),
-(7,NULL,0,'Premium Persona','persona','{"connections":{"count":"NA=="}}','cee79531-8781-11eb-969d-42010a52200b');
+(1,0,0,'Excell Theme','site','{"connections":{"count":"NA=="}}','9a2b1749-3474-11e9-9461-52de8773d5f0'),
+(2,2,0,'EZ Card Original','site','{"connections":{"count":"NA=="}}','4dd5597f-3f7e-11eb-9e97-42010a52200a'),
+(3,2,0,'Premium EZ Digital','site','{"connections":{"count":"NA=="}}','cee79531-8781-11eb-969d-42010a52200b'),
+(4,1,0,'Standard MaxSite','site','{"header": {"title": "SGVhZGVy","type": "dGhlbWU=","elements": [{"title": "SGVhZGVyIEhlaWdodA==","label": "aGVhZGVyLWJhbm5lcg==","type": "Y3Nz","data": {"label": "aGVpZ2h0","default": "MTc1","responsive": {"tablet": "MTUw","mobile": "MTI1"}}}]},"main-logo": {"type": "bG9nbw==","elements": [{"title": "TG9nbyBIZWlnaHQ=","label": "bG9nby1oZWlnaHQ=","type": "Y3Nz","data": {"label": "aGVpZ2h0","default": "MTI1","responsive": {"tablet": "MTAw","mobile": "NzU="}}},{"title": "TG9nbyBVcmw=","label": "bG9nby11cmw=","type": "aW1hZ2U=","data": {"label": "dXJs","default": "L3dlYnNpdGUvaW1hZ2VzL21heHItbWljcm9zaXRlLWxvZ28ucG5n","responsive": {"tablet": null,"mobile": null}}},{"title": "VG9wIE9mZnNldA==","label": "dG9wLW9mZnNldA==","type": "Y3Nz","data": {"label": "dG9w","default": "Mg==","responsive": {"tablet": "Mg==","mobile": "Mg=="}}},{"title": "TGVmdCBPZmZzZXQ=","label": "bGVmdC1vZmZzZXQ=","type": "Y3Nz","data": {"label": "bGVmdA==","default": "MjA=","responsive": {"tablet": "MjU=","mobile": "MjA="}}}]}}','cee79531-8781-11eb-969d-42010a52200b'),
+(5,1,0,'Premium MaxSite','site','{"connections":{"count":"NA=="}}','cee79531-8781-11eb-969d-42010a52200b'),
+(6,1,0,'Basic Persona','persona','{"connections":{"count":"NA=="}}','cee79531-8781-11eb-969d-42010a52200b'),
+(7,1,0,'Premium Persona','persona','{"connections":{"count":"NA=="}}','cee79531-8781-11eb-969d-42010a52200b');
 
 INSERT INTO card_template_company_rel (card_template_company_rel_id,card_template_id,company_id,sys_row_id) VALUES
 (1,1,0,'9a2b1749-3474-11e9-9461-52de8773d5f0'),
-(2,4,4,'4dd5597f-3f7e-11eb-9e97-42010a52200a'),
-(3,5,4,'cee79531-8781-11eb-969d-42010a52200b'),
-(4,6,4,'cee79531-8781-11eb-969d-42010a52200b'),
-(5,2,1,'cee79531-8781-11eb-969d-42010a52200b'),
-(6,3,1,'cee79531-8781-11eb-969d-42010a52200b'),
-(7,7,1,'cee79531-8781-11eb-969d-42010a52200b'),
-(8,7,4,'cee79531-8781-11eb-969d-42010a52200b');
+(2,4,1,'4dd5597f-3f7e-11eb-9e97-42010a52200a'),
+(3,5,1,'cee79531-8781-11eb-969d-42010a52200b'),
+(4,6,1,'cee79531-8781-11eb-969d-42010a52200b'),
+(5,2,2,'cee79531-8781-11eb-969d-42010a52200b'),
+(6,3,2,'cee79531-8781-11eb-969d-42010a52200b'),
+(7,7,1,'cee79531-8781-11eb-969d-42010a52200b');
 
 INSERT INTO card_type (card_type_id,name,sys_row_id) VALUES (1,'Default','e507f2ff-c82d-11e8-95ec-6ef620543eb9');
 INSERT INTO card_type (card_type_id,name,sys_row_id) VALUES (2,'Persona','8df7701a-302f-40fd-9e3f-d959eedc4fa9');
@@ -125,7 +124,7 @@ INSERT INTO company_setting (company_setting_id, company_id, label, value, creat
 (43, 1, 'website_logo_css', 'width: 125px; top: 8px;', '2020-12-16 03:05:03', '2020-12-16 09:05:04', '9f756c9f-4938-11eb-9e97-42010a52200a'),
 (44, 1, 'stripe_account_type', 'connected', '2020-12-16 03:05:03', '2020-12-16 09:05:04', '9f815c62-4938-11eb-9e97-42010a52200a'),
 (45, 1, 'portal_logo_light', '/website/logos/max-community-logo.png', '2020-12-16 03:05:02', '2020-12-28 18:34:43', '9f8d4139-4938-11eb-9e97-42010a52200a'),
-(46, 1, 'default_persona_package_id', '28', '2020-12-16 03:05:02', '2020-12-28 18:34:43', '9f8d4139-4938-11eb-9e97-42010a52200a');
+(46, 1, 'default_persona_package_id', '14', '2020-12-16 03:05:02', '2020-12-28 18:34:43', '9f8d4139-4938-11eb-9e97-42010a52200a');
 
 INSERT INTO company_setting (company_setting_id, company_id, label, value, created_on, last_updated, sys_row_id) VALUES
 (47, 1, 'portal_theme_main_color', 'ed1e0b', '2020-12-28 12:42:42', '2020-12-28 18:42:44', '78166019-493c-11eb-9e97-42010a52200a'),
@@ -327,22 +326,22 @@ INSERT INTO `package_line_setting` (`package_line_setting_id`, `package_line_id`
 INSERT INTO `package_line_setting` (`package_line_setting_id`, `package_line_id`, `label`, `value`, `created_on`, `last_updated`, `sys_row_id`) VALUES
 (10, 6, 'page_content', '<p style="text-align: center;"><img src="https://app.ezcardmedia.com/images/users/1001/fbd9c58c08341dbdbde672346fcbc5b29a026cc2.jpg" style="width: 1000px;" class="fr-fic fr-dib" data-success="true" data-message=""></p><p style="text-align: center;"><br></p><p style="text-align: center;"><img src="https://app.ezcardmedia.com/images/users/1001/5a2e0cafcc18fc848fb7374f74aa6a0f552874ea.jpg" style="width: 1000px;" class="fr-fic fr-dib" data-success="true" data-message=""></p>', '2020-08-20 02:43:28', '2021-01-05 05:05:23', '410e4da2-4f3b-11eb-9e97-42010a52200a'),
 (11, 21, 'page_insertion_index', '2', '2020-08-20 05:01:13', '2021-01-05 18:32:15', '9ac388c8-4f3b-11eb-9e97-42010a52200a'),
-(12, 21, 'default_template', '30652', '2020-08-20 02:43:28', '2021-01-27 04:03:36', '9acf0a6c-4f3b-11eb-9e97-42010a52200a'),
+(12, 21, 'default_template_id', '4', '2020-08-20 02:43:28', '2021-01-27 04:03:36', '9acf0a6c-4f3b-11eb-9e97-42010a52200a'),
 (13, 24, 'page_insertion_index', '2', '2020-08-20 05:01:13', '2021-01-05 18:32:39', '9ada5642-4f3b-11eb-9e97-42010a52200a'),
-(14, 24, 'default_template', '30652', '2020-08-20 02:43:28', '2021-01-27 04:03:33', '9ae57a26-4f3b-11eb-9e97-42010a52200a'),
+(14, 24, 'default_template_id', '4', '2020-08-20 02:43:28', '2021-01-27 04:03:33', '9ae57a26-4f3b-11eb-9e97-42010a52200a'),
 (15, 27, 'page_insertion_index', '2', '2020-08-20 05:01:13', '2021-01-05 18:32:44', '9af06056-4f3b-11eb-9e97-42010a52200a'),
-(16, 27, 'default_template', '30652', '2020-08-20 02:43:28', '2021-03-24 22:35:01', '9afc6189-4f3b-11eb-9e97-42010a52200a'),
+(16, 27, 'default_template_id', '4', '2020-08-20 02:43:28', '2021-03-24 22:35:01', '9afc6189-4f3b-11eb-9e97-42010a52200a'),
 (17, 23, 'page_content', '<p style="text-align: center;"><img src="https://app.ezcardmedia.com/images/users/1001/fbd9c58c08341dbdbde672346fcbc5b29a026cc2.jpg" style="width: 1000px;" class="fr-fic fr-dib" data-success="true" data-message=""></p><p style="text-align: center;"><br></p><p style="text-align: center;"><img src="https://app.ezcardmedia.com/images/users/1001/5a2e0cafcc18fc848fb7374f74aa6a0f552874ea.jpg" style="width: 1000px;" class="fr-fic fr-dib" data-success="true" data-message=""></p>\r\n', '2020-08-20 02:43:28', '2021-01-05 05:05:20', '9b07327d-4f3b-11eb-9e97-42010a52200a'),
 (18, 26, 'page_content', '<p style="text-align: center;"><img src="https://app.ezcardmedia.com/images/users/1001/fbd9c58c08341dbdbde672346fcbc5b29a026cc2.jpg" style="width: 1000px;" class="fr-fic fr-dib" data-success="true" data-message=""></p><p style="text-align: center;"><br></p><p style="text-align: center;"><img src="https://app.ezcardmedia.com/images/users/1001/5a2e0cafcc18fc848fb7374f74aa6a0f552874ea.jpg" style="width: 1000px;" class="fr-fic fr-dib" data-success="true" data-message=""></p>', '2020-08-20 02:43:28', '2021-01-05 05:05:23', '9b13d30c-4f3b-11eb-9e97-42010a52200a');
 
 INSERT INTO `package_line_setting` (`package_line_setting_id`, `package_line_id`, `label`, `value`, `created_on`, `last_updated`, `sys_row_id`) VALUES
 (19, 29, 'page_content', '<p style="text-align: center;"><img src="https://app.ezcardmedia.com/images/users/1001/fbd9c58c08341dbdbde672346fcbc5b29a026cc2.jpg" style="width: 1000px;" class="fr-fic fr-dib" data-success="true" data-message=""></p><p style="text-align: center;"><br></p><p style="text-align: center;"><img src="https://app.ezcardmedia.com/images/users/1001/5a2e0cafcc18fc848fb7374f74aa6a0f552874ea.jpg" style="width: 1000px;" class="fr-fic fr-dib" data-success="true" data-message=""></p>', '2020-08-20 02:43:28', '2021-01-05 05:05:23', '9b1f5c29-4f3b-11eb-9e97-42010a52200a'),
 (20, 32, 'page_content', '<p style="text-align: center;"><img src="https://app.ezcardmedia.com/images/users/1001/fbd9c58c08341dbdbde672346fcbc5b29a026cc2.jpg" style="width: 1000px;" class="fr-fic fr-dib" data-success="true" data-message=""></p><p style="text-align: center;"><br></p><p style="text-align: center;"><img src="https://app.ezcardmedia.com/images/users/1001/5a2e0cafcc18fc848fb7374f74aa6a0f552874ea.jpg" style="width: 1000px;" class="fr-fic fr-dib" data-success="true" data-message=""></p>', '2020-08-20 02:43:28', '2021-01-05 05:05:23', 'd4650a53-a89d-4428-b927-a34b499ad5cf'),
-(22, 46, 'default_template', '30663', '2020-08-20 02:43:28', '2021-03-18 00:57:36', '43f2f9ea-e668-4d74-8182-f88e6a659057'),
+(22, 46, 'default_template_id', '4', '2020-08-20 02:43:28', '2021-03-18 00:57:36', '43f2f9ea-e668-4d74-8182-f88e6a659057'),
 (23, 46, 'page_insertion_index', '2', '2020-08-20 05:01:13', '2021-01-05 18:32:44', '4abea38e-ebbc-4d46-b1f6-e8c4c57e239d'),
 (24, 48, 'page_content', '<p style="text-align: center;"><img src="https://app.ezcardmedia.com/images/users/1001/fbd9c58c08341dbdbde672346fcbc5b29a026cc2.jpg" style="width: 1000px;" class="fr-fic fr-dib" data-success="true" data-message=""></p><p style="text-align: center;"><br></p><p style="text-align: center;"><img src="https://app.ezcardmedia.com/images/users/1001/5a2e0cafcc18fc848fb7374f74aa6a0f552874ea.jpg" style="width: 1000px;" class="fr-fic fr-dib" data-success="true" data-message=""></p>', '2020-08-20 02:43:28', '2021-01-05 05:05:23', 'ab89ea2a-d801-4261-9409-e33b4a1176ca'),
 (26, 44, 'page_insertion_index', '2', '2020-08-20 05:01:13', '2021-03-24 22:51:11', '88728366-ce1a-44fc-955d-c35a53e26162'),
-(27, 33, 'default_template', '30652', '2020-08-20 02:43:28', '2021-03-24 22:50:39', '78094431-7263-4c8c-a400-55309b4290b7');
+(27, 33, 'default_template_id', '4', '2020-08-20 02:43:28', '2021-03-24 22:50:39', '78094431-7263-4c8c-a400-55309b4290b7');
 
 INSERT INTO `promo_code` (`promo_code_id`, `company_id`, `entity_type`, `entity_id`, `promo_code`, `title`, `description`, `promo_discount_value`, `discount_value`, `discount_type`, `min_entity_value`, `expiration_date`, `test_only`, `expired`, `created_on`, `last_updated`, `sys_row_id`) VALUES
 (11, 1, 'purchase', NULL, 'gregTest396', '296 Dollars Off', NULL, NULL, 396.00, '$', 396.00, NULL, 0, 0, '2020-11-05 17:02:55', '2021-02-26 21:24:48', 'ce344125-4f90-11eb-9e97-42010a52200a'),
@@ -446,7 +445,7 @@ INSERT INTO `user_class_type` (`user_class_type_id`, `name`, `sys_row_id`) VALUE
 (15, 'Members', '18524741-8d8d-11eb-969d-42010a52200b');
 
 INSERT INTO `user_setting` (`user_setting_id`, `user_id`, `label`, `value`, `created_on`, `last_updated`, `sys_row_id`) VALUES
-(1, 1000, 'admin_portal_theme_shade', 'dark', '2020-11-10 14:08:59', '2020-11-21 22:15:50', '1ab40526-3914-4c14-bf61-61dcdd9f6e01'),
+(1, 1000, 'admin_portal_theme_shade', 'light', '2020-11-10 14:08:59', '2020-11-21 22:15:50', '1ab40526-3914-4c14-bf61-61dcdd9f6e01'),
 (2, 1001, 'admin_portal_theme_shade', 'light', '2020-11-10 14:08:59', '2020-11-21 22:15:50', 'bc00fca8-eff1-4726-a649-8f77a1ba54c9');
 
 -- CRM Database Data Load:

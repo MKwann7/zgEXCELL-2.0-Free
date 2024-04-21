@@ -325,7 +325,7 @@ header.portal-header {
     padding: 11px 19px;
     position:fixed;
     width: 100%;
-    width: calc(100% - 220px);
+    width: calc(100% - 200px);
 }
 .shoppingCartIcon {
     width: 23px;
