@@ -11,9 +11,9 @@ echo "project_path = ${project_path}"
 
 if [[ -z "$(ls -A ${project_path}/src/engine)" ]]; then
   mkdir "${project_path}/src/engine"
-  cd "${project_path}/src/engine"
+  cd "${project_path}/src/engine" || exit
   git clone https://github.com/MKwann7/zgXCELL-Core .
-  cd "${project_path}/"
+  cd "${project_path}/" || exit
 fi
 
 if [[ -z "$(ls -A ${project_path}/src/vendors/phpunit)" ]]; then
@@ -27,16 +27,16 @@ mkdir -p list
 mkdir -p list/commands
 mkdir -p storage
 mkdir -p tmp
-chown -R mkwann7:mkwann7 list
-chown -R mkwann7:mkwann7 list/commands
-chown -R mkwann7:mkwann7 tmp
-chown -R mkwann7:mkwann7 logs
-chown -R mkwann7:mkwann7 storage
+chown -R micah:micah list
+chown -R micah:micah list/commands
+chown -R micah:micah tmp
+chown -R micah:micah logs
+chown -R micah:micah storage
 chmod -R 777 list
 chmod -R 777 list/commands
 chmod -R 777 tmp
 chmod -R 777 logs
 chmod -R 777 storage
-cd code
+cd code || exit
 
-docker-compose -f docker/docker-compose.local.yml --project-name ${APP_NAME} up --build
+docker-compose --file "${project_path}/docker/docker-compose.local.yml" --project-name ${APP_NAME} up --build
