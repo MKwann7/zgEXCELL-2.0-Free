@@ -1,6 +1,6 @@
 FROM alpine:3
 
-# Install packages
+# Install PHP, Nginx, and other required packages
 RUN apk --no-cache add nano curl nginx p7zip supervisor nghttp2 \
     php81 php81-fpm php81-mysqli php81-json php81-openssl php81-curl \
     php81-zlib php81-xml php81-phar php81-intl php81-dom php81-xmlreader php81-ctype php81-session \
@@ -33,6 +33,8 @@ RUN mkdir -p /app/excell/list/commands
 RUN mkdir -p /app/excell/storage/modules
 RUN mkdir -p /app/excell/storage/modules/company
 RUN mkdir -p /app/excell/tmp
+
+# Add nobody to fxs group
 RUN addgroup nobody xfs
 
 # Make sure files/folders needed by the processes are accessable when they run under the nobody user
@@ -44,39 +46,38 @@ RUN chown -R nobody:nobody /app/excell/code && \
     chown -R nobody:nobody /app/excell/logs && \
     chown -R nobody:nobody /app/excell/k6 && \
     chown -R nobody:nobody /run && \
-    chown -R nobody:nobody /var/lib/nginx
-
-# Make the document root a volume
-#VOLUME /app/excell/code
-#VOLUME /app/excell/list
-#VOLUME /app/excell/tmp
-#VOLUME /app/excell/logs
+    chown -R nobody:nobody /var/lib/nginx && \
+    chmod -R 777 /var/lib/nginx
 
 COPY docker/ssl/ssl.zip /app/excell/storage/ssl
-RUN 7z e /app/excell/storage/ssl/ssl.zip -o/app/excell/ssl -y > nul
 RUN chown -R nobody:nobody /app/excell/ssl
 RUN chown -R nobody:nobody /app/excell/logs
 RUN chown -R nobody:nobody /app/excell/tmp
 RUN chmod -R 777 /app/excell/ssl
 RUN chmod -R 777 /app/excell/list
 RUN chmod -R 777 /app/excell/tmp
-
-# Switch to use a non-root user from here on
-USER nobody
+RUN chmod +x /app/excell/code/
 
 # Add application
 WORKDIR /app/excell/code
 COPY --chown=nobody src /app/excell/code
 
-#COPY docker/env/excell-app-local.env /app/excell/code/.env
-#COPY docker/ssl/ssl.zip /app/excell/storage/ssl
-#RUN 7z e /app/excell/storage/ssl/ssl.zip -o/app/excell/ssl -y > nulp7zip
+# Configure supervisord
+COPY docker/deploy/deploy.sh /deploy.sh
+RUN chown -R nobody:nobody /deploy.sh
+RUN chmod +x /deploy.sh
+
+# Switch to use a non-root user from here on
+USER nobody
 
 # Expose the port nginx is reachable on
 EXPOSE 8080 4443
 
+# Set the entry point to the deploy script
+ENTRYPOINT ["/deploy.sh"]
+
 # Let supervisord start nginx & php-fpm
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+#CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
 
 # Configure a healthcheck to validate that everything is up&running
 HEALTHCHECK --timeout=10s CMD curl --silent --fail http://localhost:8080/fpm-ping

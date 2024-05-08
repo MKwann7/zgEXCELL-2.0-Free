@@ -1004,6 +1004,21 @@ CREATE TABLE IF NOT EXISTS `contact_user_rel` (
 
 -- Data exporting was unselected.
 
+-- Dumping structure for table excell_main.contact_user_rel
+CREATE TABLE IF NOT EXISTS `domain_ssl` (
+    `domain_ssl_id` int(15) NOT NULL AUTO_INCREMENT COMMENT 'DomainSslId',
+    `company_id` int(15) DEFAULT NULL COMMENT 'CompanyId',
+    `card_domain_id` int(15) DEFAULT NULL COMMENT 'CardDomainId',
+    `domain` varchar(255) DEFAULT NULL COMMENT 'DomainName',
+    `key_value` text DEFAULT NULL COMMENT 'DomainKey',
+    PRIMARY KEY (`domain_ssl_id`),
+    KEY `domain` (`domain`),
+    KEY `company_id` (`company_id`),
+    KEY `card_domain_id` (`card_domain_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf32 COMMENT='DomainSslTable for Excell  3.0';
+
+-- Data exporting was unselected.
+
 -- Dumping structure for table excell_main.division
 CREATE TABLE IF NOT EXISTS `division` (
     `division_id` int(15) NOT NULL COMMENT 'DivisionID',

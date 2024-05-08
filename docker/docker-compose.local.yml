@@ -20,27 +20,10 @@ services:
          - "./../../logs:/app/excell/logs"
          - "./../../tmp:/app/excell/tmp"
          - "./../k6:/app/excell/k6"
-      networks: 
-         excell:
-            ipv4_address: 172.1.0.5
-      links:
-         - db
-      privileged: true
-   db:
-      hostname: db.excell.docker
-      image: 'mysql:5.7.35'
-      container_name: excell-db
-      shm_size: 2gb
-      environment:
-         MYSQL_ROOT_PASSWORD: MYSQL_pass
-      ports:
-         - "3307:3306"
-      volumes:
-         - "./mysql-data:/var/lib/mysql"
-         - "./init-scripts/main:/docker-entrypoint-initdb.d"
       networks:
-         excell:
-            ipv4_address: 172.1.0.7
+         excell_excell:
+            ipv4_address: 172.1.0.5
+      privileged: true
    pg:
       hostname: pg.excell.docker
       image: 'postgres:13-alpine'
@@ -54,7 +37,7 @@ services:
          - "./postgres-data:/var/lib/postgresql/data"
          - "./init-scripts/postgres:/docker-entrypoint-initdb.d"
       networks:
-         excell:
+         excell_excell:
             ipv4_address: 172.1.0.8
    socket:
       container_name: excell-socket
@@ -70,10 +53,8 @@ services:
       volumes:
          - "./../../../socket/src:/app/excell/code/src"
       networks:
-         excell:
+         excell_excell:
             ipv4_address: 172.1.0.3
-      links:
-         - db
    process:
       container_name: excell-process
       #image: excell_process:v1
@@ -88,10 +69,8 @@ services:
       volumes:
          - "./../../../process/src:/app/excell/code/src"
       networks:
-         excell:
+         excell_excell:
             ipv4_address: 172.1.0.9
-      links:
-         - db
    media:
       container_name: excell-media
       #image: excell_process:v1
@@ -110,10 +89,8 @@ services:
          - "./../../../media/logs:/app/logs"
          - "./../../../media/code/docker/env/app-local.env:/app/code/.env"
       networks:
-         excell:
+         excell_excell:
             ipv4_address: 172.1.0.10
-      links:
-         - db
    api:
       container_name: excell-api
       #image: excell_api:v1
@@ -128,17 +105,9 @@ services:
       volumes:
          - "./../../../api/src:/app/excell/code/src"
       networks:
-         excell:
+         excell_excell:
             ipv4_address: 172.1.0.11
-      links:
-         - db
 
 networks:
-   excell:
-      external: false
-      driver: bridge
-      ipam:
-         driver: default
-         config:
-            - subnet: 172.1.0.0/16
-              gateway: 172.1.0.1
+   excell_excell:
+      external: true
